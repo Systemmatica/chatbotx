@@ -22,6 +22,110 @@ import { assertDeletable } from "../template/installed-resource.service"
 import type { PaginatedResult } from "../types"
 
 const AI_AGENT_CACHE_TTL_SECONDS = 5 * 60
+const FILE_TOOL_PREFIX = "file:"
+
+function filterTools(
+  tools: string[] | null | undefined,
+  matchFilePrefix: boolean,
+): string[] {
+  return (tools ?? []).filter(
+    (tool) => tool.startsWith(FILE_TOOL_PREFIX) === matchFilePrefix,
+  )
+}
+
+function isSameStringSet(a?: string[] | null, b?: string[] | null): boolean {
+  const left = [...(a ?? [])].sort()
+  const right = [...(b ?? [])].sort()
+  return (
+    left.length === right.length &&
+    left.every((value, index) => value === right[index])
+  )
+}
+
+// Postgres jsonb does not preserve object-key order, so comparing DB-read
+// values against freshly-built payloads with plain JSON.stringify produces
+// false positives whenever the key order differs. Sort keys recursively
+// before comparing so the diff reflects real content changes only.
+function stableStringify(value: unknown): string {
+  if (Array.isArray(value)) {
+    return `[${value.map(stableStringify).join(",")}]`
+  }
+  if (value !== null && typeof value === "object") {
+    const entries = Object.entries(value as Record<string, unknown>).sort(
+      ([a], [b]) => a.localeCompare(b),
+    )
+    return `{${entries.map(([key, val]) => `${JSON.stringify(key)}:${stableStringify(val)}`).join(",")}}`
+  }
+  return JSON.stringify(value)
+}
+
+function isSameJsonValue(a: unknown, b: unknown): boolean {
+  return stableStringify(a) === stableStringify(b)
+}
+
+type AIAgentChangeGroup = "model" | "instructions" | "knowledge base"
+
+function buildChangeGroupMessage(changed: AIAgentChangeGroup[]): string {
+  if (changed.length === 1) {
+    return `updated the AI Agent ${changed[0]}`
+  }
+  if (changed.length === 2) {
+    return `updated the AI Agent ${changed[0]} and ${changed[1]}`
+  }
+  return `updated the AI Agent ${changed.slice(0, -1).join(", ")} and ${changed.at(-1)}`
+}
+
+function hasOtherFieldChanges(
+  aiAgent: AIAgentModel,
+  data: UpdateAIAgentRequest,
+): boolean {
+  if (data.name !== undefined && data.name !== aiAgent.name) {
+    return true
+  }
+  if (
+    data.temperature !== undefined &&
+    data.temperature !== aiAgent.temperature
+  ) {
+    return true
+  }
+  if (
+    data.maxOutputTokens !== undefined &&
+    data.maxOutputTokens !== aiAgent.maxOutputTokens
+  ) {
+    return true
+  }
+  if (
+    data.isRichResponse !== undefined &&
+    data.isRichResponse !== aiAgent.isRichResponse
+  ) {
+    return true
+  }
+  if (
+    data.messages !== undefined &&
+    !isSameJsonValue(data.messages, aiAgent.messages)
+  ) {
+    return true
+  }
+  if (
+    data.webSearchAuthorizedDomains !== undefined &&
+    !isSameStringSet(
+      normalizeWebSearchDomains(data.webSearchAuthorizedDomains),
+      aiAgent.webSearchAuthorizedDomains,
+    )
+  ) {
+    return true
+  }
+  if (
+    data.tools !== undefined &&
+    !isSameStringSet(
+      filterTools(data.tools, false),
+      filterTools(aiAgent.tools, false),
+    )
+  ) {
+    return true
+  }
+  return false
+}
 
 type FindByProps = {
   tx?: DatabaseClient
@@ -159,6 +263,8 @@ class AiAgentService extends BaseService {
     data: CreateAIAgentRequest,
     tx?: DatabaseClient,
   ): Promise<void> {
+    const id = createId()
+
     const execute = async (client: DatabaseClient) => {
       if (data.isDefault) {
         await client
@@ -173,13 +279,17 @@ class AiAgentService extends BaseService {
           webSearchAuthorizedDomains,
         ),
         workspaceId,
-        id: createId(),
+        id,
       })
     }
 
     await (tx ? execute(tx) : db.transaction(execute))
 
     await this.invalidateCacheTags(this.getWorkspaceCacheTag(workspaceId))
+
+    if (!tx) {
+      await this.audit("create", `created a new AI Agent (#${id})`)
+    }
   }
 
   async updateAIAgent(
@@ -216,6 +326,50 @@ class AiAgentService extends BaseService {
     })
 
     await this.invalidateCacheTags(this.getWorkspaceCacheTag(ctx.workspaceId))
+
+    const changedKeys = Object.keys(data)
+
+    if (changedKeys.length === 1 && changedKeys[0] === "isDefault") {
+      await this.audit(
+        "update",
+        data.isDefault
+          ? `set as default an AI Agent (#${aiAgent.id})`
+          : `unset default an AI Agent (#${aiAgent.id})`,
+      )
+      return
+    }
+
+    const changedGroups: AIAgentChangeGroup[] = []
+    if (
+      data.models !== undefined &&
+      !isSameJsonValue(data.models, aiAgent.models)
+    ) {
+      changedGroups.push("model")
+    }
+    if (data.prompt !== undefined && data.prompt !== aiAgent.prompt) {
+      changedGroups.push("instructions")
+    }
+    if (
+      data.tools !== undefined &&
+      !isSameStringSet(
+        filterTools(data.tools, true),
+        filterTools(aiAgent.tools, true),
+      )
+    ) {
+      changedGroups.push("knowledge base")
+    }
+
+    if (changedGroups.length > 0) {
+      await this.audit(
+        "update",
+        `${buildChangeGroupMessage(changedGroups)} (#${aiAgent.id})`,
+      )
+      return
+    }
+
+    if (hasOtherFieldChanges(aiAgent, data)) {
+      await this.audit("update", `updated an AI Agent (#${aiAgent.id})`)
+    }
   }
 
   /**
@@ -238,6 +392,12 @@ class AiAgentService extends BaseService {
     })
 
     const client = tx ?? db
+
+    const agents = await client.query.aiAgentModel.findMany({
+      where: { workspaceId: ctx.workspaceId, id: { in: ctx.ids } },
+      columns: { id: true },
+    })
+
     await client
       .delete(aiAgentModel)
       .where(
@@ -248,6 +408,12 @@ class AiAgentService extends BaseService {
       )
 
     await this.invalidateCacheTags(this.getWorkspaceCacheTag(ctx.workspaceId))
+
+    if (!tx) {
+      for (const agent of agents) {
+        await this.audit("delete", `deleted an AI Agent (#${agent.id})`)
+      }
+    }
   }
 }
 

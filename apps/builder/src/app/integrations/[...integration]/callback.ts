@@ -6,6 +6,7 @@ import {
   workspaceMemberService,
   workspaceService,
 } from "@chatbotx.io/business"
+import { auditService } from "@chatbotx.io/business/audit"
 import { db } from "@chatbotx.io/database/client"
 import type { IntegrationType } from "@chatbotx.io/database/partials"
 import {
@@ -68,6 +69,7 @@ import { logger } from "@/lib/log"
 import { resolveRelayTarget, sanitizeReferer } from "@/lib/oauth-referer"
 import { resolveOwnerForWorkspace } from "@/lib/platform-credential-owner"
 import { buildProviderCallbackUrl } from "@/lib/provider-origin"
+import { getGuestClientIp } from "@/lib/rate-limit/guest-rate-limit"
 
 const stateValidationSchema = z.object({
   workspaceId: zodBigintAsString().optional(),
@@ -327,6 +329,16 @@ export const handleCallback = async (
           code,
           callbackUrl,
         })
+        if (result.status === "success") {
+          await auditService.record({
+            userId,
+            workspaceId: workspace.id,
+            action: "update",
+            detail: "reconnected the Messenger channel",
+            ipAddress: getGuestClientIp(req.headers),
+            userAgent: req.headers.get("user-agent") ?? undefined,
+          })
+        }
         return redirect(buildReconnectRedirectUrl(safeReferer, result))
       }
 
@@ -406,6 +418,16 @@ export const handleCallback = async (
           integrationId: stateParams.reconnectIntegrationId,
           userToken,
         })
+        if (result.status === "success") {
+          await auditService.record({
+            userId,
+            workspaceId: workspace.id,
+            action: "update",
+            detail: "reconnected the Instagram channel",
+            ipAddress: getGuestClientIp(req.headers),
+            userAgent: req.headers.get("user-agent") ?? undefined,
+          })
+        }
         return redirect(buildReconnectRedirectUrl(safeReferer, result))
       }
 
@@ -458,6 +480,16 @@ export const handleCallback = async (
           integrationId: stateParams.reconnectIntegrationId,
           userToken,
         })
+        if (result.status === "success") {
+          await auditService.record({
+            userId,
+            workspaceId: workspace.id,
+            action: "update",
+            detail: "reconnected the Instagram channel",
+            ipAddress: getGuestClientIp(req.headers),
+            userAgent: req.headers.get("user-agent") ?? undefined,
+          })
+        }
         return redirect(buildReconnectRedirectUrl(safeReferer, result))
       }
 
@@ -510,6 +542,7 @@ export const handleCallback = async (
       await connectTiktokHandler({
         tiktokSettings: tiktokCredential.config,
         workspaceId: workspace.id,
+        userId,
         req,
         redirectUrl: tiktokCallbackUrl,
       })
@@ -547,6 +580,7 @@ export const handleCallback = async (
       await connectZaloHandler({
         zaloSettings: zaloCredential.config,
         workspaceId: workspace.id,
+        userId,
         req,
         redirectUrl: zaloRedirectUrl,
       })
@@ -682,6 +716,17 @@ export const handleCallback = async (
       })
     }
   })
+
+  if (integrationType === "googleSheets") {
+    await auditService.record({
+      userId,
+      workspaceId: workspace.id,
+      action: "connect",
+      detail: "connected a new Google Sheets integration",
+      ipAddress: getGuestClientIp(req.headers),
+      userAgent: req.headers.get("user-agent") ?? undefined,
+    })
+  }
 
   return redirect(safeReferer)
 }

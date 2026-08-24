@@ -3,6 +3,7 @@ import {
   sequenceAnalyticsService,
 } from "@chatbotx.io/analytics"
 import { tagService } from "@chatbotx.io/business"
+import { auditService } from "@chatbotx.io/business/audit"
 import { chunkById } from "@chatbotx.io/database/utils"
 import {
   type JobBulkTagContacts,
@@ -54,5 +55,11 @@ export async function handleBulkTagContacts(
       })
       return true
     },
+  })
+
+  await auditService.record({
+    workspaceId: data.workspaceId,
+    action: "update",
+    detail: `bulk-tagged contacts (${data.tagIds.map((id) => `#${id}`).join(", ")})`,
   })
 }

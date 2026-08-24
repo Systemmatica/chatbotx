@@ -71,6 +71,11 @@ vi.mock("@chatbotx.io/redis", () => ({
   invalidateCacheByTags,
 }))
 
+const auditRecord = vi.fn()
+vi.mock("@chatbotx.io/business/audit", () => ({
+  auditService: { record: auditRecord },
+}))
+
 const createId = vi.fn(() => "logo-id")
 vi.mock("@chatbotx.io/utils", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@chatbotx.io/utils")>()
@@ -167,6 +172,11 @@ describe("updateWorkspaceLogo", () => {
       "users:user-1:workspace-members",
       "users:user-2:workspace-members",
     ])
+    expect(auditRecord).toHaveBeenCalledWith({
+      workspaceId: "ws-1",
+      action: "update",
+      detail: "changed the workspace logo",
+    })
   })
 
   test("does not update workspace when integration has no profile picture", async () => {
@@ -181,6 +191,7 @@ describe("updateWorkspaceLogo", () => {
     expect(uploadFileFromUrl).not.toHaveBeenCalled()
     expect(db.update).not.toHaveBeenCalled()
     expect(invalidateCacheByTags).not.toHaveBeenCalled()
+    expect(auditRecord).not.toHaveBeenCalled()
   })
 
   test("does not update workspace when profile picture lookup fails", async () => {
@@ -195,6 +206,7 @@ describe("updateWorkspaceLogo", () => {
     expect(uploadFileFromUrl).not.toHaveBeenCalled()
     expect(db.update).not.toHaveBeenCalled()
     expect(invalidateCacheByTags).not.toHaveBeenCalled()
+    expect(auditRecord).not.toHaveBeenCalled()
   })
 
   test("does not update workspace when profile picture upload fails", async () => {
@@ -209,6 +221,7 @@ describe("updateWorkspaceLogo", () => {
 
     expect(db.update).not.toHaveBeenCalled()
     expect(invalidateCacheByTags).not.toHaveBeenCalled()
+    expect(auditRecord).not.toHaveBeenCalled()
   })
 
   test("does not fetch or upload profile picture when workspace already has a logo", async () => {
@@ -226,5 +239,6 @@ describe("updateWorkspaceLogo", () => {
     expect(db.update).not.toHaveBeenCalled()
     expect(db.select).not.toHaveBeenCalled()
     expect(invalidateCacheByTags).not.toHaveBeenCalled()
+    expect(auditRecord).not.toHaveBeenCalled()
   })
 })

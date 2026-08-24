@@ -3,6 +3,7 @@
 import { beforeEach, describe, expect, test, vi } from "vitest"
 
 const {
+  mockAuditRecord,
   mockDbDelete,
   mockDbInsert,
   mockDbUpdate,
@@ -14,6 +15,7 @@ const {
   mockIsCommunity,
   mockQuotaHasReachedLimit,
   mockUpdateSet,
+  mockUserFindFirst,
   mockWorkspaceFindById,
   mockWorkspaceMemberServiceDelete,
 } = vi.hoisted(() => {
@@ -27,6 +29,7 @@ const {
   const mockDbDelete = vi.fn(() => ({ where: mockDeleteWhere }))
 
   return {
+    mockAuditRecord: vi.fn(),
     mockDbDelete,
     mockDbInsert,
     mockDbUpdate,
@@ -41,6 +44,7 @@ const {
     mockQuotaHasReachedLimit: vi.fn(),
     mockUpdateSet,
     mockUpdateWhere,
+    mockUserFindFirst: vi.fn(),
     mockWorkspaceFindById: vi.fn(),
   }
 })
@@ -83,6 +87,11 @@ vi.mock("@chatbotx.io/database/client", () => ({
     delete: mockDbDelete,
     insert: mockDbInsert,
     update: mockDbUpdate,
+    query: {
+      userModel: {
+        findFirst: mockUserFindFirst,
+      },
+    },
   },
   eq: (col: unknown, val: unknown) => ({ eq: [col, val] }),
   findOrFail: mockFindOrFail,
@@ -90,6 +99,10 @@ vi.mock("@chatbotx.io/database/client", () => ({
 
 vi.mock("@chatbotx.io/redis", () => ({
   invalidateCacheByTags: mockInvalidateCacheByTags,
+}))
+
+vi.mock("@chatbotx.io/business/audit", () => ({
+  auditService: { record: mockAuditRecord },
 }))
 
 vi.mock("@chatbotx.io/database/schema", () => ({
@@ -267,6 +280,19 @@ describe("inviteWorkspaceMemberAction", () => {
     const insertedValues = getInsertedValues()
     expect(insertedValues.permissions).toEqual(assignedOnlyPermissions)
   })
+
+  test("records an invite audit event labeled with the granted role", async () => {
+    mockCurrentMember()
+
+    await (inviteWorkspaceMemberAction as (props: unknown) => Promise<unknown>)(
+      actionCtx(),
+    )
+
+    expect(mockAuditRecord).toHaveBeenCalledWith({
+      action: "invite",
+      detail: "invited a new member",
+    })
+  })
 })
 
 describe("updateWorkspaceMemberAction", () => {
@@ -283,6 +309,21 @@ describe("updateWorkspaceMemberAction", () => {
       ownerId: "owner-1",
     })
     mockIsCommunity.mockReturnValue(false)
+    mockUserFindFirst.mockResolvedValue({
+      name: "Target User",
+      email: "target@example.com",
+    })
+  })
+
+  test("records a role_change audit event with the target member's name", async () => {
+    await (updateWorkspaceMemberAction as (props: unknown) => Promise<unknown>)(
+      updateActionCtx(),
+    )
+
+    expect(mockAuditRecord).toHaveBeenCalledWith({
+      action: "role_change",
+      detail: "changed role of Target User to member",
+    })
   })
 
   test("forces full super-admin permissions for community updates", async () => {

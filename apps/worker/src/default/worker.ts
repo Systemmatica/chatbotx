@@ -11,6 +11,7 @@ import { ensureBootstrapped } from "../lib/bootstrap"
 import { isBlockedWorkspace } from "../lib/is-blocked-workspace"
 import { logger } from "../lib/logger"
 import { resolveWorkspaceId } from "../lib/resolve-workspace-id"
+import { runJobWithAuditContext } from "../lib/run-job-with-audit-context"
 import { handleBulkTagContacts } from "./handlers/bulk-tag-contacts"
 import { loopableExportContacts } from "./handlers/export-contacts"
 import { exportCoupons } from "./handlers/export-coupons"
@@ -25,9 +26,6 @@ import { sendErrorLog } from "./handlers/send-error-log"
 import { handleSyncChannelLabels } from "./handlers/sync-channel-labels"
 import { syncExternalCalendarEvent } from "./handlers/sync-external-calendar-event"
 import { handleSyncTag } from "./handlers/sync-tag"
-
-const isBlockedJob = async (data: unknown) =>
-  isBlockedWorkspace(await resolveWorkspaceId(data))
 
 async function startDefaultWorker() {
   try {
@@ -50,80 +48,160 @@ async function startDefaultWorker() {
         case DefaultJobAction.sendErrorLog:
           await sendErrorLog(job.data.data)
           return
-        case DefaultJobAction.exportContacts:
-          if (await isBlockedJob(job.data.data)) {
+        case DefaultJobAction.exportContacts: {
+          const { type, data } = job.data
+          const workspaceId = await resolveWorkspaceId(data)
+          if (await isBlockedWorkspace(workspaceId)) {
             return
           }
-          await loopableExportContacts(job.data.data)
+          await runJobWithAuditContext(
+            { workspaceId, source: `default:${type}` },
+            () => loopableExportContacts(data),
+          )
           return
-        case DefaultJobAction.exportCoupons:
-          if (await isBlockedJob(job.data.data)) {
+        }
+        case DefaultJobAction.exportCoupons: {
+          const { type, data } = job.data
+          const workspaceId = await resolveWorkspaceId(data)
+          if (await isBlockedWorkspace(workspaceId)) {
             return
           }
-          await exportCoupons(job.data.data)
+          await runJobWithAuditContext(
+            { workspaceId, source: `default:${type}` },
+            () => exportCoupons(data),
+          )
           return
-        case DefaultJobAction.bulkTagContacts:
-          if (await isBlockedJob(job.data.data)) {
+        }
+        case DefaultJobAction.bulkTagContacts: {
+          const { type, data } = job.data
+          const workspaceId = await resolveWorkspaceId(data)
+          if (await isBlockedWorkspace(workspaceId)) {
             return
           }
-          await handleBulkTagContacts(job.data.data, {
-            attemptsMade: job.attemptsMade,
-          })
+          await runJobWithAuditContext(
+            {
+              workspaceId,
+              requestedUserId: data.requestedUserId,
+              source: `default:${type}`,
+            },
+            () =>
+              handleBulkTagContacts(data, { attemptsMade: job.attemptsMade }),
+          )
           return
-        case DefaultJobAction.runImport:
-          if (await isBlockedJob(job.data.data)) {
+        }
+        case DefaultJobAction.runImport: {
+          const { type, data } = job.data
+          const workspaceId = await resolveWorkspaceId(data)
+          if (await isBlockedWorkspace(workspaceId)) {
             return
           }
-          await runImport(job.data.data)
+          await runJobWithAuditContext(
+            {
+              workspaceId,
+              source: `default:${type}`,
+              ipAddress: data.ipAddress,
+              userAgent: data.userAgent,
+            },
+            () => runImport(data),
+          )
           return
-        case DefaultJobAction.syncTag:
-          if (await isBlockedJob(job.data.data)) {
+        }
+        case DefaultJobAction.syncTag: {
+          const { type, data } = job.data
+          const workspaceId = await resolveWorkspaceId(data)
+          if (await isBlockedWorkspace(workspaceId)) {
             return
           }
-          await handleSyncTag(job.data.data)
+          await runJobWithAuditContext(
+            { workspaceId, source: `default:${type}` },
+            () => handleSyncTag(data),
+          )
           return
-        case DefaultJobAction.syncChannelLabels:
-          if (await isBlockedJob(job.data.data)) {
+        }
+        case DefaultJobAction.syncChannelLabels: {
+          const { type, data } = job.data
+          const workspaceId = await resolveWorkspaceId(data)
+          if (await isBlockedWorkspace(workspaceId)) {
             return
           }
-          await handleSyncChannelLabels(job.data.data)
+          await runJobWithAuditContext(
+            { workspaceId, source: `default:${type}` },
+            () => handleSyncChannelLabels(data),
+          )
           return
-        case DefaultJobAction.submitMetaCatalogSync:
-          if (await isBlockedJob(job.data.data)) {
+        }
+        case DefaultJobAction.submitMetaCatalogSync: {
+          const { type, data } = job.data
+          const workspaceId = await resolveWorkspaceId(data)
+          if (await isBlockedWorkspace(workspaceId)) {
             return
           }
-          await submitMetaCatalogSync(job.data.data)
+          await runJobWithAuditContext(
+            { workspaceId, source: `default:${type}` },
+            () => submitMetaCatalogSync(data),
+          )
           return
-        case DefaultJobAction.importMetaCatalogProducts:
-          if (await isBlockedJob(job.data.data)) {
+        }
+        case DefaultJobAction.importMetaCatalogProducts: {
+          const { type, data } = job.data
+          const workspaceId = await resolveWorkspaceId(data)
+          if (await isBlockedWorkspace(workspaceId)) {
             return
           }
-          await importMetaCatalogProducts(job.data.data)
+          await runJobWithAuditContext(
+            { workspaceId, source: `default:${type}` },
+            () => importMetaCatalogProducts(data),
+          )
           return
-        case DefaultJobAction.checkMetaCatalogSync:
-          if (await isBlockedJob(job.data.data)) {
+        }
+        case DefaultJobAction.checkMetaCatalogSync: {
+          const { type, data } = job.data
+          const workspaceId = await resolveWorkspaceId(data)
+          if (await isBlockedWorkspace(workspaceId)) {
             return
           }
-          await checkMetaCatalogSync(job.data.data)
+          await runJobWithAuditContext(
+            { workspaceId, source: `default:${type}` },
+            () => checkMetaCatalogSync(data),
+          )
           return
-        case DefaultJobAction.syncExternalCalendarEvent:
-          if (await isBlockedJob(job.data.data)) {
+        }
+        case DefaultJobAction.syncExternalCalendarEvent: {
+          const { type, data } = job.data
+          const workspaceId = await resolveWorkspaceId(data)
+          if (await isBlockedWorkspace(workspaceId)) {
             return
           }
-          await syncExternalCalendarEvent(job.data.data)
+          await runJobWithAuditContext(
+            { workspaceId, source: `default:${type}` },
+            () => syncExternalCalendarEvent(data),
+          )
           return
-        case DefaultJobAction.sendAppointmentReminder:
-          if (await isBlockedJob(job.data.data)) {
+        }
+        case DefaultJobAction.sendAppointmentReminder: {
+          const { type, data } = job.data
+          const workspaceId = await resolveWorkspaceId(data)
+          if (await isBlockedWorkspace(workspaceId)) {
             return
           }
-          await sendAppointmentReminder(job.data.data)
+          await runJobWithAuditContext(
+            { workspaceId, source: `default:${type}` },
+            () => sendAppointmentReminder(data),
+          )
           return
-        case DefaultJobAction.installTemplate:
-          if (await isBlockedJob(job.data.data)) {
+        }
+        case DefaultJobAction.installTemplate: {
+          const { type, data } = job.data
+          const workspaceId = await resolveWorkspaceId(data)
+          if (await isBlockedWorkspace(workspaceId)) {
             return
           }
-          await installTemplate(job.data.data)
+          await runJobWithAuditContext(
+            { workspaceId, source: `default:${type}` },
+            () => installTemplate(data),
+          )
           return
+        }
         default:
           logger.warn(`Unknown job name: ${job.name}`)
           return

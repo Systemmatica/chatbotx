@@ -150,6 +150,12 @@ class AutomatedResponseService extends BaseService {
       })
       .returning()
     await this.invalidateCache(workspaceId)
+
+    await this.audit(
+      "create",
+      `created a new keyword automation (#${created.id})`,
+    )
+
     return created
   }
 
@@ -159,11 +165,20 @@ class AutomatedResponseService extends BaseService {
     tx?: DatabaseClient,
   ): Promise<AutomatedResponseModel> {
     const client = tx ?? db
+
+    // Fetched before the write so a Save that resubmits identical values
+    // doesn't produce an "updated" audit entry.
+    const existing = await client.query.automatedResponseModel.findFirst({
+      where: { id: ctx.id, workspaceId: ctx.workspaceId },
+      columns: { folderId: true, keywords: true, text: true, flowId: true },
+    })
+    const nextKeywords = data.keywords?.map((m) => m.value) ?? []
+
     const [updated] = await client
       .update(automatedResponseModel)
       .set({
         ...data,
-        keywords: data.keywords?.map((m) => m.value) ?? [],
+        keywords: nextKeywords,
       })
       .where(
         and(
@@ -173,6 +188,27 @@ class AutomatedResponseService extends BaseService {
       )
       .returning()
     await this.invalidateCache(ctx.workspaceId)
+
+    const keywordsChanged =
+      !existing ||
+      nextKeywords.length !== existing.keywords.length ||
+      nextKeywords.some(
+        (keyword, index) => keyword !== existing.keywords[index],
+      )
+    const changed =
+      !existing ||
+      (data.folderId !== undefined && data.folderId !== existing.folderId) ||
+      (data.text !== undefined && data.text !== existing.text) ||
+      (data.flowId !== undefined && data.flowId !== existing.flowId) ||
+      keywordsChanged
+
+    if (changed) {
+      await this.audit(
+        "update",
+        `updated a keyword automation (#${updated.id})`,
+      )
+    }
+
     return updated
   }
 
@@ -182,6 +218,12 @@ class AutomatedResponseService extends BaseService {
     tx?: DatabaseClient,
   ): Promise<AutomatedResponseModel> {
     const client = tx ?? db
+
+    const existing = await client.query.automatedResponseModel.findFirst({
+      where: { id: ctx.id, workspaceId: ctx.workspaceId },
+      columns: { status: true },
+    })
+
     const [updated] = await client
       .update(automatedResponseModel)
       .set({ status })
@@ -193,6 +235,14 @@ class AutomatedResponseService extends BaseService {
       )
       .returning()
     await this.invalidateCache(ctx.workspaceId)
+
+    if (existing?.status !== status) {
+      await this.audit(
+        "update",
+        `${status ? "enabled" : "disabled"} a keyword automation (#${updated.id})`,
+      )
+    }
+
     return updated
   }
 
@@ -208,6 +258,12 @@ class AutomatedResponseService extends BaseService {
     })
 
     const client = tx ?? db
+
+    const deleted = await client.query.automatedResponseModel.findMany({
+      where: { workspaceId, id: { in: ids } },
+      columns: { id: true },
+    })
+
     await client
       .delete(automatedResponseModel)
       .where(
@@ -217,6 +273,13 @@ class AutomatedResponseService extends BaseService {
         ),
       )
     await this.invalidateCache(workspaceId)
+
+    if (deleted.length > 0) {
+      await this.audit(
+        "delete",
+        `deleted keyword automation${deleted.length > 1 ? "s" : ""} ${deleted.map((row) => `#${row.id}`).join(", ")}`,
+      )
+    }
   }
 
   async invalidateCache(workspaceId: string): Promise<void> {

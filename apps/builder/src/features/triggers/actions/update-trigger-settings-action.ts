@@ -1,5 +1,6 @@
 "use server"
 
+import { auditService } from "@chatbotx.io/business/audit"
 import { db, eq } from "@chatbotx.io/database/client"
 import { triggerModel } from "@chatbotx.io/database/schema"
 import { zodBigintAsString } from "@chatbotx.io/utils"
@@ -53,4 +54,18 @@ export const updateTriggerSettings = async (
     .update(triggerModel)
     .set(parsedInput)
     .where(eq(triggerModel.id, trigger.id))
+
+  const changedKeys = Object.keys(parsedInput)
+  let detail = `updated a trigger (#${trigger.id})`
+  if (changedKeys.length === 1 && changedKeys[0] === "active") {
+    detail = parsedInput.active
+      ? `enabled a trigger (#${trigger.id})`
+      : `disabled a trigger (#${trigger.id})`
+  }
+
+  await auditService.record({
+    workspaceId: ctx.workspaceId,
+    action: "update",
+    detail,
+  })
 }

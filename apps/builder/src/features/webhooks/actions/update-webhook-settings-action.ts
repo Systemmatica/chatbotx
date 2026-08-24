@@ -1,5 +1,6 @@
 "use server"
 
+import { auditService } from "@chatbotx.io/business/audit"
 import { db, eq } from "@chatbotx.io/database/client"
 import { webhookModel } from "@chatbotx.io/database/schema"
 import { updateWebhookCache } from "@chatbotx.io/events"
@@ -33,4 +34,18 @@ export const updateWebhookSettingsAction = workspaceActionClient
       .where(eq(webhookModel.id, webhook.id))
 
     await updateWebhookCache(workspaceId)
+
+    const changedKeys = Object.keys(parsedInput)
+    let detail = `updated a webhook (#${webhook.id})`
+    if (changedKeys.length === 1 && changedKeys[0] === "active") {
+      detail = parsedInput.active
+        ? `enabled a webhook (#${webhook.id})`
+        : `disabled a webhook (#${webhook.id})`
+    }
+
+    await auditService.record({
+      workspaceId,
+      action: "update",
+      detail,
+    })
   })

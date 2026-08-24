@@ -1,5 +1,6 @@
 "use server"
 
+import { auditService } from "@chatbotx.io/business/audit"
 import { and, db, eq, inArray } from "@chatbotx.io/database/client"
 import { conditionModel, triggerModel } from "@chatbotx.io/database/schema"
 import { updateTriggerCache } from "@chatbotx.io/events"
@@ -84,6 +85,12 @@ export const updateTriggerAction = workspaceActionClient
     })
 
     await updateTriggerCache(workspaceId)
+
+    await auditService.record({
+      workspaceId,
+      action: "update",
+      detail: `updated a trigger (#${id})`,
+    })
 
     return result
   })

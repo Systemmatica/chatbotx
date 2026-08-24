@@ -94,6 +94,9 @@ vi.mock("@chatbotx.io/analytics", () => ({ macRepository, anchoredPeriod }))
 const logger = { info: vi.fn(), warn: vi.fn(), error: vi.fn() }
 vi.mock("../src/logger", () => ({ logger }))
 
+const dispatchAuditRecord = vi.fn()
+vi.mock("../src/audit/dispatcher", () => ({ dispatchAuditRecord }))
+
 const { workspaceService } = await import("../src/workspace/service")
 
 function createInput() {
@@ -123,6 +126,7 @@ beforeEach(() => {
     .mockResolvedValue(new Map<string, string>())
   anchoredPeriod.mockClear()
   logger.error.mockClear()
+  dispatchAuditRecord.mockClear()
   returningUpdatedWorkspace
     .mockReset()
     .mockResolvedValue([{ id: "ws-1", name: "New Name" }])
@@ -313,5 +317,27 @@ describe("WorkspaceService.update — member cache invalidation", () => {
     await workspaceService.update({ id: "ws-1", data: { name: "New Name" } })
 
     expect(invalidateCacheByTags).toHaveBeenCalledWith(["workspaces:ws-1"])
+  })
+})
+
+describe("WorkspaceService.update — API token regeneration audit", () => {
+  beforeEach(() => {
+    workspaceMemberService.listUserIdsByWorkspaceId.mockResolvedValue([])
+  })
+
+  test("audits a token regeneration without leaking the raw token value", async () => {
+    await workspaceService.update({
+      id: "ws-1",
+      data: { token: "ws-1_super-secret-token" },
+    })
+
+    expect(dispatchAuditRecord).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: "update",
+        detail: "created/regenerated workspace API key",
+      }),
+    )
+    const [call] = dispatchAuditRecord.mock.calls
+    expect(JSON.stringify(call)).not.toContain("super-secret-token")
   })
 })

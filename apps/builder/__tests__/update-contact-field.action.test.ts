@@ -16,6 +16,13 @@ const mocks = vi.hoisted(() => ({
   emitCustomFieldChanges: vi.fn(),
   emitContactInfoChangeEvents: vi.fn(),
   listCustomFields: vi.fn(),
+  recordAuditLog: vi.fn(),
+}))
+
+vi.mock("@chatbotx.io/business/audit", () => ({
+  auditService: {
+    record: (...args: unknown[]) => mocks.recordAuditLog(...args),
+  },
 }))
 
 const txHandle = { __tx: true }
@@ -166,6 +173,11 @@ describe("updateContactFields — custom-field event ordering", () => {
       workspaceId: "ws-1",
       contactId: "contact-1",
       changes: persisted,
+    })
+    expect(mocks.recordAuditLog).toHaveBeenCalledWith({
+      workspaceId: "ws-1",
+      action: "update",
+      detail: "updated a contact (#contact-1)",
     })
   })
 

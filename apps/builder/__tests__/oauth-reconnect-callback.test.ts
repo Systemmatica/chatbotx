@@ -39,6 +39,7 @@ const {
   mockCookieSet,
   mockNotFound,
   mockRedirect,
+  mockAuditRecord,
 } = vi.hoisted(() => ({
   mockFindMessengerIntegration: vi.fn(),
   mockUpdateMessengerIntegrationAuth: vi.fn(),
@@ -77,6 +78,11 @@ const {
     throw new Error("not found")
   }),
   mockRedirect: vi.fn(),
+  mockAuditRecord: vi.fn().mockResolvedValue(undefined),
+}))
+
+vi.mock("@chatbotx.io/business/audit", () => ({
+  auditService: { record: mockAuditRecord },
 }))
 
 vi.mock("@chatbotx.io/business", () => ({

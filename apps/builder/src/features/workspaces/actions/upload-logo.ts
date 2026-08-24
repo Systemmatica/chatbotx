@@ -1,3 +1,4 @@
+import { auditService } from "@chatbotx.io/business/audit"
 import {
   and,
   type DatabaseClient,
@@ -83,5 +84,11 @@ export async function updateWorkspaceLogo<A extends AuthValue>(props: {
           `users:${workspaceMember.userId}:workspace-members`,
       ),
     ])
+
+    await auditService.record({
+      workspaceId: id,
+      action: "update",
+      detail: "changed the workspace logo",
+    })
   }
 }

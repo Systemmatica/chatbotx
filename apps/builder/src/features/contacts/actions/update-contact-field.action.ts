@@ -9,6 +9,7 @@ import {
   normalizeLanguage,
   normalizeStoredTimezone,
 } from "@chatbotx.io/business"
+import { auditService } from "@chatbotx.io/business/audit"
 import { db } from "@chatbotx.io/database/client"
 import {
   type FillableContactKey,
@@ -123,6 +124,12 @@ export const updateContactFields = async (
       },
       tx,
     )
+  })
+
+  await auditService.record({
+    workspaceId: ctx.workspaceId,
+    action: "update",
+    detail: `updated a contact (#${ctx.id})`,
   })
 
   await emitContactInfoChangeEvents(ctx.workspaceId, ctx.id, existingContact, {

@@ -1,6 +1,7 @@
 "use server"
 
 import { workspaceMemberCacheTag } from "@chatbotx.io/business"
+import { auditService } from "@chatbotx.io/business/audit"
 import { ChatbotXException } from "@chatbotx.io/business/errors"
 import { db, eq, findOrFail } from "@chatbotx.io/database/client"
 import { workspaceMemberModel } from "@chatbotx.io/database/schema"
@@ -62,4 +63,14 @@ export const updateWorkspaceMemberAction = workspaceActionClient
     await invalidateCacheByTags([
       workspaceMemberCacheTag(workspaceMember.userId),
     ])
+
+    const targetUser = await db.query.userModel.findFirst({
+      where: { id: workspaceMember.userId },
+      columns: { name: true, email: true },
+    })
+
+    await auditService.record({
+      action: "role_change",
+      detail: `changed role of ${targetUser?.name ?? targetUser?.email ?? "a member"} to ${updateInput.permissions.superAdmin ? "admin" : "member"}`,
+    })
   })

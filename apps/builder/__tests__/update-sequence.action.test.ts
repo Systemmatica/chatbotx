@@ -10,6 +10,7 @@ const {
   mockIsDatabaseError,
   mockReturnValidationErrors,
   mockGetTranslations,
+  mockAuditRecord,
 } = vi.hoisted(() => {
   const mockUpdateWhere = vi.fn().mockResolvedValue(undefined)
   const mockUpdateSet = vi.fn().mockReturnValue({ where: mockUpdateWhere })
@@ -19,12 +20,13 @@ const {
     mockUpdateWhere,
     mockUpdateSet,
     mockUpdate,
-    mockFindOrFail: vi.fn().mockResolvedValue(undefined),
+    mockFindOrFail: vi.fn().mockResolvedValue({ id: "seq-1", name: "Seq" }),
     mockIsDatabaseError: vi.fn().mockReturnValue(false),
     mockReturnValidationErrors: vi
       .fn()
       .mockReturnValue({ __validationError: true }),
     mockGetTranslations: vi.fn().mockResolvedValue((k: string) => k),
+    mockAuditRecord: vi.fn().mockResolvedValue(undefined),
   }
 })
 
@@ -46,6 +48,10 @@ vi.mock("@chatbotx.io/database/client", () => ({
 
 vi.mock("@chatbotx.io/database/schema", () => ({
   sequenceModel: { id: "id", name: "name", workspaceId: "workspaceId" },
+}))
+
+vi.mock("@chatbotx.io/business/audit", () => ({
+  auditService: { record: mockAuditRecord },
 }))
 
 vi.mock("next-intl/server", () => ({
@@ -86,7 +92,7 @@ describe("updateSequenceAction", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     resetUpdateChain()
-    mockFindOrFail.mockResolvedValue(undefined)
+    mockFindOrFail.mockResolvedValue({ id: "seq-1", name: "Seq" })
     mockIsDatabaseError.mockReturnValue(false)
     mockGetTranslations.mockResolvedValue((k: string) => k)
     mockReturnValidationErrors.mockReturnValue({ __validationError: true })
@@ -224,7 +230,7 @@ describe("updateSequence (exported helper)", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     resetUpdateChain()
-    mockFindOrFail.mockResolvedValue(undefined)
+    mockFindOrFail.mockResolvedValue({ id: "seq-1", name: "Seq" })
     mockIsDatabaseError.mockReturnValue(false)
     mockGetTranslations.mockResolvedValue((k: string) => k)
     mockReturnValidationErrors.mockReturnValue({ __validationError: true })

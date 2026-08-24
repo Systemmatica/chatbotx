@@ -1,5 +1,6 @@
 "use server"
 
+import { auditService } from "@chatbotx.io/business/audit"
 import { db, eq, findOrFail } from "@chatbotx.io/database/client"
 import { flowModel } from "@chatbotx.io/database/schema"
 import { zodBigintAsString } from "@chatbotx.io/utils"
@@ -35,4 +36,10 @@ const updateFlow = async (
   })
 
   await db.update(flowModel).set(parsedInput).where(eq(flowModel.id, flow.id))
+
+  await auditService.record({
+    workspaceId: ctx.workspaceId,
+    action: "update",
+    detail: `updated a flow (#${flow.id})`,
+  })
 }

@@ -209,7 +209,8 @@
     "title": "ActiveCampaign"
   },
   "admins": {
-    "title": "管理员"
+    "title": "管理员",
+    "adminActivityLogs": "管理员活动日志"
   },
   "ads": {
     "analytics": {
@@ -513,7 +514,23 @@
     "user": "用户"
   },
   "auditLogs": {
-    "title": "审核日志"
+    "title": "审核日志",
+    "columns": {
+      "user": "用户",
+      "action": "操作",
+      "detail": "详情",
+      "ipAddress": "IP 地址",
+      "date": "日期"
+    },
+    "filters": {
+      "from": "起始日期",
+      "to": "结束日期",
+      "user": "用户",
+      "userPlaceholder": "用户 ID",
+      "keyword": "关键词",
+      "keywordPlaceholder": "操作或详情",
+      "allAdmins": "所有管理员"
+    }
   },
   "auth": {
     "acceptTermsAndPolicy": "点击继续即表示您同意我们的",
@@ -2779,6 +2796,7 @@
       "markCouponUsed": "标记优惠券",
       "markEmailVerified": "标记电子邮件已验证",
       "messenger": "Messenger",
+      "metaConversions": "Meta Conversions API",
       "moosendCreateContact": "将联系人添加到 Moosend",
       "noFlowsAvailable": "无可用流量",
       "noTemplatesAvailable": "目前没有可用的范本",
@@ -2835,7 +2853,6 @@
       "appointmentScheduling": "预约安排",
       "triggerN8n": "触发 n8n",
       "sendMetaCapiEvent": "发送 Meta CAPI 事件",
-      "metaConversions": "Meta Conversions API",
       "import": "导入流程",
       "export": "导出",
       "importStarted": "流程正在导入中，请稍后查看导入记录以获取结果。",
