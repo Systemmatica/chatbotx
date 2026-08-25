@@ -244,3 +244,16 @@ describe("ads analytics 'All channels' aggregation", () => {
     expect(result.perAd[0]?.channels).toEqual(["messenger", "instagram"])
   })
 })
+
+describe("adsAnalyticsChannelDisplayOrder", () => {
+  test("lists 'All channels' first, then every ads-eligible channel", async () => {
+    const { adsAnalyticsChannelDisplayOrder, adsAnalyticsChannelValues } =
+      await import("@/features/ads/schemas/analytics")
+
+    expect(adsAnalyticsChannelDisplayOrder[0]).toBe("all")
+    // Same membership as the parse-order list, order aside.
+    expect([...adsAnalyticsChannelDisplayOrder].sort()).toEqual(
+      [...adsAnalyticsChannelValues].sort(),
+    )
+  })
+})

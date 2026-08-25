@@ -26,6 +26,15 @@ export const adsAnalyticsChannelValues = [
 ] as const
 export type AdsAnalyticsChannel = AdsEligibleChannelType | "all"
 
+// Display order for the analytics channel dropdown — "All channels" leads (the
+// default aggregate view), then the concrete channels in their canonical order.
+// Kept separate from `adsAnalyticsChannelValues` (whose order backs URL parsing
+// and defaults) so display ordering never couples to parse ordering.
+export const adsAnalyticsChannelDisplayOrder = [
+  "all",
+  ...adsEligibleChannelTypes.options,
+] as const satisfies readonly AdsAnalyticsChannel[]
+
 const toDateKey = (date: Date): string => date.toISOString().slice(0, 10)
 const DATE_KEY_RE = /^\d{4}-\d{2}-\d{2}$/
 
