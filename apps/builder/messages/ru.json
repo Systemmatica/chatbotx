@@ -844,7 +844,7 @@
     },
     "authorizedDomain": {
       "description": "Домены или поддомены, которым разрешён доступ к вашему веб-чату.",
-      "label": "Авторизованный домен{plural, select, 1 {} other {ы}}"
+      "label": "Авторизованн{plural, select, 1 {ые домены} other {ый домен}}"
     },
     "webSearchAuthorizedDomains": {
       "label": "Разрешённые сайты для инструмента веб-поиска",
@@ -932,7 +932,7 @@
     },
     "conversationStarter": {
       "description": "Стартовые сообщения используются, чтобы начать диалог с пользователем.",
-      "label": "Стартовое сообщени{plural, select, 1 {е} other {я}}",
+      "label": "Стартов{plural, select, 1 {ые сообщения} other {ое сообщение}}",
       "type": {
         "openWebsite": "Открыть сайт",
         "sendFlow": "Отправить цепочку",

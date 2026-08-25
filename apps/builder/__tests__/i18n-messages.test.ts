@@ -36,6 +36,8 @@ const forbiddenGeneratedTokenPattern = /⟪TK\d+⟫|\bTK\d+\b|ROW_/
 const icuHeaderPattern =
   /\{([A-Za-z][\w.-]*),\s*(plural|select|selectordinal)\s*,/g
 const icuCategoryPattern = /^\s*(=?[\w-]+)\s*\{/
+// CLDR plural keywords, plus ICU explicit-value branches such as `=0` / `=1`.
+const pluralCategoryPattern = /^(=\d+|zero|one|two|few|many|other)$/
 const zeroWidthPattern = /\u200b|\u200c|\u200d|\ufeff/
 const completeCatalogLocales = ["en", "vi"] as const
 const cjkCatalogLocales = ["zh-TW", "zh-CN"].filter((locale) =>
@@ -174,7 +176,46 @@ describe("builder message catalogs", () => {
 
       const translatedValue = translatedMessages[key]
       expect(typeof translatedValue, key).toBe("string")
-      expect(getIcuStructures(translatedValue as string), key).toEqual(expected)
+
+      const actual = getIcuStructures(translatedValue as string)
+
+      // Arguments and keywords must line up one-for-one with English.
+      expect(
+        actual.map(({ argument, keyword }) => ({ argument, keyword })),
+        key,
+      ).toEqual(
+        expected.map(({ argument, keyword }) => ({ argument, keyword })),
+      )
+
+      for (const [index, expectedStructure] of expected.entries()) {
+        const actualStructure = actual[index]
+        if (!actualStructure) {
+          continue
+        }
+
+        // `select` branches are author-defined labels, not language features,
+        // so they must match English exactly.
+        if (expectedStructure.keyword === "select") {
+          expect(actualStructure.categories, key).toEqual(
+            expectedStructure.categories,
+          )
+          continue
+        }
+
+        // `plural` / `selectordinal` categories come from the locale's CLDR
+        // plural rules and legitimately differ from English: Russian, Polish
+        // and Czech need `few`/`many`, Japanese needs only `other`. Demanding
+        // parity with English would make every such locale untranslatable.
+        // Assert what must actually hold: `other` is present (ICU requires it)
+        // and no category is invented.
+        expect(actualStructure.categories, key).toContain("other")
+        for (const category of actualStructure.categories) {
+          expect(
+            pluralCategoryPattern.test(category),
+            `${key}: unexpected plural category "${category}"`,
+          ).toBe(true)
+        }
+      }
     }
   })
 
