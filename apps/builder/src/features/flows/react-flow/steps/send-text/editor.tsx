@@ -1,6 +1,6 @@
 "use client"
 
-import { TiptapEditorField } from "@/components/tiptap/tiptap-editor-field"
+import { RichTextEditorField } from "@/components/tiptap/rich-text-editor-field"
 import { ButtonGroupEditor } from "../button/editor"
 import { TiktokTitleNotice } from "./tiktok-title-notice"
 
@@ -14,7 +14,10 @@ const SendTextStepEditor = (props: SendTextStepEditorProps) => {
   return (
     <div className="items-center justify-center overflow-hidden rounded-lg">
       <div className="bg-secondary px-4 py-2">
-        <TiptapEditorField includeCouponVariables name={`${parentName}.text`} />
+        <RichTextEditorField
+          includeCouponVariables
+          name={`${parentName}.text`}
+        />
         <TiktokTitleNotice parentName={parentName} />
       </div>
 

@@ -105,7 +105,34 @@ describe("sendTextValidator", () => {
 })
 
 describe("sendTextStepSchema", () => {
-  test("sendTextValidator.omnichannel is the unrefined base schema", () => {
-    expect(sendTextValidator.omnichannel).toBe(sendTextStepSchema)
+  test("sendTextValidator.omnichannel is built on the base schema plus the rich-text/length refinement, not the tiktok title rule", () => {
+    // Same base object shape (accepts a plain step)...
+    expect(
+      sendTextValidator.omnichannel.safeParse({
+        id: "step-1",
+        stepType: "sendText" as const,
+        text: "hello",
+        buttons: [],
+      }).success,
+    ).toBe(true)
+
+    // ...but it is not literally the un-refined `sendTextStepSchema` — it
+    // additionally enforces SEND_TEXT_MAX, which the bare schema does not.
+    expect(sendTextValidator.omnichannel).not.toBe(sendTextStepSchema)
+    const tooLong = sendTextStepSchema.safeParse({
+      id: "step-1",
+      stepType: "sendText" as const,
+      text: "x".repeat(1001),
+      buttons: [],
+    })
+    expect(tooLong.success).toBe(true)
+
+    const tooLongOmnichannel = sendTextValidator.omnichannel.safeParse({
+      id: "step-1",
+      stepType: "sendText" as const,
+      text: "x".repeat(1001),
+      buttons: [],
+    })
+    expect(tooLongOmnichannel.success).toBe(false)
   })
 })

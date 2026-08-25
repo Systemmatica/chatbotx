@@ -1,6 +1,8 @@
 import { channelTypes } from "@chatbotx.io/utils/channel"
 import type { z } from "zod"
+import { getVisibleTextLength } from "../rich-text/renderers"
 import type { ButtonStepProps } from "../steps/button"
+import type { SendTextStepVersionSchema } from "../steps/send-text"
 import { flowValidationCodes } from "../validation-codes"
 
 /**
@@ -24,9 +26,11 @@ export const TIKTOK_CARD_TITLE_MAX = 40
 const exceedsCardTitleMax = (props: {
   buttons: ButtonStepProps[] | null | undefined
   text: string | null | undefined
+  version?: SendTextStepVersionSchema | null
 }): boolean =>
   (props.buttons?.length ?? 0) > 0 &&
-  Array.from(props.text ?? "").length > TIKTOK_CARD_TITLE_MAX
+  getVisibleTextLength(props.text ?? "", props.version ?? undefined) >
+    TIKTOK_CARD_TITLE_MAX
 
 /**
  * Channels on which a sendText step can reach a TikTok contact, and so have
@@ -52,6 +56,7 @@ export const isTiktokCardTitleTruncated = (props: {
   channel: string | null | undefined
   buttons: ButtonStepProps[] | null | undefined
   text: string | null | undefined
+  version?: SendTextStepVersionSchema | null
 }): boolean =>
   TIKTOK_REACHABLE_CHANNELS.has(props.channel ?? "") &&
   exceedsCardTitleMax(props)
@@ -63,7 +68,11 @@ export const isTiktokCardTitleTruncated = (props: {
  * contact) is never blocked, only warned by the editor's live notice.
  */
 export const refineTiktokSendTextStep = (
-  step: { text: string; buttons: ButtonStepProps[] },
+  step: {
+    text: string
+    buttons: ButtonStepProps[]
+    version?: SendTextStepVersionSchema
+  },
   ctx: z.RefinementCtx,
 ): void => {
   if (exceedsCardTitleMax(step)) {

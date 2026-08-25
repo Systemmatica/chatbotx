@@ -1,4 +1,7 @@
-import type { SendTextStepSchema } from "@chatbotx.io/flow-config"
+import {
+  richTextToPlainText,
+  type SendTextStepSchema,
+} from "@chatbotx.io/flow-config"
 import type { SendFlowStepProps } from "@chatbotx.io/sdk"
 import type { TiktokAuthValue, TiktokSendMessageRequest } from "../../../schema"
 import {
@@ -16,6 +19,11 @@ export function* convertFlowStepText(
     data: { step, contact, flowId, flowVersionId, metadata },
   } = props
   const quickReplies = props.data.quickReplies ?? []
+  // TikTok has no formatting support — "v2" rich markup renders to plain
+  // text (tags dropped, links expanded to "label (url)") before it reaches
+  // TIKTOK_CARD_TITLE_MAX truncation in ./send-button; "v1"/absent passes
+  // through unchanged.
+  const text = richTextToPlainText(step.text, step.version)
 
   if (step.buttons.length === 0 && quickReplies.length === 0) {
     yield {
@@ -23,7 +31,7 @@ export function* convertFlowStepText(
       recipient_type: "CONVERSATION",
       recipient: contact.sourceConversationId ?? contact.sourceId,
       message_type: "TEXT",
-      text: { body: step.text },
+      text: { body: text },
     }
     return
   }
@@ -31,7 +39,7 @@ export function* convertFlowStepText(
   const templates =
     quickReplies.length === 0
       ? buildTiktokTemplates({
-          title: step.text,
+          title: text,
           flowId,
           flowVersionId,
           buttons: step.buttons,
@@ -39,7 +47,7 @@ export function* convertFlowStepText(
           contactInboxId: contact.id,
         })
       : buildTiktokTemplatesFromGroups({
-          title: step.text,
+          title: text,
           groups: [
             ...step.buttons.map((button) =>
               getButtonTemplateGroup({

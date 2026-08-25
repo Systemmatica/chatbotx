@@ -5,7 +5,7 @@
     "actions": "Действия",
     "add": "Добавить",
     "addVariable": "Добавить переменную",
-    "addFeature": "Добавить {feature}",
+    "addFeature": "Добавить «{feature}»",
     "addFlowReply": "Добавить ответ-цепочку",
     "addMore": "Добавить ещё",
     "addTag": "Добавить тег",
@@ -37,7 +37,7 @@
     "continue": "Продолжить",
     "create": "Создать",
     "loading": "Загрузка...",
-    "createFeature": "Создать {feature}",
+    "createFeature": "Создать «{feature}»",
     "delete": "Удалить",
     "deleteContact": "Удалить контакт",
     "disableBot": "Отключить бота",
@@ -45,7 +45,7 @@
     "download": "Скачать",
     "downloadTemplate": "Скачать шаблон",
     "edit": "Изменить",
-    "editFeature": "Изменить {feature}",
+    "editFeature": "Изменить «{feature}»",
     "enableBot": "Включить бота",
     "export": "Экспорт",
     "getEmbedCode": "Получить код для встраивания",
@@ -112,9 +112,9 @@
     "messagePlaceholder": "Сообщение...",
     "signOut": "Выйти",
     "backToSignIn": "Вернуться к входу",
-    "connectFeature": "Подключить {feature}",
+    "connectFeature": "Подключить «{feature}»",
     "scanQRCode": "Отсканируйте камерой",
-    "inviteFeature": "Пригласить {feature}",
+    "inviteFeature": "Пригласить «{feature}»",
     "joinTheTeam": "Присоединиться к команде",
     "chooseChannel": "Выбрать канал",
     "chooseSubaction": "Выбрать подпункт действия",
@@ -783,12 +783,12 @@
     "contactFilter": {
       "allConditions": "Все условия ниже",
       "anyConditions": "Любое из условий ниже.",
-      "label": "Фильтр участников",
-      "onlyContactsMatch": "Только участники, которые соответствуют",
+      "label": "Фильтр контактов",
+      "onlyContactsMatch": "Только контакты, которые соответствуют",
       "moreOptions": "Больше настроек"
     },
     "contactNote": {
-      "label": "Заметка об участнике"
+      "label": "Заметка о контакте"
     },
     "chooseTime": {
       "label": "Выбрать время"
@@ -989,7 +989,7 @@
       "label": "Ответ по умолчанию"
     },
     "defaultReplyFrequency": {
-      "description": "Определяет, как часто цепочка «Ответ по умолчанию» может срабатывать для одного и того же участника в канале.",
+      "description": "Определяет, как часто цепочка «Ответ по умолчанию» может срабатывать для одного и того же контакта в канале.",
       "label": "Частота срабатывания ответа по умолчанию",
       "options": {
         "allTime": "Всегда",
@@ -1174,7 +1174,7 @@
       "label": "Расширенный ответ"
     },
     "language": {
-      "description": "Участнику присваивается язык по умолчанию, если его язык неизвестен.",
+      "description": "Контакту присваивается язык по умолчанию, если его язык неизвестен.",
       "label": "Язык",
       "placeholder": "Выберите язык"
     },
@@ -1295,7 +1295,7 @@
     "javascriptCode": {
       "label": "Код JavaScript",
       "placeholder": "return (input.first_name || 'there').toUpperCase()",
-      "description": "Используйте чистый JavaScript и верните значение. Сеть, файлы, API и внешние библиотеки недоступны. Данные участника и системы доступны в объекте `input`."
+      "description": "Используйте чистый JavaScript и верните значение. Сеть, файлы, API и внешние библиотеки недоступны. Данные контакта и системы доступны в объекте `input`."
     },
     "httpMethod": {
       "label": "Метод"
@@ -1317,7 +1317,7 @@
     "bodyType": {
       "label": "Тип тела запроса",
       "options": {
-        "allContactData": "Все данные участника",
+        "allContactData": "Все данные контакта",
         "json": "JSON",
         "formEncoded": "Form Encoded"
       }
@@ -1481,7 +1481,7 @@
       "label": "Переходы по ссылке (%)"
     },
     "targetCountry": {
-      "description": "Страна, где живёт большинство ваших участников.",
+      "description": "Страна, где живёт большинство ваших контактов.",
       "label": "Целевая страна"
     },
     "team": {
@@ -1504,7 +1504,7 @@
       "label": "Этот месяц"
     },
     "timezone": {
-      "description": "Участнику присваивается этот часовой пояс, если его часовой пояс неизвестен.",
+      "description": "Контакту присваивается этот часовой пояс, если его часовой пояс неизвестен.",
       "label": "Часовой пояс"
     },
     "title": {
@@ -2233,8 +2233,8 @@
       "integration": "OpenAI-совместимый провайдер"
     },
     "actions": {
-      "addContactNotes": "Добавить заметку к участнику",
-      "addContactTag": "Добавить тег участнику",
+      "addContactNotes": "Добавить заметку к контакту",
+      "addContactTag": "Добавить тег контакту",
       "aiDeleteMessageHistory": "Удалить историю сообщений",
       "aiExtractData": "ИИ: извлечь данные",
       "aiAnalyzeImage": "ИИ: проанализировать изображение",
@@ -2246,7 +2246,7 @@
       "assignConversation": "Назначить диалог",
       "appointmentScheduling": "Запись на приём",
       "autoAssignConversation": "Автоназначение диалога",
-      "blockContact": "Заблокировать участника",
+      "blockContact": "Заблокировать контакт",
       "broadcastActions": "Действия с рассылкой",
       "callApi": "Внешний API-запрос",
       "make": "Make",
@@ -2259,9 +2259,9 @@
       "chooseChannel": "Выбрать канал",
       "clearCustomField": "Очистить пользовательское поле",
       "condition": "Условие",
-      "contactActions": "Действия с участником",
+      "contactActions": "Действия с контактом",
       "countCharacters": "Подсчитать символы",
-      "deleteContact": "Удалить участника",
+      "deleteContact": "Удалить контакт",
       "emailActions": "Действия с email",
       "flowActions": "Действия с цепочкой",
       "followConversation": "Отслеживать диалог",
@@ -2270,28 +2270,28 @@
       "getDataFromJson": "Получить данные из JSON",
       "inboxActions": "Действия с входящими",
       "markEmailVerified": "Отметить email подтверждённым",
-      "activeCampaignSyncContact": "Добавить участника в ActiveCampaign",
+      "activeCampaignSyncContact": "Добавить контакт в ActiveCampaign",
       "facebookCustomAudience": "Индивидуализированная аудитория Facebook",
       "sendMetaCapiEvent": "Отправить событие Meta CAPI",
-      "mailchimpAddMember": "Добавить участника в MailChimp",
-      "mailerLiteAddSubscriber": "Добавить участника в MailerLite",
-      "klaviyoSyncProfile": "Добавить участника в Klaviyo",
-      "moosendCreateContact": "Добавить участника в Moosend",
-      "dripSubscribeSubscriber": "Добавить участника в Drip",
-      "getResponseAddContact": "Добавить участника в GetResponse",
-      "sendGridAddContact": "Добавить участника в SendGrid",
+      "mailchimpAddMember": "Добавить контакт в MailChimp",
+      "mailerLiteAddSubscriber": "Добавить контакт в MailerLite",
+      "klaviyoSyncProfile": "Добавить контакт в Klaviyo",
+      "moosendCreateContact": "Добавить контакт в Moosend",
+      "dripSubscribeSubscriber": "Добавить контакт в Drip",
+      "getResponseAddContact": "Добавить контакт в GetResponse",
+      "sendGridAddContact": "Добавить контакт в SendGrid",
       "messenger": "Messenger",
       "metaConversions": "Meta Conversions API",
       "openWebsite": "Открыть сайт",
       "optInEmail": "Подписать на email-рассылку",
       "optOutEmail": "Отписать от email-рассылки",
       "performAction": "Выполнить действие",
-      "removeContactTag": "Убрать тег у участника",
+      "removeContactTag": "Убрать тег у контакта",
       "setMessengerUserPersistentMenu": "Настроить постоянное меню пользователя",
       "enableMessengerComposer": "Включить поле ввода Messenger",
       "disableMessengerComposer": "Отключить поле ввода Messenger",
       "setMessengerPersona": "Настроить персону",
-      "updateMessengerContactData": "Обновить данные участника",
+      "updateMessengerContactData": "Обновить данные контакта",
       "sendAudio": "Отправить аудио",
       "sendCard": "Отправить карточку",
       "sendExternalFlow": "Запустить внешнюю цепочку",
@@ -2390,7 +2390,7 @@
     },
     "formatTimezone": {
       "timezone": "Часовой пояс аккаунта",
-      "contactTimezone": "Часовой пояс участника"
+      "contactTimezone": "Часовой пояс контакта"
     },
     "fields": {
       "selectTemplatePlaceholder": "Выберите шаблон WhatsApp",
@@ -2439,7 +2439,7 @@
     "followUp": {
       "durationLabel": "Продолжительность",
       "waitAndContinue": "Подождать <value>{duration} {unit}</value> и продолжить",
-      "cancelOnReplyHint": "Напоминание не будет отправлено, если участник ответит до истечения времени."
+      "cancelOnReplyHint": "Напоминание не будет отправлено, если контакт ответит до истечения времени."
     },
     "setCustomField": {
       "temporalHint": "Оставьте пустым, чтобы сохранить текущую дату/время."
@@ -2537,14 +2537,14 @@
       "toggleRule": "Включить или отключить правило",
       "deleteRule": "Удалить правило",
       "qualifyingTemplateMessageSent": "Отправлено квалифицирующее шаблонное сообщение",
-      "qualifyingFirstReply": "Участник отправляет первое сообщение",
-      "qualifyingAnyReply": "Участник отправляет сообщение",
+      "qualifyingFirstReply": "Контакт отправляет первое сообщение",
+      "qualifyingAnyReply": "Контакт отправляет сообщение",
       "when": "Когда",
       "whenOptions": {
         "templateSent": "Отправлено квалифицирующее шаблонное сообщение",
-        "tagApplied": "Участнику присвоен тег",
-        "keywordMatched": "Сообщение участника совпадает с правилом по ключевому слову",
-        "contactReplied": "Участник отправляет сообщение"
+        "tagApplied": "Контакту присвоен тег",
+        "keywordMatched": "Сообщение контакта совпадает с правилом по ключевому слову",
+        "contactReplied": "Контакт отправляет сообщение"
       },
       "tags": "Теги",
       "selectTags": "Выберите теги",
@@ -2571,7 +2571,7 @@
       },
       "trackQualifiedLeads": {
         "title": "Отслеживание квалифицированных лидов",
-        "question": "На каком этапе диалога участник должен считаться квалифицированным лидом?",
+        "question": "На каком этапе диалога контакт должен считаться квалифицированным лидом?",
         "when": "Когда",
         "then": "Тогда пометить лид CTWA как"
       },
@@ -2629,7 +2629,7 @@
       "to": "По",
       "unattributed": "Без атрибуции",
       "retargetDialog": {
-        "title": "Ретаргетинг участников CTWA",
+        "title": "Ретаргетинг контактов CTWA",
         "createAudience": "Создать аудиторию",
         "useExistingAudience": "Использовать существующую аудиторию",
         "audienceName": "Название аудитории",
@@ -2655,7 +2655,7 @@
         "purchases": "Экспортировать покупки"
       },
       "csv": {
-        "contactName": "Имя участника",
+        "contactName": "Имя контакта",
         "phone": "Телефон",
         "adId": "ID объявления",
         "occurredAt": "Дата события"
@@ -2739,12 +2739,12 @@
       "listPlaceholder": "Выберите список",
       "email": "Поле email",
       "emailPlaceholder": "Выберите поле с email",
-      "emailTooltip": "Поле участника, содержащее email, по которому определяются участники в GetResponse.",
+      "emailTooltip": "Поле контакта, содержащее email, по которому определяются контакты в GetResponse.",
       "tags": "Теги",
       "tagsPlaceholder": "Выберите теги",
       "dayOfCycle": "День цикла автоответчика",
       "dayOfCyclePlaceholder": "0",
-      "dayOfCycleTooltip": "Переместить участника на определённый день в цикле автоответчика. Введите 0, чтобы начать с дня 0.",
+      "dayOfCycleTooltip": "Переместить контакт на определённый день в цикле автоответчика. Введите 0, чтобы начать с дня 0.",
       "optional": "Необязательно"
     },
     "campaigns": {
@@ -2958,13 +2958,13 @@
     "title": "Редактировать профиль"
   },
   "messages": {
-    "moveFeature": "Переместить {feature}",
+    "moveFeature": "Переместить «{feature}»",
     "poweredBy": "Работает на {name}",
     "noGiphyApiKey": "Не найден API-ключ GIPHY. Добавьте его в настройках платформы.",
-    "connectedSuccess": "{feature} успешно подключён",
-    "connectFailed": "Не удалось подключить {feature}",
-    "connectSuccess": "{feature} успешно подключён",
-    "refreshTokenSuccessfully": "Токен {feature} успешно обновлён",
+    "connectedSuccess": "Подключено: {feature}",
+    "connectFailed": "Не удалось подключить «{feature}»",
+    "connectSuccess": "Подключено: {feature}",
+    "refreshTokenSuccessfully": "Токен «{feature}» успешно обновлён",
     "success": "Успешно",
     "failed": "Ошибка",
     "copiedToClipboard": "Скопировано в буфер обмена",
@@ -2975,12 +2975,12 @@
     "messengerAdsInvalidStepType": "Стартовый шаг может содержать текст, изображение, карточку, галерею, видео, видео Facebook, аудио и файл.",
     "messengerAdsInvalidVariable": "На «стартовом шаге» нельзя использовать пользовательские поля из-за ограничений Facebook. В сообщение можно добавить только first_name, last_name и full_name.",
     "copyFailed": "Не удалось скопировать в буфер обмена",
-    "createdFailed": "Не удалось создать {feature}",
-    "deletedSuccess": "{feature} успешно удалён",
+    "createdFailed": "Не удалось создать «{feature}»",
+    "deletedSuccess": "Удалено: {feature}",
     "deleteFileComingSoon": "Удаление файла скоро будет доступно",
-    "disconnectFeature": "Отключить {feature}",
-    "disconnectFeatureDescription": "Вы уверены, что хотите отключить {feature}?",
-    "disconnectSuccess": "{feature} успешно отключён",
+    "disconnectFeature": "Отключить «{feature}»",
+    "disconnectFeatureDescription": "Вы уверены, что хотите отключить «{feature}»?",
+    "disconnectSuccess": "Отключено: {feature}",
     "reply": "Ответить",
     "viewMessage": "Посмотреть сообщение",
     "changeLikeState": "Изменить статус лайка",
@@ -3011,24 +3011,24 @@
     "syncedSuccessfully": "Синхронизация выполнена",
     "nameAlreadyExists": "{feature} с таким названием уже существует",
     "unknownError": "Неизвестная ошибка",
-    "updatedSuccess": "{feature} успешно обновлён",
+    "updatedSuccess": "Обновлено: {feature}",
     "updateFileComingSoon": "Обновление файла скоро будет доступно",
     "videoError": "Ошибка видео",
-    "createdSuccess": "{feature} успешно создан",
-    "createFeature": "Создать {feature}",
+    "createdSuccess": "Создано: {feature}",
+    "createFeature": "Создать «{feature}»",
     "noItemsFound": "Ничего не найдено",
-    "editFeature": "Редактировать {feature}",
-    "duplicateFeature": "Дублировать {feature}",
-    "duplicatedSuccess": "{feature} успешно продублирован",
-    "duplicateConfirmation": "Будет создана копия {feature}.",
-    "deleteFeature": "Удалить {feature}",
-    "deleteConfirmation": "Вы точно уверены?\nЭто действие нельзя отменить.\n{feature} будет безвозвратно удалён с наших серверов.",
-    "addFeature": "Добавить {feature}",
+    "editFeature": "Редактировать «{feature}»",
+    "duplicateFeature": "Дублировать «{feature}»",
+    "duplicatedSuccess": "Продублировано: {feature}",
+    "duplicateConfirmation": "Будет создана копия «{feature}».",
+    "deleteFeature": "Удалить «{feature}»?",
+    "deleteConfirmation": "Вы точно уверены?\nЭто действие нельзя отменить.\nЭто приведёт к безвозвратному удалению «{feature}» с наших серверов.",
+    "addFeature": "Добавить «{feature}»",
     "signOutConfirmation": "Вы уверены, что хотите выйти?",
     "copyInvitationUrlSuccess": "Скопируйте ссылку ниже и отправьте её человеку, которого хотите добавить как администратора.",
     "noAIIntegrationFound": "ИИ-интеграция не найдена. Подключите ИИ-интеграцию, чтобы использовать ИИ-агентов.",
-    "resendFeature": "Отправить повторно {feature}",
-    "resendFeatureDescription": "Повторно отправить {feature} контактам, которые ещё его не получили.",
+    "resendFeature": "Отправить повторно «{feature}»",
+    "resendFeatureDescription": "Повторно отправить «{feature}» контактам, которые ещё не получили это сообщение.",
     "resendSuccess": "Повторная отправка выполнена",
     "changeDefault": "Изменить по умолчанию",
     "changeDefaultDescription": "Вы уверены, что хотите изменить ИИ-агента по умолчанию?",
@@ -3039,21 +3039,21 @@
     "selectConversationDescription": "Выберите диалог из списка слева, чтобы посмотреть сообщения и начать переписку.",
     "selectConversationContactTitle": "Контакт не выбран",
     "selectConversationContactDescription": "Выберите диалог, чтобы увидеть здесь данные контакта и информацию о переписке.",
-    "archiveFeature": "Архивировать {feature}",
-    "archiveFeatureDescription": "Вы уверены, что хотите архивировать {feature}?",
-    "disableFeature": "Отключить {feature}",
-    "disableFeatureDescription": "Вы уверены, что хотите отключить {feature}?",
-    "enableFeature": "Включить {feature}",
-    "enableFeatureDescription": "Вы уверены, что хотите включить {feature}?",
-    "exportedSuccess": "{feature} успешно экспортирован",
-    "createSuccess": "{feature} успешно создан",
-    "deleteFailed": "Не удалось удалить {feature}",
-    "deleteSuccess": "{feature} успешно удалён",
+    "archiveFeature": "Архивировать «{feature}»",
+    "archiveFeatureDescription": "Вы уверены, что хотите архивировать «{feature}»?",
+    "disableFeature": "Отключить «{feature}»",
+    "disableFeatureDescription": "Вы уверены, что хотите отключить «{feature}»?",
+    "enableFeature": "Включить «{feature}»",
+    "enableFeatureDescription": "Вы уверены, что хотите включить «{feature}»?",
+    "exportedSuccess": "Экспортировано: {feature}",
+    "createSuccess": "Создано: {feature}",
+    "deleteFailed": "Не удалось удалить «{feature}»",
+    "deleteSuccess": "Удалено: {feature}",
     "error": "Ошибка",
-    "moveFolderDescription": "Переместить {feature} в папку",
+    "moveFolderDescription": "Переместить «{feature}» в папку",
     "noData": "Нет данных",
-    "featureNotFound": "{feature} не найден",
-    "enableSuccess": "{feature} успешно включён",
+    "featureNotFound": "Не найдено: {feature}",
+    "enableSuccess": "Включено: {feature}",
     "userInactive": "Пользователь неактивен более 7 дней",
     "messagingWindowClosed": "Сообщение нельзя отправить за пределами разрешённого окна",
     "sendHumanAgentTag": "Отправить одно сообщение с тегом HUMAN_AGENT",
@@ -3248,7 +3248,7 @@
   },
   "openaiCompatible": {
     "addProvider": "Добавить ИИ-провайдера",
-    "addProviderModel": "Добавить {name}",
+    "addProviderModel": "Добавить «{name}»",
     "apiKeyKeepExisting": "Оставьте пустым, чтобы сохранить текущий API-ключ.",
     "autoReply": {
       "description": "Разрешить использовать этого провайдера для автоматических ответов ИИ.",
@@ -3348,7 +3348,7 @@
   },
   "validation": {
     "maxSize": "Размер файла превышает максимально допустимый",
-    "maxItemsReached": "Максимум {max} {feature} на рабочее пространство",
+    "maxItemsReached": "Лимит «{feature}» на рабочее пространство: {max}",
     "invalidApiKey": "Неверный API-ключ",
     "maxMustBeGreaterThanMin": "{maxField} должно быть больше или равно {minField}"
   },
@@ -3420,7 +3420,7 @@
         }
       },
       "messages": {
-        "codeSent": "Код подтверждения отправлен по {method}.",
+        "codeSent": "Код подтверждения отправлен: {method}.",
         "cooldown": "Подождите {seconds} с перед повторным запросом кода.",
         "verified": "Номер телефона успешно подтверждён и зарегистрирован."
       },
@@ -3720,7 +3720,7 @@
   },
   "dynamicImages": {
     "title": "Динамические изображения",
-    "description": "Создавайте персонализированные изображения для каждого участника на основе фона и слоёв текста, изображений и QR-кода.",
+    "description": "Создавайте персонализированные изображения для каждого контакта на основе фона и слоёв текста, изображений и QR-кода.",
     "publicUrl": {
       "label": "Публичный URL",
       "hint": "Скопируйте и вставьте URL в цепочку, рассылку или последовательность, чтобы отправлять персонализированные изображения."
@@ -3746,7 +3746,7 @@
       "priority": "Приоритет",
       "imageType": "Тип изображения",
       "imageTypeUrl": "URL изображения",
-      "imageTypeAvatarUser": "Аватар участника",
+      "imageTypeAvatarUser": "Аватар контакта",
       "imageTypeCustomField": "Произвольное поле",
       "imageUrl": "URL изображения",
       "uploadImage": "Загрузить изображение",
@@ -3855,7 +3855,7 @@
     "description": "Создайте токен, чтобы разрешить вашему рабочему пространству доступ к публичным API. Храните этот токен в секрете и никому его не передавайте."
   },
   "contacts": {
-    "title": "Участники",
+    "title": "Контакты",
     "exportPreparing": "Готовим выгрузку…",
     "exportPreparingDescription": "Формируем ваш CSV-файл. Это может занять некоторое время.",
     "exportReadyTitle": "Выгрузка готова",
@@ -3864,9 +3864,9 @@
     "exportFailed": "Не удалось выполнить выгрузку. Попробуйте ещё раз.",
     "copyLink": "Скопировать ссылку",
     "linkCopied": "Ссылка скопирована в буфер обмена",
-    "countExact": "Участников: {count}",
-    "countCapped": "Участников: {count}+",
-    "exportAllNotice": "Будут выгружены все участники, соответствующие текущему фильтру.",
+    "countExact": "Контактов: {count}",
+    "countCapped": "Контактов: {count}+",
+    "exportAllNotice": "Будут выгружены все контакты, соответствующие текущему фильтру.",
     "exportTakingLong": "Выгрузка занимает больше времени, чем обычно",
     "exportTakingLongDescription": "Выгрузка всё ещё обрабатывается. Вы можете закрыть это окно и через несколько минут проверить статус в истории выгрузок."
   },
@@ -3909,7 +3909,7 @@
   "appointmentManagement": {
     "title": "Записи на приём",
     "singular": "Запись",
-    "unknownContact": "Неизвестный участник",
+    "unknownContact": "Неизвестный контакт",
     "searchPlaceholder": "Поиск по имени...",
     "tabs": {
       "next": "Предстоящие",
@@ -3944,7 +3944,7 @@
   },
   "sequences": {
     "title": "Последовательности",
-    "subscribers": "Участники",
+    "subscribers": "Контакты",
     "step": "Сообщение",
     "addStep": "Добавить сообщение",
     "addFirstStep": "Добавить первое сообщение",
@@ -4062,7 +4062,7 @@
   },
   "questionnaires": {
     "title": "Анкеты",
-    "description": "Создавайте анкеты для участников и управляйте ими.",
+    "description": "Создавайте анкеты для контактов и управляйте ими.",
     "singular": "Анкета",
     "submission": "Заполнение",
     "addNew": "Добавить",
@@ -4093,7 +4093,7 @@
     "completionRate": "Процент заполнения",
     "date": "Дата",
     "inbox": "Входящие",
-    "unknownContact": "Неизвестный участник",
+    "unknownContact": "Неизвестный контакт",
     "noAnswers": "Нет ответов",
     "responseTypes": {
       "text": "Текст",
@@ -4390,13 +4390,13 @@
   },
   "facebookLeadAdsAutomation": {
     "title": "Автоматизация лид-форм Facebook",
-    "description": "Автоматизируйте обработку лид-форм Facebook для ваших участников.",
+    "description": "Автоматизируйте обработку лид-форм Facebook для ваших контактов.",
     "create": "Создать",
     "leads": "Лиды",
     "facebookPage": "Страница Facebook",
     "leadForm": "Лид-форма",
     "allForms": "Все формы",
-    "allFormsNote": "Будут собираться лиды со всех форм этой страницы. Стандартные поля (email, телефон, имя, пол) автоматически сохраняются в соответствующие поля участника.",
+    "allFormsNote": "Будут собираться лиды со всех форм этой страницы. Стандартные поля (email, телефон, имя, пол) автоматически сохраняются в соответствующие поля контакта.",
     "leadData": "Данные лида",
     "whatFlow": "Какая цепочка запускается",
     "addNewPage": "Добавить",
@@ -4754,7 +4754,7 @@
     "cancel": {
       "metadataTitle": "Отмена встречи",
       "title": "Отмена встречи",
-      "description": "Отменить {calendar} в {time}.",
+      "description": "Отменить «{calendar}» в {time}.",
       "action": "Отменить встречу",
       "cancelledTitle": "Встреча отменена",
       "cancelledDescription": "Эта встреча отменена.",

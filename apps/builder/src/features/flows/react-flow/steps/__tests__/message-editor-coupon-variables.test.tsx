@@ -8,6 +8,7 @@ import SendTextStepEditor from "../send-text/editor"
 import WhatsappFlowStepEditor from "../whatsapp-flow/editor"
 
 const tiptapEditorFieldMock = vi.fn()
+const richTextEditorFieldMock = vi.fn()
 
 vi.mock("@/components/tiptap/tiptap-editor-field", () => ({
   TiptapEditorField: (props: {
@@ -21,6 +22,23 @@ vi.mock("@/components/tiptap/tiptap-editor-field", () => ({
           Boolean(props.includeCouponVariables),
         )}
         data-testid={`tiptap-${props.name}`}
+      />
+    )
+  },
+}))
+
+vi.mock("@/components/tiptap/rich-text-editor-field", () => ({
+  RichTextEditorField: (props: {
+    includeCouponVariables?: boolean
+    name: string
+  }) => {
+    richTextEditorFieldMock(props)
+    return (
+      <div
+        data-include-coupon-variables={String(
+          Boolean(props.includeCouponVariables),
+        )}
+        data-testid={`rich-text-${props.name}`}
       />
     )
   },
@@ -70,6 +88,7 @@ beforeEach(() => {
     globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }
   ).IS_REACT_ACT_ENVIRONMENT = true
   tiptapEditorFieldMock.mockReset()
+  richTextEditorFieldMock.mockReset()
   container = document.createElement("div")
   document.body.appendChild(container)
   root = createRoot(container)
@@ -111,7 +130,7 @@ describe("flow message coupon variables", () => {
   test("enables coupon variables in send text editor", () => {
     render(<SendTextStepEditor parentName="step" />)
 
-    expect(tiptapEditorFieldMock).toHaveBeenCalledWith({
+    expect(richTextEditorFieldMock).toHaveBeenCalledWith({
       includeCouponVariables: true,
       name: "step.text",
     })

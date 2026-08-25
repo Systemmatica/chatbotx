@@ -1,4 +1,4 @@
-import { stepTypes } from "@chatbotx.io/flow-config"
+import { richTextToPlainText, stepTypes } from "@chatbotx.io/flow-config"
 import {
   contentTypes,
   type MessageHandlers,
@@ -106,12 +106,16 @@ const fileTypeForStep = (
   }
 }
 
-const mapFlowStepToEnvelope = (
+export const mapFlowStepToEnvelope = (
   step: SendFlowStepData,
 ): { text: string | null; contentAttributes?: Record<string, unknown> } => {
   switch (step.stepType) {
     case stepTypes.enum.sendText:
-      return { text: step.text }
+      // The callback URL is an arbitrary external system with unknown
+      // rendering capability — the explicit "unknown channel" default is
+      // clean plain text, not raw markup. "v1"/absent passes through
+      // unchanged.
+      return { text: richTextToPlainText(step.text, step.version) }
     case stepTypes.enum.sendImage:
     case stepTypes.enum.sendGif:
     case stepTypes.enum.sendVideo:
@@ -151,7 +155,15 @@ const mapFlowStepToEnvelope = (
       )
       return {
         text:
-          "text" in step && typeof step.text === "string" ? step.text : null,
+          "text" in step && typeof step.text === "string"
+            ? richTextToPlainText(
+                step.text,
+                "version" in step &&
+                  (step.version === "v1" || step.version === "v2")
+                  ? step.version
+                  : undefined,
+              )
+            : null,
       }
   }
 }

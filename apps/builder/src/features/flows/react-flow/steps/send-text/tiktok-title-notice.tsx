@@ -26,8 +26,9 @@ export const TiktokTitleNotice = ({ parentName }: TiktokTitleNoticeProps) => {
   const channel = useWatch({ name: "beforeStep.channel" })
   const text = useWatch({ name: `${parentName}.text` })
   const buttons = useWatch({ name: `${parentName}.buttons` })
+  const version = useWatch({ name: `${parentName}.version` })
 
-  if (!isTiktokCardTitleTruncated({ channel, buttons, text })) {
+  if (!isTiktokCardTitleTruncated({ channel, buttons, text, version })) {
     return null
   }
 

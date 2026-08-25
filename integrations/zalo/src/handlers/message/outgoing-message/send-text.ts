@@ -1,4 +1,7 @@
-import type { SendTextStepSchema } from "@chatbotx.io/flow-config"
+import {
+  richTextToPlainText,
+  type SendTextStepSchema,
+} from "@chatbotx.io/flow-config"
 import type { SendFlowStepProps } from "@chatbotx.io/sdk"
 import { MAX_BUTTONS } from "../../../constants"
 import { logger } from "../../../lib/logger"
@@ -14,10 +17,14 @@ export function* convertFlowStepText(
   } = props
   const quickReplies = props.data.quickReplies ?? []
   const buttonCount = step.buttons.length + quickReplies.length
+  // Zalo has no formatting support — "v2" rich markup renders to plain text
+  // (tags dropped, links expanded to "label (url)"); "v1"/absent passes
+  // through unchanged.
+  const text = richTextToPlainText(step.text, step.version)
 
   if (buttonCount === 0) {
     yield {
-      text: step.text,
+      text,
     }
     return
   }
@@ -46,7 +53,7 @@ export function* convertFlowStepText(
   const buttons: ButtonPayload[] | undefined = buttonsToSend
 
   yield {
-    text: step.text,
+    text,
     attachment: buttons
       ? {
           type: "template",

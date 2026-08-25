@@ -1,4 +1,7 @@
-import type { SendTextStepSchema } from "@chatbotx.io/flow-config"
+import {
+  richTextToPlainText,
+  type SendTextStepSchema,
+} from "@chatbotx.io/flow-config"
 import type { SendFlowStepProps } from "@chatbotx.io/sdk"
 import type {
   InstagramAuthValue,
@@ -13,9 +16,13 @@ export function* convertFlowStepText(
   const {
     data: { step },
   } = props
+  // Instagram has no formatting support — "v2" rich markup renders to plain
+  // text (tags dropped, links expanded to "label (url)"); "v1"/absent
+  // passes through unchanged.
+  const text = richTextToPlainText(step.text, step.version)
   if (step.buttons.length === 0) {
     yield {
-      text: step.text,
+      text,
     }
   } else {
     const buttons = convertInstagramButtons({
@@ -29,7 +36,7 @@ export function* convertFlowStepText(
         type: "template",
         payload: {
           template_type: "button",
-          text: step.text,
+          text,
           buttons,
         },
       },
