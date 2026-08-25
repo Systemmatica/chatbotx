@@ -70,6 +70,19 @@ export const telegramStickerSchema = z.object({
 })
 export type TelegramSticker = z.infer<typeof telegramStickerSchema>
 
+// Telegram "round" video message (video circle). Unlike `video`, the Bot API
+// never sends `file_name` or `mime_type` for it — it is always a square mp4
+// (`length` = side/diameter in px, not width/height). See incoming-message.ts
+// for how the missing mime type is handled.
+export const telegramVideoNoteSchema = z.object({
+  file_id: z.string(),
+  file_unique_id: z.string(),
+  length: z.number(),
+  duration: z.number(),
+  file_size: z.number().optional(),
+})
+export type TelegramVideoNote = z.infer<typeof telegramVideoNoteSchema>
+
 export const telegramMessageSchema = z.object({
   message_id: z.number(),
   from: telegramUserSchema.optional(),
@@ -81,6 +94,7 @@ export const telegramMessageSchema = z.object({
   document: telegramFileSchema.optional(),
   audio: telegramFileSchema.optional(),
   video: telegramFileSchema.optional(),
+  video_note: telegramVideoNoteSchema.optional(),
   voice: telegramFileSchema.optional(),
   sticker: telegramStickerSchema.optional(),
 })

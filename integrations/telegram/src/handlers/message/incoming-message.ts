@@ -171,6 +171,22 @@ const getMessageAttachments = async (
     }
   }
 
+  if (message.video_note) {
+    // video_note (a Telegram "round" video message) never carries
+    // file_name/mime_type — the Bot API always encodes it as mp4, so we hard
+    // code the mime type instead of reading it off the payload like `video`
+    // does. Everything downstream (storage, fileType detection, ai-speech-to-text)
+    // follows the same contract as a regular `video` attachment.
+    const attachment = await downloadAndUploadFile(
+      ctx,
+      message.video_note.file_id,
+      "video/mp4",
+    )
+    if (attachment) {
+      attachments.push(attachment)
+    }
+  }
+
   if (message.voice) {
     const attachment = await downloadAndUploadFile(
       ctx,
