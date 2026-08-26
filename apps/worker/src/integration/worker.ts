@@ -14,6 +14,7 @@ import {
 import { type Job, Worker } from "bullmq"
 import { env } from "../env"
 import { ensureBootstrapped } from "../lib/bootstrap"
+import { registerShutdown } from "../lib/graceful-shutdown"
 import { isBlockedWorkspace } from "../lib/is-blocked-workspace"
 import { logger } from "../lib/logger"
 import { resolveWorkspaceId } from "../lib/resolve-workspace-id"
@@ -338,26 +339,13 @@ async function startIntegrationWorker() {
     }
   })
 
-  let isShuttingDown = false
-  async function shutdown() {
-    if (isShuttingDown) {
-      return
-    }
-    isShuttingDown = true
-    try {
-      await Promise.all([
-        worker.close(),
-        closeChatQueueEvents(),
-        closeIntegrationQueueEvents(),
-      ])
-      process.exit(0)
-    } catch (err) {
-      logger.error(err, "[IntegrationWorker] Error during shutdown")
-      process.exit(1)
-    }
-  }
-  process.once("SIGINT", shutdown)
-  process.once("SIGTERM", shutdown)
+  registerShutdown("integration", () =>
+    Promise.all([
+      worker.close(),
+      closeChatQueueEvents(),
+      closeIntegrationQueueEvents(),
+    ]).then(() => undefined),
+  )
 }
 
 startIntegrationWorker().catch((err) => {

@@ -1,5 +1,6 @@
 import { startWorker, stopWorker } from "@chatbotx.io/event-bus/worker"
 import { ensureBootstrapped } from "../lib/bootstrap"
+import { registerShutdown, triggerShutdown } from "../lib/graceful-shutdown"
 import { analyticsDashboardEvents } from "./analytics"
 import flowEventListener from "./flow"
 import messageEventListener from "./message"
@@ -18,37 +19,22 @@ async function startEventWorker() {
     flowEventListener,
     analyticsDashboardEvents,
   ])
+
+  registerShutdown("events", () => stopWorker())
 }
 
 startEventWorker()
 
-let isShuttingDown = false
-async function shutdown(signal: "SIGINT" | "SIGTERM") {
-  if (isShuttingDown) {
-    console.log(`[EventWorker] Already shutting down, ignoring ${signal}`)
-    return
-  }
-
-  isShuttingDown = true
-
-  try {
-    await stopWorker()
-    process.exit(0)
-  } catch (error) {
-    console.error("[EventWorker] Error during shutdown", error)
-    process.exit(1)
-  }
-}
-
-process.once("SIGINT", shutdown)
-process.once("SIGTERM", shutdown)
-
+// A process-wide safety net: if anything in this process throws
+// uncaught (own handler or a sibling worker's, when several workers
+// share one process), force a coordinated shutdown of every registered
+// worker rather than limping on with unknown state.
 process.on("uncaughtException", (error) => {
   console.error("[EventWorker] Uncaught exception", error)
-  shutdown("SIGTERM")
+  triggerShutdown("SIGTERM")
 })
 
 process.on("unhandledRejection", (reason) => {
   console.error("[EventWorker] Unhandled rejection", reason)
-  shutdown("SIGTERM")
+  triggerShutdown("SIGTERM")
 })
