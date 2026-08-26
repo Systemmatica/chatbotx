@@ -17,6 +17,8 @@ export const stepTypes = z.enum([
   "sendAudio",
   "sendFile",
   "sendQuickReply",
+  "requestPhone",
+  "removeReplyKeyboard",
 
   // Wait/Timing (W_)
   "waitUserReply",

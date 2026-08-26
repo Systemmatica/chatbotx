@@ -125,9 +125,55 @@ export type IncomingMessage = {
     | MessageTemplateEntity
     | MessageWhatsappFlowResponseEntity
     | MessageStoryReplyEntity
+    | MessageContactShareEntity
     | { [x: string]: unknown }
   attachments?: IncomingAttachment[]
   clientId?: string | null
+}
+
+/**
+ * Carried on a message that is a native "share contact" reply (Telegram's
+ * `request_contact` button send-back, or an equivalent channel mechanism)
+ * rather than free-typed text. Kept on `contentAttributes` instead of a new
+ * `ContentType` DB enum value — same reasoning as `MessageStoryReplyEntity`:
+ * no schema migration needed, and `contentType` stays `"text"` so every
+ * existing consumer that switches on `contentType` keeps working unchanged.
+ *
+ * `ownContact` is `true` only when the shared contact's own channel user id
+ * matches the message sender's id — Telegram (and some other channels) let a
+ * user share ANY contact from their address book, not just their own. A
+ * `false` here means `phoneNumber` belongs to a third party: callers must
+ * not treat it as the sender's own phone number (see
+ * `packages/business/src/get-user-data/reply-input.combinators.ts`'s
+ * `fromContactShare` and `integrations/telegram/.../incoming-message.ts`,
+ * which only populates the top-level `IncomingContact.phoneNumber` when this
+ * is `true`).
+ */
+export type MessageContactShareEntity = {
+  type: "contact_share"
+  phoneNumber: string
+  ownContact: boolean
+  firstName?: string
+  lastName?: string
+  userId?: string
+  vcard?: string
+}
+
+/**
+ * Extracts the contact-share payload from a message's contentAttributes.
+ * Centralized so callers can't drift on the shape check (mirrors
+ * `getStoryReply`).
+ */
+export const getContactShare = (
+  contentAttributes: unknown,
+): MessageContactShareEntity | undefined => {
+  if (!contentAttributes || typeof contentAttributes !== "object") {
+    return
+  }
+  const attrs = contentAttributes as { type?: string }
+  return attrs.type === "contact_share"
+    ? (contentAttributes as MessageContactShareEntity)
+    : undefined
 }
 
 export type MessageWhatsappFlowResponseEntity = {

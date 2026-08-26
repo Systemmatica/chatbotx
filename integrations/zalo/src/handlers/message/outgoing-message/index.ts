@@ -1,4 +1,5 @@
 import {
+  type RequestPhoneStepSchema,
   type SendFileStepSchema,
   type SendGifStepSchema,
   type SendImageStepSchema,
@@ -144,6 +145,28 @@ export async function* convertFlowStepToZaloMessage(
       yield* await convertFlowStepFile(
         props as SendFlowStepProps<ZaloAuthValue, SendFileStepSchema>,
       )
+      break
+    case stepTypes.enum.requestPhone: {
+      // Zalo OA has no reply-keyboard/native-contact-request mechanism a
+      // bot can trigger — deliberate fallback to a plain text prompt built
+      // from the step's message.
+      const requestPhoneStep = step as RequestPhoneStepSchema
+      yield* convertFlowStepText({
+        ...props,
+        data: {
+          ...props.data,
+          step: {
+            id: requestPhoneStep.id,
+            stepType: stepTypes.enum.sendText,
+            text: requestPhoneStep.message,
+            buttons: [],
+          },
+        },
+      } as SendFlowStepProps<ZaloAuthValue, SendTextStepSchema>)
+      break
+    }
+    case stepTypes.enum.removeReplyKeyboard:
+      // No reply-keyboard concept on Zalo — deliberate no-op.
       break
     default:
       break

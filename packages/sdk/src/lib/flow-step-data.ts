@@ -1,4 +1,6 @@
 import type {
+  RemoveReplyKeyboardStepSchema,
+  RequestPhoneStepSchema,
   SendAudioStepSchema,
   SendCarouselStepSchema,
   SendFileStepSchema,
@@ -26,3 +28,5 @@ export type SendFlowStepData =
   | WhatsappOptionListStepSchema
   | WhatsappFlowStepSchema
   | SendMessengerTemplateMessageStepSchema
+  | RequestPhoneStepSchema
+  | RemoveReplyKeyboardStepSchema

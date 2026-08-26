@@ -1061,6 +1061,35 @@ const buildExistingContactMatch = async (props: {
     }
   }
 
+  // A shared contact card updates an EXISTING contact's phone too, not only a
+  // freshly created one.
+  //
+  // Without this, the common case silently loses the number: a contact is
+  // created the moment someone opens the bot, so by the time they tap "share
+  // my phone" the row already exists and the create-time path never runs
+  // again. A lead-capture flow would look like it worked and store nothing.
+  //
+  // Treated as fresher truth than the stored value, matching how inbound
+  // message *text* is handled a few hundred lines above — the person just
+  // deliberately shared it. `incomingContact.phoneNumber` is only ever
+  // populated for a contact the sender proved is their own (the channel
+  // checks that before forwarding it), so an address-book card belonging to
+  // someone else cannot land here.
+  const sharedPhone = incomingContact.phoneNumber
+  if (sharedPhone && sharedPhone !== syncedContact.phoneNumber) {
+    try {
+      syncedContact = await contactService.update(
+        { workspaceId: inbox.workspaceId, id: contact.id },
+        { phoneNumber: sharedPhone },
+      )
+    } catch (error) {
+      logger.warn(
+        { error, contactId: contact.id },
+        "Contact.phoneNumber update from shared contact card failed",
+      )
+    }
+  }
+
   const conversation = await conversationService.findOrCreate({
     workspaceId: inbox.workspaceId,
     contactId: syncedContactInbox.contactId,

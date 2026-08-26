@@ -5,6 +5,7 @@ import {
   type IncomingAttachment,
   type IncomingContact,
   type IncomingMessage,
+  type MessageContactShareEntity,
   messageTypes,
   type ReceivedMessageResult,
 } from "@chatbotx.io/sdk"
@@ -14,11 +15,46 @@ import { TelegramException } from "../../exception"
 import { logger } from "../../lib/logger"
 import type {
   TelegramAuthValue,
+  TelegramContact,
   TelegramMessage,
   TelegramPhotoSize,
   TelegramUpdate,
 } from "../../schema"
 import { telegramUpdateSchema } from "../../schema"
+
+/**
+ * Telegram lets a user share ANY contact from their address book via a
+ * `request_contact` reply-keyboard button — not necessarily their own. The
+ * bot API sets `contact.user_id` to the shared contact's Telegram user id
+ * only when that contact has one; comparing it against the message
+ * sender's own id (`message.from.id`) is the only reliable "is this the
+ * sender's own number" signal Telegram gives us.
+ *
+ * Policy for a mismatch (or a missing `user_id`, which Telegram omits for
+ * contacts without a Telegram account and therefore can never be proven to
+ * be the sender's own): `ownContact: false`. Callers must never write a
+ * `false` contact's phone number into `Contact.phoneNumber` — see
+ * `getMessageResult` below, which only forwards `phoneNumber` on the
+ * top-level `IncomingContact` when `ownContact` is `true`. The contact-share
+ * payload itself is still surfaced (via `contentAttributes`) so a flow can
+ * choose to re-prompt ("please share your own number using the button") if
+ * it wants to — the wait-for-reply validator
+ * (`packages/business/src/get-user-data/reply-input.combinators.ts`'s
+ * `fromContactShare`) rejects a foreign contact for exactly this reason, so
+ * the flow does not silently advance on someone else's number either.
+ */
+const buildContactShare = (
+  contact: TelegramContact,
+  fromUserId: number | undefined,
+): MessageContactShareEntity => ({
+  type: "contact_share",
+  phoneNumber: contact.phone_number,
+  ownContact: contact.user_id !== undefined && contact.user_id === fromUserId,
+  firstName: contact.first_name,
+  lastName: contact.last_name,
+  userId: contact.user_id === undefined ? undefined : String(contact.user_id),
+  vcard: contact.vcard,
+})
 
 export const receiveMessage = async ({
   ctx,
@@ -52,12 +88,17 @@ const getMessageResult = async (
 
   const attachments = await getMessageAttachments(ctx, message)
 
+  const contactShare = message.contact
+    ? buildContactShare(message.contact, message.from?.id)
+    : undefined
+
   const incomingMessage: IncomingMessage = {
     sourceId: String(message.message_id),
     messageType: messageTypes.enum.incoming,
     text: message.text ?? message.caption,
     contentType: contentTypes.enum.text,
     attachments,
+    ...(contactShare ? { contentAttributes: contactShare } : {}),
   }
 
   const contact: IncomingContact = {
@@ -65,6 +106,12 @@ const getMessageResult = async (
     firstName: message.from?.first_name,
     lastName: message.from?.last_name,
     locale: message.from?.language_code,
+    // Only the sender's OWN shared contact ever seeds `Contact.phoneNumber`
+    // — see `buildContactShare`'s doc for why a mismatched/unprovable
+    // `user_id` must never be treated as the sender's own number.
+    ...(contactShare?.ownContact
+      ? { phoneNumber: contactShare.phoneNumber }
+      : {}),
   }
 
   // Calculate ref from /start command

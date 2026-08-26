@@ -11,6 +11,7 @@ import {
   asUrl,
   firstAccepted,
   fromAttachment,
+  fromContactShare,
   fromLocation,
   fromText,
   fromTextWhenAttachmentAbsent,
@@ -42,6 +43,13 @@ export const replyFormatValidators: Record<ReplyFormatValue, ReplyValidator> = {
     fromAttachment(() => true),
     fromLocation,
     fromText(asIs),
+  ),
+  // A native contact-share reply (Telegram's `request_contact` button) is
+  // preferred; channels/contacts without that native affordance still work
+  // by typing the number as plain text, same validation as ReplyFormat.phone.
+  [ReplyFormat.phoneContact]: firstAccepted(
+    fromContactShare,
+    fromTextWhenAttachmentAbsent(asPhone),
   ),
 }
 

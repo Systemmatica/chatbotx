@@ -14,7 +14,9 @@ export interface ReplyInputMessage {
 
 // How the accepted value was sourced. Attachments yield a storage key that the
 // caller must turn into a public URL; text/location values are stored as-is.
-export type ReplyInputKind = "text" | "attachment" | "location"
+// "contact" is a native contact-share reply (see `fromContactShare`) — its
+// value is the shared phone number, stored as-is like text.
+export type ReplyInputKind = "text" | "attachment" | "location" | "contact"
 
 export type ReplyValidationResult =
   | { ok: true; userInput: string; kind: ReplyInputKind }

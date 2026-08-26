@@ -21,6 +21,16 @@ export const ReplyFormat = {
   date: "RF09",
   datetime: "RF10",
   anyInput: "RF11",
+  /**
+   * A native contact-share reply (Telegram's `request_contact` button, or
+   * an equivalent channel mechanism) rather than free-typed text. Validated
+   * against a `contentType: "contact"` stored message — see
+   * `packages/business/src/get-user-data/reply-format-validators.ts`. Channels
+   * without a native contact-share UI still accept a typed phone number as
+   * plain text for this format (same text fallback `requestPhone` itself
+   * uses on those channels).
+   */
+  phoneContact: "RF12",
 } as const
 export type ReplyFormat = (typeof ReplyFormat)[keyof typeof ReplyFormat]
 

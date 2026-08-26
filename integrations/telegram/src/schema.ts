@@ -83,6 +83,20 @@ export const telegramVideoNoteSchema = z.object({
 })
 export type TelegramVideoNote = z.infer<typeof telegramVideoNoteSchema>
 
+// A contact shared via a `request_contact` reply-keyboard button, or an
+// address-book contact the user chose to forward. `user_id` is only present
+// when the shared contact has a Telegram account; it lets the incoming
+// handler tell "the sender shared their own number" apart from "the sender
+// shared someone else's contact card" (see incoming-message.ts).
+export const telegramContactSchema = z.object({
+  phone_number: z.string(),
+  first_name: z.string(),
+  last_name: z.string().optional(),
+  user_id: z.number().optional(),
+  vcard: z.string().optional(),
+})
+export type TelegramContact = z.infer<typeof telegramContactSchema>
+
 export const telegramMessageSchema = z.object({
   message_id: z.number(),
   from: telegramUserSchema.optional(),
@@ -97,6 +111,7 @@ export const telegramMessageSchema = z.object({
   video_note: telegramVideoNoteSchema.optional(),
   voice: telegramFileSchema.optional(),
   sticker: telegramStickerSchema.optional(),
+  contact: telegramContactSchema.optional(),
 })
 export type TelegramMessage = z.infer<typeof telegramMessageSchema>
 
@@ -127,11 +142,42 @@ export type TelegramInlineKeyboardMarkup = {
   inline_keyboard: TelegramInlineKeyboardButton[][]
 }
 
+// A reply keyboard button. Telegram allows at most one of
+// `request_contact` / `request_location` / `request_poll` per button; we
+// only ever emit `request_contact` here. Unlike an inline keyboard button,
+// this carries no `callback_data` — tapping it makes the client send a
+// regular message (with a `contact` payload) back to the bot, it does not
+// fire a callback query.
+export type TelegramKeyboardButton = {
+  text: string
+  request_contact?: true
+}
+
+// Telegram's native reply keyboard — replaces the user's own keyboard with
+// a bot-defined one. Fundamentally different object from
+// `TelegramInlineKeyboardMarkup`: it is not attached "under" the message,
+// it takes over the client's input area, and must be explicitly hidden
+// again with `TelegramReplyKeyboardRemove` (`removeReplyKeyboard` step).
+export type TelegramReplyKeyboardMarkup = {
+  keyboard: TelegramKeyboardButton[][]
+  resize_keyboard?: boolean
+  one_time_keyboard?: boolean
+}
+
+export type TelegramReplyKeyboardRemove = {
+  remove_keyboard: true
+}
+
+export type TelegramReplyMarkup =
+  | TelegramInlineKeyboardMarkup
+  | TelegramReplyKeyboardMarkup
+  | TelegramReplyKeyboardRemove
+
 export type TelegramSendMessageRequest = {
   chat_id: number | string
   text: string
   parse_mode?: "HTML" | "Markdown" | "MarkdownV2"
-  reply_markup?: TelegramInlineKeyboardMarkup
+  reply_markup?: TelegramReplyMarkup
 }
 
 export type TelegramSendPhotoRequest = {

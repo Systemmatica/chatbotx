@@ -1,4 +1,5 @@
 import {
+  type RequestPhoneStepSchema,
   type SendAudioStepSchema,
   type SendCarouselStepSchema,
   type SendFileStepSchema,
@@ -513,6 +514,32 @@ async function* convertFlowStepToFacebookMessage(
       yield* convertFlowStepCarousel(
         props as SendFlowStepProps<MessengerAuthValue, SendCarouselStepSchema>,
       ) as Generator<FacebookMessage>
+      break
+    case stepTypes.enum.requestPhone: {
+      // Messenger has no reply-keyboard concept, but it does have a native
+      // "share phone number" quick reply (Send API content_type
+      // "user_phone_number") — the same reserved postback the questionnaires
+      // engine already uses (see MESSENGER_NATIVE_QUICK_REPLY's doc). Facebook
+      // fills the value from the contact's own Messenger account, so there is
+      // no own-vs-foreign concern on this channel the way there is on
+      // Telegram's forwarded-contact-card path.
+      const requestPhoneStep = step as RequestPhoneStepSchema
+      yield {
+        text: requestPhoneStep.message,
+        quick_replies: convertCanonicalFacebookQuickReplies([
+          {
+            id: requestPhoneStep.id,
+            label: requestPhoneStep.buttonLabel,
+            buttonType: "postback",
+            postback: MESSENGER_NATIVE_QUICK_REPLY.USER_PHONE_NUMBER,
+          },
+        ]),
+      }
+      break
+    }
+    case stepTypes.enum.removeReplyKeyboard:
+      // No reply-keyboard concept on Messenger (quick replies dismiss
+      // themselves after one tap) — deliberate no-op, nothing to send.
       break
     default:
       break

@@ -1,4 +1,5 @@
 import type { FileType } from "@chatbotx.io/database/partials"
+import { getContactShare } from "@chatbotx.io/sdk"
 import type {
   ReplyInputKind,
   ReplyValidationResult,
@@ -72,6 +73,32 @@ export const fromLocation: ReplyValidator = (message) => {
   }
 
   return accepted(`${latitude},${longitude}`, "location")
+}
+
+/**
+ * Validates a native contact-share reply (e.g. Telegram's `request_contact`
+ * button send-back) stored on `contentAttributes` — see
+ * `MessageContactShareEntity` in `packages/sdk`. Rejects a contact whose
+ * `ownContact` flag is `false`: the sender shared someone else's contact
+ * card (or a contact Telegram cannot prove is their own), and that number
+ * must never be accepted as the sender's own phone number, matching the
+ * incoming Telegram handler's own policy of not writing such a number into
+ * `Contact.phoneNumber` either.
+ */
+export const fromContactShare: ReplyValidator = (message) => {
+  const contactShare = getContactShare(message.contentAttributes)
+
+  if (!contactShare) {
+    return rejected("getUserData: expected a shared contact")
+  }
+
+  if (!contactShare.ownContact) {
+    return rejected(
+      "getUserData: shared contact is not the sender's own — please share your own number",
+    )
+  }
+
+  return accepted(contactShare.phoneNumber, "contact")
 }
 
 export function firstAccepted(...validators: ReplyValidator[]): ReplyValidator {

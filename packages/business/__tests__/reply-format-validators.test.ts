@@ -4,6 +4,7 @@ import {
   accepted,
   firstAccepted,
   fromAttachment,
+  fromContactShare,
   fromLocation,
   type ReplyInputMessage,
   type ReplyValidator,
@@ -231,6 +232,53 @@ describe("replyFormatValidators", () => {
       rejected("getUserData: expected text input"),
     )
   })
+
+  test("phoneContact accepts a native contact share (own contact)", () => {
+    expect(
+      validateReplyInput(
+        ReplyFormat.phoneContact,
+        makeMessage({
+          contentAttributes: {
+            type: "contact_share",
+            phoneNumber: "+15551234567",
+            ownContact: true,
+          },
+        }),
+      ),
+    ).toEqual(accepted("+15551234567", "contact"))
+  })
+
+  test("phoneContact rejects a native contact share of someone else's contact", () => {
+    // firstAccepted falls through to the typed-phone-text validator when the
+    // contact share is rejected, and (like the other formats' fallback
+    // chains above) surfaces THAT validator's rejection message when both
+    // reject — see the dedicated `fromContactShare` tests below for the
+    // contact-specific message on its own.
+    expect(
+      validateReplyInput(
+        ReplyFormat.phoneContact,
+        makeMessage({
+          contentAttributes: {
+            type: "contact_share",
+            phoneNumber: "+15559999999",
+            ownContact: false,
+          },
+        }),
+      ),
+    ).toEqual(rejected("getUserData: expected text input"))
+  })
+
+  test("phoneContact falls back to typed phone text when no contact share is present", () => {
+    expect(
+      validateReplyInput(
+        ReplyFormat.phoneContact,
+        makeMessage({ text: "+1-555-123-4567" }),
+      ),
+    ).toEqual(accepted("+1-555-123-4567"))
+    expect(
+      validateReplyInput(ReplyFormat.phoneContact, makeMessage({ text: "hi" })),
+    ).toEqual(rejected("getUserData: invalid phone number"))
+  })
 })
 
 describe("reply input combinators", () => {
@@ -283,5 +331,43 @@ describe("reply input combinators", () => {
         }),
       ),
     ).toEqual(rejected("getUserData: invalid location"))
+  })
+
+  test("fromContactShare rejects a message with no contact-share payload", () => {
+    expect(fromContactShare(makeMessage({ text: "hello" }))).toEqual(
+      rejected("getUserData: expected a shared contact"),
+    )
+  })
+
+  test("fromContactShare accepts an own contact share", () => {
+    expect(
+      fromContactShare(
+        makeMessage({
+          contentAttributes: {
+            type: "contact_share",
+            phoneNumber: "+15551234567",
+            ownContact: true,
+          },
+        }),
+      ),
+    ).toEqual(accepted("+15551234567", "contact"))
+  })
+
+  test("fromContactShare rejects a foreign contact share", () => {
+    expect(
+      fromContactShare(
+        makeMessage({
+          contentAttributes: {
+            type: "contact_share",
+            phoneNumber: "+15559999999",
+            ownContact: false,
+          },
+        }),
+      ),
+    ).toEqual(
+      rejected(
+        "getUserData: shared contact is not the sender's own — please share your own number",
+      ),
+    )
   })
 })

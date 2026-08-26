@@ -72,6 +72,11 @@ export const MESSAGE_PRODUCING_STEP_TYPES = new Set<StepType>([
   stepTypes.enum.sendMessengerTemplateMessage,
   stepTypes.enum.whatsappOptionList,
   stepTypes.enum.whatsappFlow,
+  // Both send a real outgoing message: `requestPhone` sends the prompt plus a
+  // native reply keyboard, and `removeReplyKeyboard` can only take that
+  // keyboard away by sending a message that carries the removal.
+  stepTypes.enum.requestPhone,
+  stepTypes.enum.removeReplyKeyboard,
 ])
 
 export type SuccessErrorStepSchema = BaseStepSchema & {

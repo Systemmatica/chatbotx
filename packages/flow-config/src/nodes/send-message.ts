@@ -6,6 +6,8 @@ import {
   chooseChannelStepSchema,
 } from "../steps/choose-channel"
 import { getUserDataStepSchema } from "../steps/get-user-data"
+import { removeReplyKeyboardStepSchema } from "../steps/remove-reply-keyboard"
+import { requestPhoneStepSchema } from "../steps/request-phone"
 import { sendAudioStepSchema } from "../steps/send-audio"
 import { sendCarouselStepSchema } from "../steps/send-carousel"
 import { sendFileStepSchema } from "../steps/send-file"
@@ -48,6 +50,8 @@ export const sendMessageNodeSchema = baseNodeSchema.extend({
           sendMessengerTemplateMessageStepSchema,
           whatsappOptionListStepSchema,
           whatsappFlowStepSchema,
+          requestPhoneStepSchema,
+          removeReplyKeyboardStepSchema,
           ...actionSteps,
         ]),
       ),

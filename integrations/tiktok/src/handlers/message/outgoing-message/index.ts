@@ -1,4 +1,5 @@
 import {
+  type RequestPhoneStepSchema,
   type SendImageStepSchema,
   type SendTextStepSchema,
   stepTypes,
@@ -132,6 +133,38 @@ export const sendFlowStep: MessageHandlers<TiktokAuthValue>["sendFlowStep"] =
           }
           break
         }
+        case stepTypes.enum.requestPhone: {
+          // TikTok DMs have no reply-keyboard/native-contact-request
+          // mechanism a bot can trigger — deliberate fallback to a plain
+          // text prompt built from the step's message.
+          const requestPhoneStep = step as RequestPhoneStepSchema
+          for (const payload of convertFlowStepText(businessId, {
+            ...props,
+            data: {
+              ...props.data,
+              step: {
+                id: requestPhoneStep.id,
+                stepType: stepTypes.enum.sendText,
+                text: requestPhoneStep.message,
+                buttons: [],
+              },
+            },
+          } as Parameters<
+            MessageHandlers<TiktokAuthValue, SendTextStepSchema>["sendFlowStep"]
+          >[0])) {
+            const messageId = await sendTiktokMessage(
+              ctx.auth.tokens.accessToken,
+              payload,
+            )
+            if (messageId) {
+              messageIds.push(messageId)
+            }
+          }
+          break
+        }
+        case stepTypes.enum.removeReplyKeyboard:
+          // No reply-keyboard concept on TikTok — deliberate no-op.
+          break
         default:
           break
       }

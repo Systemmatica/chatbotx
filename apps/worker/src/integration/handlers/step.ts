@@ -410,6 +410,12 @@ export const flowStepHandlers: Record<
   [stepTypes.enum.optOutEmail]: optOutEmail,
   [stepTypes.enum.performAction]: undefined,
   [stepTypes.enum.removeContactTag]: removeContactTag,
+  // Pure "send to the channel" steps, same dispatch as sendText and friends:
+  // the worker hands them to the integration, which decides what the channel
+  // can actually render (a native reply keyboard on Telegram, a quick reply on
+  // Messenger, a plain text prompt everywhere else).
+  [stepTypes.enum.removeReplyKeyboard]: sendFlowMessage,
+  [stepTypes.enum.requestPhone]: sendFlowMessage,
   [stepTypes.enum.sendAudio]: sendFlowMessage,
   [stepTypes.enum.sendCard]: sendFlowMessage,
   [stepTypes.enum.sendCarousel]: sendFlowMessage,

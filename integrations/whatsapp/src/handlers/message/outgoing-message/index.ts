@@ -1,4 +1,5 @@
 import {
+  type RequestPhoneStepSchema,
   type SendCarouselStepSchema,
   type SendImageStepSchema,
   type SendTextStepSchema,
@@ -136,6 +137,30 @@ function* convertFlowStepToWhatsappMessage(
           >["sendFlowStep"]
         >[0],
       )
+      break
+    case stepTypes.enum.requestPhone: {
+      // WhatsApp Business has no reply-keyboard/native-contact-request
+      // mechanism a bot can trigger — deliberate fallback to a plain text
+      // prompt built from the step's message.
+      const requestPhoneStep = step as RequestPhoneStepSchema
+      yield* convertFlowStepText({
+        ...props,
+        data: {
+          ...props.data,
+          step: {
+            id: requestPhoneStep.id,
+            stepType: stepTypes.enum.sendText,
+            text: requestPhoneStep.message,
+            buttons: [],
+          },
+        },
+      } as Parameters<
+        MessageHandlers<WhatsappAuthValue, SendTextStepSchema>["sendFlowStep"]
+      >[0])
+      break
+    }
+    case stepTypes.enum.removeReplyKeyboard:
+      // No reply-keyboard concept on WhatsApp — deliberate no-op.
       break
     default:
       break

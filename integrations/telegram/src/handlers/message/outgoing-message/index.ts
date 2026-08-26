@@ -1,4 +1,6 @@
 import {
+  type RemoveReplyKeyboardStepSchema,
+  type RequestPhoneStepSchema,
   type SendAudioStepSchema,
   type SendCarouselStepSchema,
   type SendFileStepSchema,
@@ -36,6 +38,10 @@ import {
 } from "./send-button"
 import { convertFlowStepCarousel } from "./send-carousel"
 import { convertFlowStepQuickReply } from "./send-quick-reply"
+import {
+  convertFlowStepRemoveReplyKeyboard,
+  convertFlowStepRequestPhone,
+} from "./send-request-phone"
 import { convertFlowStepText } from "./send-text"
 
 export const sendMessage: MessageHandlers<TelegramAuthValue>["sendMessage"] =
@@ -243,6 +249,34 @@ export const sendFlowStep: MessageHandlers<TelegramAuthValue>["sendFlowStep"] =
               const messageId = await sendTelegramMessage(ctx.auth, payload)
               messageIds.push(String(messageId))
             }
+          }
+          break
+        }
+        case stepTypes.enum.requestPhone: {
+          for (const payload of convertFlowStepRequestPhone(
+            props as Parameters<
+              MessageHandlers<
+                TelegramAuthValue,
+                RequestPhoneStepSchema
+              >["sendFlowStep"]
+            >[0],
+          )) {
+            const messageId = await sendTelegramMessage(ctx.auth, payload)
+            messageIds.push(String(messageId))
+          }
+          break
+        }
+        case stepTypes.enum.removeReplyKeyboard: {
+          for (const payload of convertFlowStepRemoveReplyKeyboard(
+            props as Parameters<
+              MessageHandlers<
+                TelegramAuthValue,
+                RemoveReplyKeyboardStepSchema
+              >["sendFlowStep"]
+            >[0],
+          )) {
+            const messageId = await sendTelegramMessage(ctx.auth, payload)
+            messageIds.push(String(messageId))
           }
           break
         }

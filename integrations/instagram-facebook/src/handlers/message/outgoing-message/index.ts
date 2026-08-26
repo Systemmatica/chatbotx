@@ -1,4 +1,5 @@
 import {
+  type RequestPhoneStepSchema,
   type SendAudioStepSchema,
   type SendCarouselStepSchema,
   type SendFileStepSchema,
@@ -183,6 +184,31 @@ export async function* convertFlowStepToInstagramMessage(
       yield* convertFlowStepCarousel(
         props as SendFlowStepProps<InstagramAuthValue, SendCarouselStepSchema>,
       ) as Generator<InstagramSendMessage>
+      break
+    case stepTypes.enum.requestPhone: {
+      // Instagram DMs (via Facebook) have no native contact-share/reply-
+      // keyboard mechanism — deliberate fallback to a plain text prompt
+      // built from the step's message.
+      const requestPhoneStep = step as RequestPhoneStepSchema
+      yield* convertFlowStepText({
+        ...props,
+        data: {
+          ...props.data,
+          step: {
+            id: requestPhoneStep.id,
+            stepType: stepTypes.enum.sendText,
+            text: requestPhoneStep.message,
+            buttons: [],
+          },
+        },
+      } as SendFlowStepProps<
+        InstagramAuthValue,
+        SendTextStepSchema
+      >) as Generator<InstagramMessageAttachmentPayload | InstagramSendMessage>
+      break
+    }
+    case stepTypes.enum.removeReplyKeyboard:
+      // No reply-keyboard concept on Instagram — deliberate no-op.
       break
     default:
       break
