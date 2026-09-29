@@ -67,8 +67,13 @@ jobs:
       - name: Lint
         run: pnpm lint
 
-      - name: Type-check and test
-        run: pnpm turbo run check-types test
+      # Same concurrency caps as ci.yml: the default (10) OOM-kills tsc on the
+      # 7 GB runner (exit 137, seen 29.09.2026 on integration-webchat).
+      - name: Type-check
+        run: pnpm turbo run check-types --concurrency=4
+
+      - name: Test
+        run: pnpm turbo run test --concurrency=2
 
   prepare-metadata:
     runs-on: ubuntu-latest
