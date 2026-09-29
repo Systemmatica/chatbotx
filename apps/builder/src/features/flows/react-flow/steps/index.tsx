@@ -149,6 +149,10 @@ export const allSteps: Record<StepType, StepDefinition<any> | undefined> = {
   [stepTypes.enum.wait]: waitStep,
   [stepTypes.enum.followUp]: followUpStep,
   [stepTypes.enum.performAction]: undefined,
+  // Telegram-only steps from the systemmatica branch: handled by the worker,
+  // no builder editor yet (they come in via flow import / converter).
+  [stepTypes.enum.requestPhone]: undefined,
+  [stepTypes.enum.removeReplyKeyboard]: undefined,
   [stepTypes.enum.openWebsite]: openWebsiteStep,
   [stepTypes.enum.setCustomField]: setCustomFieldStep,
   [stepTypes.enum.clearCustomField]: clearCustomFieldStep,
