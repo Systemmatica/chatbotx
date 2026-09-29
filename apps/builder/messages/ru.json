@@ -2989,7 +2989,7 @@
     "messageDeleted": "Сообщение удалено.",
     "sendFailed": "Не удалось отправить",
     "repliedToStory": "Ответил(а) на вашу историю",
-    "sentAttachments": "Отправлено {count, plural, one {# вложение} few {# вложения} many {# вложений} other {# вложений}}",
+    "sentAttachments": "Отправлено {count, plural, one {1 вложение} few {# вложения} many {# вложений} other {# вложений}}",
     "deleteComment": "Удалить комментарий",
     "deleteCommentConfirmation": "Вы уверены, что хотите удалить этот комментарий? Ответы на него также будут удалены — и во входящих, и на Facebook. Это действие нельзя отменить.",
     "deleteMessageSuccess": "Сообщение удалено",
