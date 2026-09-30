@@ -40,7 +40,19 @@ const stableKey = (where: WorkspaceWhere) =>
   JSON.stringify(Object.fromEntries(Object.entries(where).sort()))
 
 const PURGE_WORKSPACE_TEARDOWN_CONCURRENCY = 5
-const COMMUNITY_MAX_WORKSPACES = 1
+const DEFAULT_COMMUNITY_MAX_WORKSPACES = 1
+
+/**
+ * Per-owner workspace cap in the community edition. Defaults to 1 (upstream
+ * behaviour); self-hosters running several bots/companies can raise it with
+ * the COMMUNITY_MAX_WORKSPACES env var. Invalid or < 1 values fall back to 1.
+ */
+export const getCommunityMaxWorkspaces = (): number => {
+  const raw = Number.parseInt(process.env.COMMUNITY_MAX_WORKSPACES ?? "", 10)
+  return Number.isFinite(raw) && raw >= 1
+    ? raw
+    : DEFAULT_COMMUNITY_MAX_WORKSPACES
+}
 const WORKSPACE_LIMIT_LOCK_TIMEOUT_SECONDS = 30
 
 class WorkspaceService extends BaseService {
@@ -378,7 +390,7 @@ class WorkspaceService extends BaseService {
             workspaceModel,
             eq(workspaceModel.ownerId, ownerId),
           )
-          if (owned >= COMMUNITY_MAX_WORKSPACES) {
+          if (owned >= getCommunityMaxWorkspaces()) {
             throw workspaceLimitReachedException()
           }
           return this.insertWorkspace(props)

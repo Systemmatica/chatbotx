@@ -1,4 +1,7 @@
-import { isWorkspaceScheduledForDeletion } from "@chatbotx.io/business"
+import {
+  getCommunityMaxWorkspaces,
+  isWorkspaceScheduledForDeletion,
+} from "@chatbotx.io/business"
 import {
   Avatar,
   AvatarFallback,
@@ -197,7 +200,11 @@ const WorkspacesList = async ({
   const createLabel = t("actions.createFeature", {
     feature: t("fields.workspace.label"),
   })
-  const showCreateCard = !isCommunity()
+  // Community hides the card unless the self-hoster raised COMMUNITY_MAX_WORKSPACES;
+  // the service still enforces the cap server-side.
+  const communityCap = isCommunity() ? getCommunityMaxWorkspaces() : 0
+  const showCreateCard =
+    !isCommunity() || (communityCap > 1 && workspaces.length < communityCap)
   const ownerIds = new Set(ownerWorkspaceIds)
   const superAdminIds = new Set(superAdminWorkspaceIds)
   const ownerLabel = t("home.owner")

@@ -272,6 +272,33 @@ describe("WorkspaceService.create — community workspace limit", () => {
     expect(runExclusive.mock.calls[0][0].key).toBe("workspace-limit:owner-9")
   })
 
+  test("allows more workspaces when COMMUNITY_MAX_WORKSPACES is raised", async () => {
+    isCommunity.mockReturnValue(true)
+    countWorkspaces.mockResolvedValue(1)
+    process.env.COMMUNITY_MAX_WORKSPACES = "5"
+    try {
+      const result = await workspaceService.create(createInput())
+      expect(result).toEqual({ id: "ws-1", organizationId: "org-1" })
+    } finally {
+      delete process.env.COMMUNITY_MAX_WORKSPACES
+    }
+  })
+
+  test("ignores an invalid COMMUNITY_MAX_WORKSPACES and keeps the cap at 1", async () => {
+    isCommunity.mockReturnValue(true)
+    countWorkspaces.mockResolvedValue(1)
+    process.env.COMMUNITY_MAX_WORKSPACES = "0"
+    try {
+      await expect(
+        workspaceService.create(createInput()),
+      ).rejects.toMatchObject({
+        code: "workspaceLimitReached",
+      })
+    } finally {
+      delete process.env.COMMUNITY_MAX_WORKSPACES
+    }
+  })
+
   test("skips the limit entirely off community", async () => {
     isCommunity.mockReturnValue(false)
 
