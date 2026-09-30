@@ -73,7 +73,7 @@ const CreateWorkspaceCard = ({
                   <div className="flex size-16 items-center justify-center">
                     <PlusCircleIcon aria-hidden className="size-8" />
                   </div>
-                  <div className="truncate text-center font-medium text-sm">
+                  <div className="text-balance px-4 text-center font-medium text-sm">
                     {label}
                   </div>
                 </div>
@@ -102,7 +102,7 @@ const CreateWorkspaceCard = ({
           <div className="flex size-16 items-center justify-center">
             <PlusCircleIcon aria-hidden className="size-8" />
           </div>
-          <div className="truncate text-center font-medium text-sm">
+          <div className="text-balance px-4 text-center font-medium text-sm">
             {label}
           </div>
         </Link>
