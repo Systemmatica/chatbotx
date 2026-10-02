@@ -28,6 +28,10 @@ import { anonymous, magicLink, oneTimeToken } from "better-auth/plugins"
 import { PHASE_PRODUCTION_BUILD } from "next/constants"
 import { env, getBrokerUrl } from "./keys"
 import { logger } from "./logger"
+import {
+  isSignupEmailAllowed,
+  parseAllowedSignupDomains,
+} from "./signup-allowlist"
 import { getTenantId, resolveTenantOwnerId } from "./tenant-context"
 
 const getTenantSettings = async (request: Request) => {
@@ -397,33 +401,66 @@ function buildDatabaseHooks({
   onUserCreated,
   upgradeOAuthAccount,
 }: Pick<AuthConfig, "onUserCreated" | "upgradeOAuthAccount">) {
-  if (!(onUserCreated || upgradeOAuthAccount)) {
+  const allowedSignupDomains = parseAllowedSignupDomains()
+  if (!(onUserCreated || upgradeOAuthAccount || allowedSignupDomains.length)) {
     return
   }
 
-  const userHooks = onUserCreated
-    ? {
-        create: {
-          after: async (user: Record<string, unknown>) => {
-            try {
-              await onUserCreated({
-                id: String(user.id),
-                email: String(user.email),
-                tenantId:
-                  typeof user.tenantId === "string" ? user.tenantId : undefined,
-                isAnonymous:
-                  typeof user.isAnonymous === "boolean"
-                    ? user.isAnonymous
-                    : undefined,
-              })
-            } catch {
-              // Best-effort: provisioning must never block sign-up. The
-              // callback is responsible for logging its own failures.
-            }
+  // Unlike the best-effort hooks below, the allowlist must block: throwing
+  // here aborts user creation for every sign-up path (password, magic link,
+  // OAuth).
+  const signupAllowlistHook =
+    allowedSignupDomains.length > 0
+      ? {
+          // Returns a promise (better-auth awaits it); rejecting aborts creation.
+          before: (user: Record<string, unknown>): Promise<void> => {
+            const allowed =
+              user.isAnonymous === true ||
+              isSignupEmailAllowed(
+                String(user.email ?? ""),
+                allowedSignupDomains,
+              )
+            return allowed
+              ? Promise.resolve()
+              : Promise.reject(
+                  new APIError(403, {
+                    message: "Sign-up is restricted to approved email domains",
+                  }),
+                )
           },
-        },
-      }
-    : undefined
+        }
+      : undefined
+
+  const userHooks =
+    onUserCreated || signupAllowlistHook
+      ? {
+          create: {
+            ...signupAllowlistHook,
+            after: async (user: Record<string, unknown>) => {
+              if (!onUserCreated) {
+                return
+              }
+              try {
+                await onUserCreated({
+                  id: String(user.id),
+                  email: String(user.email),
+                  tenantId:
+                    typeof user.tenantId === "string"
+                      ? user.tenantId
+                      : undefined,
+                  isAnonymous:
+                    typeof user.isAnonymous === "boolean"
+                      ? user.isAnonymous
+                      : undefined,
+                })
+              } catch {
+                // Best-effort: provisioning must never block sign-up. The
+                // callback is responsible for logging its own failures.
+              }
+            },
+          },
+        }
+      : undefined
 
   const upgradeAccountBeforeHook = upgradeOAuthAccount
     ? async (account: Record<string, unknown>) => {
