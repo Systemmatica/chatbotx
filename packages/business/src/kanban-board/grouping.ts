@@ -2,6 +2,7 @@ import {
   KANBAN_NO_STATUS_STAGE_ID,
   type KanbanStage,
 } from "@chatbotx.io/database/partials"
+import type { CurrentFlowStep } from "../flow/current-step"
 
 export type KanbanCardInput = {
   contactId: string
@@ -12,6 +13,8 @@ export type KanbanCardInput = {
   channel: string | null
   lastMessageAt: Date | null
   conversationId: string | null
+  /** Flow step the contact is on, resolved for display (optional). */
+  currentFlowStep?: CurrentFlowStep | null
 }
 
 export type KanbanCard = Omit<KanbanCardInput, "bucket">

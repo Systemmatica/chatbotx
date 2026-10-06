@@ -1,6 +1,10 @@
 "use server"
 
-import { conversationService } from "@chatbotx.io/business"
+import {
+  conversationService,
+  currentFlowStepService,
+  pickLatestCurrentFlowNode,
+} from "@chatbotx.io/business"
 import { notFoundException } from "@chatbotx.io/business/errors"
 import { createMessageRepository } from "@chatbotx.io/database/repositories"
 import { zodBigintAsString } from "@chatbotx.io/utils"
@@ -95,6 +99,12 @@ export const listConversations = async (
     }),
   )
 
+  // Current flow step per conversation: one batched lookup for the page.
+  const currentSteps = await currentFlowStepService.resolveMany({
+    workspaceId,
+    refs: page.map((c) => pickLatestCurrentFlowNode(c.contactInboxes)),
+  })
+
   const lastMessagesByConversationId = new Map(
     page.map((c, index) => [c.id, lastMessagesResults[index]?.[0] ?? null]),
   )
@@ -117,7 +127,7 @@ export const listConversations = async (
     : null
 
   return {
-    data: page.map((c) => {
+    data: page.map((c, index) => {
       const lastMessage = lastMessagesByConversationId.get(c.id)
       return {
         ...c,
@@ -126,6 +136,7 @@ export const listConversations = async (
         assignedUser: c.assignedUser ?? null,
         assignedInboxTeam: c.assignedInboxTeam ?? null,
         messages: lastMessage ? [lastMessage] : [],
+        currentFlowStep: currentSteps[index] ?? null,
       }
     }),
     nextCursor,
@@ -167,10 +178,16 @@ export const findConversation = async (
     },
   )
 
+  const currentFlowStep = await currentFlowStepService.resolveOne({
+    workspaceId: input.workspaceId,
+    ref: pickLatestCurrentFlowNode(conversation.contactInboxes),
+  })
+
   return {
     data: {
       ...conversation,
       messages: lastMessages.length > 0 ? [lastMessages[0]] : [],
+      currentFlowStep,
     },
   }
 }

@@ -7,6 +7,7 @@ import z from "zod"
 import { inboxTeamResource } from "@/enterprise/features/inbox-teams/schema/resource"
 import { contactInboxResource } from "@/features/contact-inboxes/schema/resource"
 import { contactResource } from "@/features/contacts/schemas/resource"
+import { currentFlowStepResource } from "@/features/flow-steps/schemas/resource"
 import { messageResourceWithRelations } from "@/features/messages/schema/resource"
 import { userResource } from "@/features/users/schemas/resource"
 
@@ -24,6 +25,8 @@ export const listConversationsItemResource = conversationResource.and(
     contact: contactResource.nullable(),
     assignedUser: userResource.nullable(),
     assignedInboxTeam: inboxTeamResource.nullable(),
+    // Optional: realtime/partial conversation payloads do not carry it.
+    currentFlowStep: currentFlowStepResource.nullable().optional(),
   }),
 )
 export type ListConversationItemResource = z.infer<

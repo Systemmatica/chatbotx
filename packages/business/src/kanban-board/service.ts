@@ -10,6 +10,7 @@ import { type ContactAccessScope, contactService } from "../contact"
 import { contactCustomFieldService } from "../contact-custom-field"
 import { customFieldService } from "../custom-field"
 import { ChatbotXException, notFoundException } from "../errors"
+import { currentFlowStepService } from "../flow/current-step"
 import {
   buildKanbanColumns,
   type KanbanColumn,
@@ -187,7 +188,23 @@ class KanbanBoardService extends BaseService {
       kanbanBoardRepository.countCards(filter),
     ])
 
-    const columns = buildKanbanColumns({ stages: board.stages, cards, counts })
+    // One batched lookup for the whole page (no per-card queries).
+    const steps = await currentFlowStepService.resolveMany({
+      workspaceId: input.workspaceId,
+      refs: cards,
+    })
+    const cardsWithSteps = cards.map(
+      ({ currentFlowId, currentNodeId, currentNodeAt, ...card }, index) => ({
+        ...card,
+        currentFlowStep: steps[index] ?? null,
+      }),
+    )
+
+    const columns = buildKanbanColumns({
+      stages: board.stages,
+      cards: cardsWithSteps,
+      counts,
+    })
     return {
       board,
       columns: input.stageId

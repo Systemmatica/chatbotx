@@ -46,6 +46,7 @@ import {
   detectFlowVersion,
 } from "../../lib/db"
 import { logger } from "../../lib/logger"
+import { recordCurrentFlowNode } from "./current-flow-node"
 import {
   type ExecuteMultipleStepsProps,
   MESSAGE_PRODUCING_STEP_TYPES,
@@ -309,6 +310,20 @@ export async function runStepsAndQuickReplies(
       return
     }
     nodeVisits = { ...props.nodeVisits, [props.targetNodeId]: count }
+
+    // Node entry (not a button/quickReply continuation, not a mid-node
+    // re-dispatch): remember it as the contact's current step. Placed after
+    // the loop guard so a node stopped as cyclic is not recorded, and before
+    // any step runs so a contact stuck on this node (waiting for input, or a
+    // step that keeps failing) still shows it. Never throws.
+    if (targetType === "node") {
+      await recordCurrentFlowNode({
+        conversation: props.conversation,
+        contactInbox: props.contactInbox,
+        flowId: flowVersion.flowId,
+        nodeId: props.targetNodeId,
+      })
+    }
   }
 
   // run before step

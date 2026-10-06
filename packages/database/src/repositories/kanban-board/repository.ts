@@ -28,6 +28,10 @@ export type KanbanCardRow = {
   channel: string | null
   lastMessageAt: Date | null
   conversationId: string | null
+  /** Most recently entered flow node across the contact's inboxes. */
+  currentFlowId: string | null
+  currentNodeId: string | null
+  currentNodeAt: Date | null
 }
 
 export type KanbanBucketCount = {
@@ -43,6 +47,9 @@ type RawCardRow = {
   channel: string | null
   lastMessageAt: Date | string | null
   conversationId: string | number | null
+  currentFlowId: string | number | null
+  currentNodeId: string | null
+  currentNodeAt: Date | string | null
 }
 
 type RawCountRow = {
@@ -197,7 +204,10 @@ class KanbanBoardRepository {
         ranked."bucket",
         ranked."channel",
         ranked."lastMessageAt",
-        conv."id" AS "conversationId"
+        conv."id" AS "conversationId",
+        cur."currentFlowId",
+        cur."currentNodeId",
+        cur."currentNodeAt"
       FROM (
         SELECT
           c."id" AS "contactId",
@@ -230,6 +240,14 @@ class KanbanBoardRepository {
         ORDER BY (cv."sourceId" IS NULL) DESC, cv."lastActivityAt" DESC NULLS LAST
         LIMIT 1
       ) conv ON true
+      LEFT JOIN LATERAL (
+        SELECT ci."currentFlowId", ci."currentNodeId", ci."currentNodeAt"
+        FROM "ContactInbox" ci
+        WHERE ci."contactId" = ranked."contactId"
+          AND ci."currentNodeAt" IS NOT NULL
+        ORDER BY ci."currentNodeAt" DESC
+        LIMIT 1
+      ) cur ON true
       WHERE ranked."rowNumber" > ${offset}
         AND ranked."rowNumber" <= ${offset + limit}
       ORDER BY ranked."bucket" NULLS FIRST, ranked."rowNumber"
@@ -244,6 +262,10 @@ class KanbanBoardRepository {
       lastMessageAt: toDate(row.lastMessageAt),
       conversationId:
         row.conversationId === null ? null : String(row.conversationId),
+      currentFlowId:
+        row.currentFlowId === null ? null : String(row.currentFlowId),
+      currentNodeId: row.currentNodeId,
+      currentNodeAt: toDate(row.currentNodeAt),
     }))
   }
 

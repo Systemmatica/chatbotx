@@ -9,6 +9,7 @@ import { contactFilterCriteriaSchema } from "@/features/contact-filter/schemas"
 import { contactInboxResource } from "@/features/contact-inboxes/schema/resource"
 import { contactOnSequenceWithRelations } from "@/features/contact-sequences/schema"
 import { conversationResource } from "@/features/conversations/schema/resource"
+import { currentFlowStepResource } from "@/features/flow-steps/schemas/resource"
 import { inboxResource } from "@/features/inboxes/schema/resource"
 import { tagResource } from "@/features/tags/schema/resource"
 import { userResource } from "@/features/users/schemas/resource"
@@ -145,6 +146,7 @@ export const getContactResponse = contactResource.and(
     customFields: z.array(publicContactCustomFieldResource),
     contactNotes: z.array(contactNoteResource),
     contactsOnSequences: z.array(contactOnSequenceWithRelations),
+    currentFlowStep: currentFlowStepResource.nullable().optional(),
   }),
 )
 export type GetContactResponse = z.infer<typeof getContactResponse>

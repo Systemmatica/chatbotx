@@ -27,6 +27,7 @@ import { toast } from "sonner"
 import { useUserAvatarUrl } from "@/lib/auth/avatar"
 import { useChatStore } from "../chat/store/chat-store-provider"
 import { useAvatarUrl } from "../contacts/utils"
+import { CurrentStepLine } from "../flow-steps/components/current-step-line"
 import { InboxIcon } from "../inboxes/components/inbox-icon"
 import { readConversationAction } from "./actions/read-conversation.action"
 import { resolveLastMessagePreview } from "./queries/resolve-last-message-preview"
@@ -226,6 +227,10 @@ export default function ConversationItem({
           >
             {previewText}
           </div>
+          <CurrentStepLine
+            className="text-start"
+            step={conversation.currentFlowStep}
+          />
           <p className="text-end text-neutral-400 text-xs">
             <span>
               {conversation.lastActivityAt

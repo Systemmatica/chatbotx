@@ -3916,6 +3916,16 @@
       "duplicateStageNames": "Названия стадий не должны повторяться"
     }
   },
+  "currentStep": {
+    "title": "Текущий шаг",
+    "flow": "Цепочка",
+    "step": "Шаг",
+    "reachedAt": "Попал на шаг",
+    "noActiveFlow": "нет активной цепочки",
+    "removedStep": "Шаг удалён из цепочки",
+    "openFlow": "Открыть цепочку",
+    "line": "{flow} › {step} · {time}"
+  },
   "auditLogs": {
     "title": "Журнал действий"
   },

@@ -11,6 +11,7 @@ import { getPublicFileUrl } from "@chatbotx.io/utils"
 import { useDraggable } from "@dnd-kit/core"
 import Link from "next/link"
 import { useFormatter, useTranslations } from "next-intl"
+import { CurrentStepLine } from "@/features/flow-steps/components/current-step-line"
 import { InboxIcon } from "@/features/inboxes/components/inbox-icon"
 import { useTenantSettings } from "@/features/tenant"
 import type { KanbanCardResource } from "../schemas/resource"
@@ -73,6 +74,7 @@ export function KanbanCardContent({
             ? format.relativeTime(card.lastMessageAt)
             : t("kanban.noLastMessage")}
         </p>
+        <CurrentStepLine step={card.currentFlowStep} />
       </div>
     </div>
   )

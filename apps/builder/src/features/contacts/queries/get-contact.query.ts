@@ -1,3 +1,4 @@
+import { currentFlowStepService } from "@chatbotx.io/business"
 import { notFoundException } from "@chatbotx.io/business/errors"
 import { db } from "@chatbotx.io/database/client"
 import type { CustomFieldType } from "@chatbotx.io/database/partials"
@@ -57,8 +58,14 @@ export async function getContact(
     ? contactFields
     : maskContactEmailAndPhone(contactFields)
 
+  const currentFlowStep = await currentFlowStepService.resolveForContact({
+    workspaceId: input.workspaceId,
+    contactId: contact.id,
+  })
+
   return {
     ...visibleContactFields,
+    currentFlowStep,
     customFields: contactCustomFields.map((ccf) => ({
       ...ccf.customField,
       type: ccf.customField.type as CustomFieldType,

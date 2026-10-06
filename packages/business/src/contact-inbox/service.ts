@@ -29,6 +29,11 @@ import {
 } from "@chatbotx.io/sdk"
 import { BaseService } from "../base.service"
 import { logger } from "../logger"
+import {
+  CURRENT_FLOW_NODE_REFRESH_MS,
+  type CurrentFlowNodeState,
+  shouldRecordCurrentFlowNode,
+} from "./current-flow-node"
 
 // Lower bound for message lookups/deletions scoped to a contact-inbox: the
 // first moment the inbox could have received a message.
@@ -629,6 +634,64 @@ class ContactInboxService extends BaseService {
     }
 
     return invalidation
+  }
+
+  /**
+   * Records the flow node the bot just entered for this contact connection.
+   * Skips the write when the same node was recorded less than
+   * `CURRENT_FLOW_NODE_REFRESH_MS` ago — checked in memory against
+   * `previous` (the row the caller already holds) and again in SQL, so a
+   * throttled call never writes. Returns whether a row was updated.
+   *
+   * No cache invalidation: no cached ContactInbox reader uses these columns.
+   */
+  async recordCurrentFlowNode(props: {
+    tx?: DatabaseClient
+    contactInboxId: string
+    contactId: string
+    workspaceId: string
+    flowId: string
+    nodeId: string
+    previous?: CurrentFlowNodeState | null
+    at?: Date
+  }): Promise<boolean> {
+    const {
+      tx = db,
+      contactInboxId,
+      contactId,
+      workspaceId,
+      flowId,
+      nodeId,
+      at = new Date(),
+    } = props
+
+    if (
+      props.previous &&
+      !shouldRecordCurrentFlowNode(props.previous, { flowId, nodeId }, at)
+    ) {
+      return false
+    }
+
+    const freshSince = new Date(at.getTime() - CURRENT_FLOW_NODE_REFRESH_MS)
+    const updatedRows = await tx
+      .update(contactInboxModel)
+      .set({ currentFlowId: flowId, currentNodeId: nodeId, currentNodeAt: at })
+      .where(
+        and(
+          eq(contactInboxModel.id, contactInboxId),
+          eq(contactInboxModel.contactId, contactId),
+          this.workspaceScope(workspaceId),
+          sql`NOT (
+            ${contactInboxModel.currentFlowId} IS NOT DISTINCT FROM ${flowId}::int8
+            AND ${contactInboxModel.currentNodeId} IS NOT DISTINCT FROM ${nodeId}
+            AND ${contactInboxModel.currentNodeAt} IS NOT NULL
+            AND ${contactInboxModel.currentNodeAt} > ${freshSince}::timestamptz
+          )`,
+        ),
+      )
+      .returning({ id: contactInboxModel.id })
+
+    return updatedRows.length > 0
   }
 
   async findLatestLastIncomingMessageAtByContactId(props: {

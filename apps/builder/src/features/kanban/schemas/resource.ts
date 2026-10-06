@@ -1,5 +1,6 @@
 import { kanbanStageSchema } from "@chatbotx.io/database/partials"
 import { z } from "zod"
+import { currentFlowStepResource } from "@/features/flow-steps/schemas/resource"
 
 export const kanbanBoardResource = z.object({
   id: z.string(),
@@ -19,6 +20,7 @@ export const kanbanCardResource = z.object({
   channel: z.string().nullable(),
   lastMessageAt: z.date().nullable(),
   conversationId: z.string().nullable(),
+  currentFlowStep: currentFlowStepResource.nullable().optional(),
 })
 
 export type KanbanCardResource = z.infer<typeof kanbanCardResource>

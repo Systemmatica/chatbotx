@@ -95,6 +95,16 @@ export const contactInboxModel = pgTable(
     // Channel handle/username for this contact (e.g. WhatsApp `@username`).
     // Display-only, never used as a matching key.
     sourceUsername: text(),
+    // Flow node the bot last entered for this contact connection, and when.
+    // Written by the worker on node entry (throttled, best-effort); read by
+    // the builder to show "current step" and spot contacts stuck on a step.
+    // No FK on currentFlowId on purpose: a FK would make every flow delete
+    // scan ContactInbox (or need an extra index on a hot-updated column);
+    // the read path joins Flow by id + workspace and treats a missing flow
+    // as "no active flow".
+    currentFlowId: bigintAsString(),
+    currentNodeId: text(),
+    currentNodeAt: timestamp(timestampConfig),
   },
   (table) => [
     uniqueIndex(CONTACT_INBOX_SOURCE_ID_KEY).using(

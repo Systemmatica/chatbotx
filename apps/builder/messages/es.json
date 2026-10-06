@@ -3818,6 +3818,16 @@
       "duplicateStageNames": "Stage names must be unique"
     }
   },
+  "currentStep": {
+    "title": "Current step",
+    "flow": "Flow",
+    "step": "Step",
+    "reachedAt": "Reached",
+    "noActiveFlow": "No active flow",
+    "removedStep": "Step removed from the flow",
+    "openFlow": "Open flow",
+    "line": "{flow} › {step} · {time}"
+  },
   "auditLogs": {
     "title": "Registros de auditoría"
   },

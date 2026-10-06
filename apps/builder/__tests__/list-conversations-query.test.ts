@@ -28,6 +28,12 @@ vi.mock("@chatbotx.io/business", () => ({
     findManyQuery: mocks.findManyQuery,
     findWithFullRelations: mocks.findWithFullRelations,
   },
+  currentFlowStepService: {
+    resolveMany: async (input: { refs: unknown[] }) =>
+      input.refs.map(() => null),
+    resolveOne: async () => null,
+  },
+  pickLatestCurrentFlowNode: () => null,
 }))
 
 vi.mock("@chatbotx.io/business/errors", () => ({

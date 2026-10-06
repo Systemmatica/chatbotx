@@ -14,6 +14,7 @@ import { useChatStore } from "../chat/store/chat-store-provider"
 import { ContactNotesManage } from "../contact-notes/contact-notes-manage"
 import type { ContactOnSequenceWithRelations } from "../contact-sequences/schema"
 import UpdateContactSequenceField from "../contact-sequences/update-contact-sequence-field"
+import { CurrentStepBlock } from "../flow-steps/components/current-step-block"
 import { SequenceStoreProvider } from "../sequences/provider/sequence-store-context"
 import type { TagResource } from "../tags/schema/resource"
 import { ContactAppointmentsList } from "./components/contact-appointments-list"
@@ -173,6 +174,13 @@ export const ContactInboxPanel = ({
         activeConversationId={activeConversationId}
         contact={contactData}
       />
+
+      {contactData ? (
+        <CurrentStepBlock
+          step={contactData.currentFlowStep}
+          workspaceId={workspaceId}
+        />
+      ) : null}
 
       <ContactNotesManage contactNotes={contactData?.contactNotes ?? []} />
 
