@@ -148,24 +148,30 @@ const TOOLS_CONFIG = [
   // },
 ] as const
 
-export const ToolsList = () => {
+export const ToolsList = ({
+  hiddenFeatures = [],
+}: {
+  hiddenFeatures?: string[]
+}) => {
   const workspaceId = useWorkspaceId()
   const t = useTranslations()
   const router = useRouter()
 
   const tools = useMemo(
     () =>
-      TOOLS_CONFIG.map((config) => ({
-        id: config.id,
-        label: t(config.labelKey),
-        description: t(config.descriptionKey),
-        icon: config.icon,
-        link:
-          "getLink" in config && config.getLink
-            ? config.getLink(workspaceId.toString())
-            : undefined,
-      })),
-    [t, workspaceId],
+      TOOLS_CONFIG.filter((config) => !hiddenFeatures.includes(config.id)).map(
+        (config) => ({
+          id: config.id,
+          label: t(config.labelKey),
+          description: t(config.descriptionKey),
+          icon: config.icon,
+          link:
+            "getLink" in config && config.getLink
+              ? config.getLink(workspaceId.toString())
+              : undefined,
+        }),
+      ),
+    [t, workspaceId, hiddenFeatures],
   )
 
   const handleCardClick = useCallback(

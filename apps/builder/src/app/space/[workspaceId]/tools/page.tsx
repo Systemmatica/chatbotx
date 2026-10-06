@@ -1,5 +1,6 @@
 import { ToolsList } from "@/features/tools/tools-list"
 import { resolveGuardedWorkspaceId } from "@/lib/auth/require-workspace-permission"
+import { parseHiddenFeatures } from "@/lib/hidden-features"
 
 export default async function ToolsPage({
   params,
@@ -8,5 +9,5 @@ export default async function ToolsPage({
 }) {
   await resolveGuardedWorkspaceId(params, "flows")
 
-  return <ToolsList />
+  return <ToolsList hiddenFeatures={parseHiddenFeatures()} />
 }

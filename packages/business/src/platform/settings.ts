@@ -48,7 +48,9 @@ const buildDefaults = (helpItems: TenantHelpItemModel[]): TenantSettings => {
     appUrl: derived.appUrl,
     wsUrl: derived.wsUrl,
     storageUrl: derived.storageUrl,
-    name: "ChatbotX",
+    // Self-hosted instances name the product via PLATFORM_BRAND_NAME; the
+    // tenant brandName (Enterprise branding) still wins when licensed.
+    name: process.env.PLATFORM_BRAND_NAME?.trim() || "ChatbotX",
     logoLightUrl: `${derived.appUrl}/brand/logo_white.svg`,
     logoDarkUrl: `${derived.appUrl}/brand/logo_black.svg`,
     faviconUrl: `${derived.appUrl}/brand/icon_black.svg`,

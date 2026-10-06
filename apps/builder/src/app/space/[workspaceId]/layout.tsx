@@ -27,6 +27,7 @@ import { getTenantSettings } from "@/features/tenant/utils"
 import { hasWorkspacePermission } from "@/lib/auth/permission-routes"
 import { enforcePasswordCurrent } from "@/lib/auth/require-password-current"
 import { getCurrentUser } from "@/lib/auth/utils"
+import { parseHiddenFeatures } from "@/lib/hidden-features"
 import { buildWorkspaceQuotaMetrics } from "@/lib/quota-metrics"
 import { enforceWorkspaceNotScheduledForDeletionFromRequest } from "@/lib/workspace/require-not-scheduled-for-deletion"
 import { resolveWorkspaceBlockState } from "@/lib/workspace-quota"
@@ -113,6 +114,7 @@ export default async function WorkspaceLayout({
     <SidebarProvider defaultOpen={defaultOpen}>
       <AppSidebar
         allWorkspaces={allWorkspaces}
+        hiddenFeatures={parseHiddenFeatures()}
         isPlatformAdmin={platformAdmin}
         isSuperAdmin={isSuperAdmin(user)}
         permissions={targetWorkspaceMember.permissions}

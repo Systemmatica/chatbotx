@@ -42,6 +42,7 @@ import {
 } from "@/lib/auth/permission-routes"
 
 type SidebarNavItem = {
+  id: string
   title: string
   url: string
   icon: LucideIcon
@@ -58,6 +59,7 @@ export function AppSidebar({
   permissions,
   quota,
   scheduledForDeletion = false,
+  hiddenFeatures = [],
   ...props
 }: ComponentProps<typeof Sidebar> & {
   workspaceId: string
@@ -69,6 +71,7 @@ export function AppSidebar({
   permissions: WorkspaceMemberPermissions
   quota: QuotaSummary
   scheduledForDeletion?: boolean
+  hiddenFeatures?: string[]
 }) {
   const t = useTranslations()
   const { data: session } = authClient.useSession()
@@ -81,72 +84,84 @@ export function AppSidebar({
     },
     navMain: [
       {
+        id: "dashboard",
         title: t("fields.analytics.label"),
         url: `/space/${workspaceId}/dashboard`,
         icon: ChartPieIcon,
         permission: PERMISSION_NAV.dashboard,
       },
       {
+        id: "inbox",
         title: t("fields.inbox.label"),
         url: `/space/${workspaceId}/inbox`,
         icon: MessageCircleMoreIcon,
         permission: PERMISSION_NAV.contacts,
       },
       {
+        id: "flows",
         title: t("fields.flows.label"),
         url: `/space/${workspaceId}/flows`,
         icon: WorkflowIcon,
         permission: PERMISSION_NAV.flows,
       },
       {
+        id: "contacts",
         title: t("fields.contacts.label"),
         url: `/space/${workspaceId}/contacts`,
         icon: UsersIcon,
         permission: PERMISSION_NAV.contacts,
       },
       {
+        id: "ai-agents",
         title: t("aiAgent.title"),
         url: `/space/${workspaceId}/ai-agents`,
         icon: BrainIcon,
         permission: PERMISSION_NAV.flows,
       },
       {
+        id: "keywords",
         title: t("keywords.title"),
         url: `/space/${workspaceId}/automated-responses`,
         icon: AtomIcon,
         permission: "superAdmin",
       },
       {
+        id: "broadcasts",
         title: t("broadcasts.title"),
         url: `/space/${workspaceId}/broadcasts`,
         icon: RadioIcon,
         permission: PERMISSION_NAV.broadcasts,
       },
       {
+        id: "sequences",
         title: t("sequences.title"),
         url: `/space/${workspaceId}/sequences`,
         icon: ChevronsRight,
         permission: PERMISSION_NAV.sequences,
       },
       {
+        id: "triggers",
         title: t("triggers.title"),
         url: `/space/${workspaceId}/triggers`,
         icon: LightbulbIcon,
         permission: "superAdmin",
       },
       {
+        id: "webhooks",
         title: t("webhooks.title"),
         url: `/space/${workspaceId}/webhooks`,
         icon: WebhookIcon,
         permission: "superAdmin",
       },
       {
+        id: "tools",
         title: t("tools.title"),
         url: `/space/${workspaceId}/tools`,
         icon: WrenchIcon,
         permission: PERMISSION_NAV.flows,
       },
       {
+        id: "settings",
         title: t("settings.title"),
         url: `/space/${workspaceId}/settings/general`,
         icon: SlidersHorizontalIcon,
@@ -156,6 +171,7 @@ export function AppSidebar({
   }
 
   const navMain = data.navMain
+    .filter((item) => !hiddenFeatures.includes(item.id))
     .filter((item) =>
       // Items gated on the `contacts` flag (Contacts, Inbox) use the shared
       // contacts-access rule, which also admits assigned-only members.
