@@ -13,6 +13,8 @@ export type CustomFieldValueInputKind =
   | "boolean"
   | "numberInterval"
   | "datetimeInterval"
+  /** `[flowId, nodeId]` picked flow-then-node; static `currentFlowNode` only. */
+  | "flowNode"
 
 export type CustomFieldValueInputConfig = {
   kind: CustomFieldValueInputKind

@@ -71,7 +71,20 @@ const DATE_OPERATORS = [
   ...RANGE_OPERATORS,
 ] as const satisfies readonly OperatorType[]
 
+const IDENTITY_OPERATORS = [
+  operatorTypes.enum.eq,
+  operatorTypes.enum.ne,
+] as const satisfies readonly OperatorType[]
+
+const MINUTES_AGO_OPERATORS = [
+  ...BASE_OPERATORS,
+  ...RANGE_OPERATORS,
+] as const satisfies readonly OperatorType[]
+
 const STATIC_OPERATOR_RULES: Record<string, readonly OperatorType[]> = {
+  currentFlow: IDENTITY_OPERATORS,
+  currentFlowNode: IDENTITY_OPERATORS,
+  currentNodeMinutesAgo: MINUTES_AGO_OPERATORS,
   locale: BASE_OPERATORS,
   language: SET_OPERATORS,
   country: BASE_OPERATORS,
@@ -126,6 +139,25 @@ const STATIC_OPERATOR_RULES: Record<string, readonly OperatorType[]> = {
   lastSent: DATE_OPERATORS,
   lastSeen: DATE_OPERATORS,
   lastInteraction: DATE_OPERATORS,
+}
+
+const FLOW_ID_PATTERN = /^\d+$/
+
+/**
+ * Fields whose value has a fixed shape beyond "non-empty". The backend fails
+ * closed on a malformed value; rejecting it here gives the user an error
+ * instead of a silently empty audience.
+ */
+const STATIC_VALUE_VALIDATORS: Record<string, (value: unknown) => boolean> = {
+  currentFlow: (value) =>
+    typeof value === "string" && FLOW_ID_PATTERN.test(value),
+  currentFlowNode: (value) =>
+    Array.isArray(value) &&
+    value.length === 2 &&
+    typeof value[0] === "string" &&
+    FLOW_ID_PATTERN.test(value[0]) &&
+    typeof value[1] === "string" &&
+    value[1].trim() !== "",
 }
 
 const isValuelessOperator = (operator: OperatorType): boolean =>
@@ -185,6 +217,16 @@ export const staticFieldFilter = <T extends string>(field: T) =>
         ctx.addIssue({
           code: "custom",
           message: "Operator requires a value",
+          path: ["value"],
+        })
+        return
+      }
+
+      const validateValue = STATIC_VALUE_VALIDATORS[field]
+      if (validateValue && !validateValue(condition.value)) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Invalid value for this field",
           path: ["value"],
         })
       }

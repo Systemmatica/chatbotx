@@ -132,7 +132,24 @@ const dateRule = {
   intervalInput: "datetimeInterval",
 } as const satisfies StaticFieldRule
 
+const IDENTITY_OPERATORS = [
+  operatorTypes.enum.eq,
+  operatorTypes.enum.ne,
+] as const satisfies readonly OperatorType[]
+
+const minutesAgoRule = {
+  enabledOperators: [...BASE_OPERATORS, ...RANGE_OPERATORS],
+  singleInput: "number",
+  intervalInput: "numberInterval",
+} as const satisfies StaticFieldRule
+
 const staticFieldRules: Record<string, StaticFieldRule> = {
+  currentFlow: { enabledOperators: IDENTITY_OPERATORS, singleInput: "field" },
+  currentFlowNode: {
+    enabledOperators: IDENTITY_OPERATORS,
+    singleInput: "flowNode",
+  },
+  currentNodeMinutesAgo: minutesAgoRule,
   locale: dropdownRule,
   language: relationSetRule,
   country: dropdownRule,
@@ -279,6 +296,7 @@ const getDefaultValueForInputKind = (
     case "numberInterval":
       return ["0", "0"]
     case "datetimeInterval":
+    case "flowNode":
       return ["", ""]
     default:
       return ""
@@ -351,6 +369,7 @@ export const staticFieldOperatorRequiresArrayValue = (
   return (
     isSetOperator(operator) ||
     input?.kind === "numberInterval" ||
-    input?.kind === "datetimeInterval"
+    input?.kind === "datetimeInterval" ||
+    input?.kind === "flowNode"
   )
 }

@@ -242,5 +242,8 @@ export const contactFilterFields = z.enum([
   "fromCtwaAd",
   "ctwaConversion",
   "ctwaRetarget",
+  "currentFlow",
+  "currentFlowNode",
+  "currentNodeMinutesAgo",
 ])
 export type ContactFilterField = z.infer<typeof contactFilterFields>

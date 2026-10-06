@@ -25,6 +25,11 @@ import {
 import { buildCustomFieldWhere } from "./custom-field-predicates"
 import { contactInboxExists, existsWhere, joinTableExists } from "./exists"
 import {
+  buildCurrentFlowNodeWhere,
+  buildCurrentFlowWhere,
+  buildCurrentNodeMinutesAgoWhere,
+} from "./flow-position"
+import {
   buildBooleanColumn,
   buildBooleanFromTimestamp,
   buildColumnWhere,
@@ -460,6 +465,15 @@ function buildConditionWhere(
         operator,
         value,
       )
+
+    case "currentFlow":
+      return buildCurrentFlowWhere(operator, value)
+
+    case "currentFlowNode":
+      return buildCurrentFlowNodeWhere(operator, value)
+
+    case "currentNodeMinutesAgo":
+      return buildCurrentNodeMinutesAgoWhere(operator, value)
 
     case "lastUserInput":
       return buildLatestContactInboxTextWhere(

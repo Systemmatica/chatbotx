@@ -22,6 +22,7 @@ import {
   allContinentOptions,
   allCountryOptions,
 } from "@/features/workspaces/schema/types"
+import { formatFlowNodeValue } from "../lib/flow-node-options"
 import {
   CONTACT_FILTER_FIELD_DEFINITIONS,
   type ContactFilterFieldDefinition,
@@ -67,6 +68,7 @@ export type ContactFilterFieldGroup =
   | "opportunity"
   | "instagram"
   | "analytics"
+  | "flowPosition"
   | "facebookInstagramComment"
   | "sms"
   | "broadcastWhatsapp"
@@ -211,6 +213,7 @@ const resolveContactFilterOptions = (
     inboxOptions: SelectOption[]
     tagOptions: SelectOption[]
     flowVersionOptions: SelectOption[]
+    flowNodeOptions: SelectOption[]
     broadcastOptions: SelectOption[]
     sequenceOptions: SelectOption[]
     reflinkOptions: SelectOption[]
@@ -251,6 +254,8 @@ const resolveContactFilterOptions = (
       return ctx.tagOptions
     case "flows":
       return ctx.flowVersionOptions
+    case "flowNodes":
+      return ctx.flowNodeOptions
     case "broadcasts":
       return ctx.broadcastOptions
     case "sequences":
@@ -317,6 +322,7 @@ const CONTACT_FILTER_GROUP_FIELDS = {
     "questionnaireFinished",
     "votedOnPoll",
   ],
+  flowPosition: ["currentFlow", "currentFlowNode", "currentNodeMinutesAgo"],
   facebookInstagramComment: [
     "lastComment",
     "commentedOnPost",
@@ -395,6 +401,7 @@ export const getFieldConfigs = ({
   inboxOptions,
   customFields,
   flowVersionOptions,
+  flowNodeOptions = [],
   broadcastOptions = [],
   sequenceOptions = [],
   reflinkOptions = [],
@@ -406,6 +413,8 @@ export const getFieldConfigs = ({
   inboxOptions: SelectOption[]
   customFields: CustomFieldFilterOption[]
   flowVersionOptions: SelectOption[]
+  /** Flow → node tree (`children`) for `currentFlowNode`. */
+  flowNodeOptions?: SelectOption[]
   broadcastOptions?: SelectOption[]
   sequenceOptions?: SelectOption[]
   reflinkOptions?: SelectOption[]
@@ -426,6 +435,7 @@ export const getFieldConfigs = ({
         inboxOptions,
         tagOptions,
         flowVersionOptions,
+        flowNodeOptions,
         broadcastOptions,
         sequenceOptions,
         reflinkOptions,
@@ -568,6 +578,17 @@ export const formatCtwaRetargetChipLabel = (
   return [segmentLabel, adPart, `${condition.since}–${condition.until}`].join(
     " · ",
   )
+}
+
+/** Value label of a condition chip; field-aware where the value is composite. */
+export const formatFieldConditionValue = (
+  config: FieldConfig | undefined,
+  value: string | string[] | undefined,
+): string => {
+  if (value !== undefined && config?.name === "currentFlowNode") {
+    return formatFlowNodeValue(value, config.options)
+  }
+  return formatConditionValueDisplay(value, config?.options)
 }
 
 export const formatConditionValueDisplay = (

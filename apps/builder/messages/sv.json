@@ -623,6 +623,7 @@
     "datetimePlaceholder": "YYYY-MM-DD HH:mm",
     "fieldGroups": {
       "analytics": "Analys",
+      "flowPosition": "Position i flödet",
       "broadcastWhatsapp": "Utskick (WhatsApp)",
       "customFields": "Anpassade fält",
       "ecommerce": "E-handel",
@@ -700,6 +701,9 @@
       "lastDelivered": "Senast levererat",
       "lastInteraction": "Senaste interaktion",
       "lastInteractionMinutesAgo": "Senaste interaktion (minuter sedan)",
+      "currentFlow": "Aktuellt flöde",
+      "currentFlowNode": "Aktuellt flödessteg",
+      "currentNodeMinutesAgo": "På aktuellt steg (minuter)",
       "lastSeen": "Senast sett",
       "lastSeenMinutesAgo": "Senast sett (minuter sedan)",
       "lastSent": "Senast skickat",

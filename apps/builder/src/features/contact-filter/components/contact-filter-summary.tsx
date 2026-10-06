@@ -3,8 +3,8 @@
 import { useTranslations } from "next-intl"
 import type { ContactFilterCriteria } from "../schemas"
 import {
-  formatConditionValueDisplay,
   formatCtwaRetargetChipLabel,
+  formatFieldConditionValue,
   getConditionOptions,
   getFieldConfigs,
 } from "./contact-filter-config"
@@ -95,9 +95,9 @@ export function ContactFilterSummary({
             })()
           const conditionOperator =
             operatorLabelByValue.get(condition.operator) ?? condition.operator
-          const valueDisplay = formatConditionValueDisplay(
+          const valueDisplay = formatFieldConditionValue(
+            fieldConfig,
             "value" in condition ? condition.value : undefined,
-            fieldConfig?.options,
           )
           const conditionKey = [
             condition.field,

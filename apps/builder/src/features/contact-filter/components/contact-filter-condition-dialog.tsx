@@ -51,6 +51,7 @@ import {
   getCustomFieldValueInputConfig,
   getDefaultCustomFieldValue,
 } from "./custom-field-filter-config"
+import { FlowNodeValueInput } from "./flow-node-value-input"
 import {
   getDefaultStaticFieldValue,
   getStaticFieldConditionOptions,
@@ -348,6 +349,7 @@ const VALUE_INPUT_RENDERERS = {
   datetimeInterval: ({ enableVariables }) => (
     <IntervalValueInput enableVariables={enableVariables} kind="datetime" />
   ),
+  flowNode: ({ valueOptions }) => <FlowNodeValueInput options={valueOptions} />,
 } as const satisfies Record<
   ValueInputKind,
   (ctx: ValueRenderContext) => ReactNode

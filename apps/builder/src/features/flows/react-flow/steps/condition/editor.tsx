@@ -11,7 +11,14 @@ import { ContactFilter } from "@/features/contact-filter"
 import { SequenceStoreProvider } from "@/features/sequences/provider/sequence-store-context"
 import { useWorkspaceId } from "@/hooks/routing"
 
-const CONDITION_EXCLUDED_FILTER_FIELDS: ContactFilterField[] = []
+// Flow position is recorded on node entry, before the step runs: inside a
+// Condition step the contact is always "on this Condition node, 0 minutes",
+// so these fields could only ever give one constant answer here.
+const CONDITION_EXCLUDED_FILTER_FIELDS: ContactFilterField[] = [
+  "currentFlow",
+  "currentFlowNode",
+  "currentNodeMinutesAgo",
+]
 
 type ConditionStepEditorProps = {
   parentName: string

@@ -6,8 +6,8 @@ import { useTranslations } from "next-intl"
 import type { ContactFilterCondition } from "../schemas"
 import {
   type FieldConfig,
-  formatConditionValueDisplay,
   formatCtwaRetargetChipLabel,
+  formatFieldConditionValue,
 } from "./contact-filter-config"
 
 type ContactFilterConditionRowProps = {
@@ -77,9 +77,9 @@ export const ContactFilterConditionRow = ({
       }
       return t(`condition.fields.${row.field}`)
     })()
-  const valueDisplay = formatConditionValueDisplay(
+  const valueDisplay = formatFieldConditionValue(
+    fieldConfig,
     "value" in row ? row.value : undefined,
-    fieldConfig?.options,
   )
   const operatorLabel = operatorLabelByValue.get(row.operator) ?? row.operator
   const editLabel = [fieldLabel, operatorLabel, valueDisplay]

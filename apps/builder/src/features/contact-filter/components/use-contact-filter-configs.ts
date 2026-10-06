@@ -5,10 +5,12 @@ import { useMemo } from "react"
 import { useCouponTopicOptions } from "@/features/coupons/provider/use-coupon-topic-options"
 import { useCustomFieldStore } from "@/features/custom-fields/provider/custom-field-store-context"
 import { useFlowSelectOptions } from "@/features/flows/provider/flow-hook"
+import { useFlowStore } from "@/features/flows/provider/flow-store-context"
 import { useInboxOptionsByChannel } from "@/features/inboxes/provider/inbox-hook"
 import { useSequenceOptions } from "@/features/sequences/provider/sequence-hook"
 import { useTagSelectOptions } from "@/features/tags/provider/tag-hook"
 import { useContactAssigneeOptions } from "@/features/users/provider/user-hook"
+import { buildFlowNodeOptionTree } from "../lib/flow-node-options"
 import {
   type ConditionOption,
   type FieldConfig,
@@ -40,6 +42,11 @@ export const useContactFilterConfigs = (
   const inboxOptions = useInboxOptionsByChannel(inboxChannel)
   const customFields = useCustomFieldStore((state) => state.customFields)
   const flowVersionOptions = useFlowSelectOptions()
+  const flows = useFlowStore((state) => state.flows)
+  const flowNodeOptions = useMemo(
+    () => buildFlowNodeOptionTree(flows, t),
+    [flows, t],
+  )
   const broadcastOptions = useBroadcastSelectOptions()
   const sequences = useSequenceOptions()
   const sequenceOptions = useMemo(
@@ -64,6 +71,7 @@ export const useContactFilterConfigs = (
         inboxOptions,
         customFields,
         flowVersionOptions,
+        flowNodeOptions,
         broadcastOptions,
         sequenceOptions,
         reflinkOptions,
@@ -76,6 +84,7 @@ export const useContactFilterConfigs = (
       inboxOptions,
       customFields,
       flowVersionOptions,
+      flowNodeOptions,
       broadcastOptions,
       sequenceOptions,
       reflinkOptions,

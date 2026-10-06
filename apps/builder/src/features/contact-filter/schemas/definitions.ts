@@ -32,6 +32,7 @@ export type ContactFilterOptionSource =
   | "inboxes"
   | "tags"
   | "flows"
+  | "flowNodes"
   | "broadcasts"
   | "sequences"
   | "reflinks"
@@ -173,6 +174,22 @@ export const CONTACT_FILTER_FIELD_DEFINITIONS = [
   },
   {
     field: contactFilterFields.enum.lastInteractionMinutesAgo,
+    schemaKind: "number",
+    optionSource: "none",
+  },
+  {
+    field: contactFilterFields.enum.currentFlow,
+    schemaKind: "select",
+    optionSource: "flows",
+  },
+  {
+    // Value is `[flowId, nodeId]`, picked flow-then-node (`flowNode` input).
+    field: contactFilterFields.enum.currentFlowNode,
+    schemaKind: "select",
+    optionSource: "flowNodes",
+  },
+  {
+    field: contactFilterFields.enum.currentNodeMinutesAgo,
     schemaKind: "number",
     optionSource: "none",
   },

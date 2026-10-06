@@ -18,6 +18,7 @@
     "./minigame": "./src/minigame/index.ts",
     "./smart-delay": "./src/smart-delay/index.ts",
     "./errors": "./src/errors.ts",
+    "./flow-node-display": "./src/flow/node-display.ts",
     "./referral": "./src/referral/index.ts",
     "./system-field": "./src/system-field/index.ts",
     "./utils": "./src/utils.ts",

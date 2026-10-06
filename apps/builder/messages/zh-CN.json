@@ -797,6 +797,7 @@
     "datetimePlaceholder": "YYYY-MM-DD HH:mm",
     "fieldGroups": {
       "analytics": "分析",
+      "flowPosition": "流程位置",
       "broadcastWhatsapp": "广播 (WhatsApp)",
       "ctwaAds": "点击 WhatsApp 广告",
       "customFields": "自订字段",
@@ -878,6 +879,9 @@
       "lastDelivered": "最后交付",
       "lastInteraction": "最后一次交互",
       "lastInteractionMinutesAgo": "最后一次交互（分钟前）",
+      "currentFlow": "当前流程",
+      "currentFlowNode": "当前流程步骤",
+      "currentNodeMinutesAgo": "停留在当前步骤（分钟）",
       "lastSeen": "最后出现",
       "lastSeenMinutesAgo": "最后出现（分钟前）",
       "lastSent": "最后发送",

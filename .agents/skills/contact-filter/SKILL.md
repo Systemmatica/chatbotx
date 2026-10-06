@@ -54,7 +54,7 @@ Operators + form-field types: `packages/database/src/partials/custom-field.ts`
 2. **Definition** — add one entry to `CONTACT_FILTER_FIELD_DEFINITIONS`
    (`schemas/definitions.ts`) with `schemaKind`
    (`boolean|text|multiSelect|select|datetime|number`) and `optionSource`
-   (`none|languages|countries|continents|gender|contactSources|channels|inboxes|tags|flows`).
+   (`none|languages|countries|continents|gender|contactSources|channels|inboxes|tags|flows|flowNodes|…`).
    This one entry auto-generates **both** the Zod condition schema and the UI config.
 3. **Operator rules — TWO places (CRITICAL, must match):**
    - Zod validation: `STATIC_OPERATOR_RULES` in `schemas/static-field-filter.ts`
@@ -116,6 +116,22 @@ Broadcast policy example — `apps/builder/src/features/broadcasts/lib/broadcast
 `getBroadcastExcludedFilterFields({ channel, subaction })` hides `currentChannel`
 (+`inbox` for template sends, +`interactedInLast24h` for the two non-template
 Messenger/WhatsApp subactions).
+
+## Flow position fields (`currentFlow`, `currentFlowNode`, `currentNodeMinutesAgo`)
+
+`queries/contact-filter/flow-position.ts`, reading `ContactInbox.currentFlowId /
+currentNodeId / currentNodeAt` (written by the worker on node entry).
+- All three evaluate the contact's **latest** position (inbox with the newest
+  `currentNodeAt`; minutes = `MAX(currentNodeAt)`), not "any inbox" — so
+  `currentFlowNode = X AND currentNodeMinutesAgo > N` stays correlated to one
+  row. Same "current step" the inbox/contact panel shows.
+- `currentFlowNode` value is `[flowId, nodeId]`, picked via the `flowNode` value
+  input (`components/flow-node-value-input.tsx`), option tree from
+  `lib/flow-node-options.ts` (published version, draft fallback; labels via
+  `@chatbotx.io/business/flow-node-display`).
+- Malformed flow/node values fail **closed** (`FALSE`), never dropped.
+- Excluded from the flow Condition step (position there is always "this node,
+  0 min").
 
 ## Shared 24h window predicate
 
