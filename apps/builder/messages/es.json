@@ -5433,5 +5433,23 @@
     "saved": "Guardado",
     "loadError": "No se pudieron cargar los ajustes de notificaciones",
     "saveError": "No se pudo guardar el cambio"
+  },
+  "uiLabels": {
+    "sortAsc": "Ascendente",
+    "sortDesc": "Descendente",
+    "hide": "Ocultar",
+    "view": "Vista",
+    "toggleColumns": "Mostrar u ocultar columnas",
+    "searchColumns": "Buscar columnas...",
+    "noColumnsFound": "No se encontraron columnas.",
+    "clearFilters": "Borrar filtros",
+    "resetFilters": "Restablecer filtros",
+    "close": "Cerrar",
+    "selectOption": "Seleccionar opción",
+    "selectOptions": "Seleccionar opciones",
+    "searchOptions": "Buscar opciones...",
+    "optionsCount": "{count, plural, one {# opción} other {# opciones}}",
+    "moreCount": "+ {count} más",
+    "clearAllSelected": "Borrar las {count} opciones seleccionadas"
   }
 }

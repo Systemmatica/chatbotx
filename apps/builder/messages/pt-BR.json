@@ -5433,5 +5433,23 @@
     "saved": "Salvo",
     "loadError": "Não foi possível carregar as configurações de notificação",
     "saveError": "Não foi possível salvar a alteração"
+  },
+  "uiLabels": {
+    "sortAsc": "Crescente",
+    "sortDesc": "Decrescente",
+    "hide": "Ocultar",
+    "view": "Visualização",
+    "toggleColumns": "Mostrar ou ocultar colunas",
+    "searchColumns": "Pesquisar colunas...",
+    "noColumnsFound": "Nenhuma coluna encontrada.",
+    "clearFilters": "Limpar filtros",
+    "resetFilters": "Redefinir filtros",
+    "close": "Fechar",
+    "selectOption": "Selecionar opção",
+    "selectOptions": "Selecionar opções",
+    "searchOptions": "Pesquisar opções...",
+    "optionsCount": "{count, plural, one {# opção} other {# opções}}",
+    "moreCount": "+ {count} mais",
+    "clearAllSelected": "Limpar todas as {count} opções selecionadas"
   }
 }

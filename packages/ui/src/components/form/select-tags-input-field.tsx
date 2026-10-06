@@ -22,6 +22,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@chatbotx.io/ui/components/ui/popover"
+import { useUiLabels } from "@chatbotx.io/ui/components/ui-labels"
 import { cn } from "@chatbotx.io/ui/lib/utils"
 import { AnimatePresence, motion } from "framer-motion"
 import { Check, ChevronDown, X } from "lucide-react"
@@ -53,7 +54,7 @@ const SelectTagsInputFieldBase = <TFieldValues extends FieldValues>({
   name,
   description,
   label,
-  placeholder = "Chọn...",
+  placeholder: placeholderProp,
   disabled = false,
   className,
   maxTags,
@@ -63,9 +64,15 @@ const SelectTagsInputFieldBase = <TFieldValues extends FieldValues>({
   variant = "enterprise",
   tagVariant = "default",
   onSelect,
-  searchPlaceholder = "Tìm kiếm...",
-  emptyMessage = "Không tìm thấy.",
+  searchPlaceholder: searchPlaceholderProp,
+  emptyMessage: emptyMessageProp,
 }: SelectTagsInputFieldProps<TFieldValues>) => {
+  const uiLabels = useUiLabels()
+  const placeholder = placeholderProp ?? uiLabels.pleaseSelect ?? "Select..."
+  const searchPlaceholder =
+    searchPlaceholderProp ?? uiLabels.search ?? "Search..."
+  const emptyMessage =
+    emptyMessageProp ?? uiLabels.noRecordFound ?? "No record found."
   const { control } = useFormContext()
   const [open, setOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)

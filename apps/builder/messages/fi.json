@@ -5433,5 +5433,23 @@
     "saved": "Tallennettu",
     "loadError": "Ilmoitusasetuksia ei voitu ladata",
     "saveError": "Muutosta ei voitu tallentaa"
+  },
+  "uiLabels": {
+    "sortAsc": "Nouseva",
+    "sortDesc": "Laskeva",
+    "hide": "Piilota",
+    "view": "Näkymä",
+    "toggleColumns": "Näytä tai piilota sarakkeet",
+    "searchColumns": "Hae sarakkeita...",
+    "noColumnsFound": "Sarakkeita ei löytynyt.",
+    "clearFilters": "Tyhjennä suodattimet",
+    "resetFilters": "Nollaa suodattimet",
+    "close": "Sulje",
+    "selectOption": "Valitse vaihtoehto",
+    "selectOptions": "Valitse vaihtoehdot",
+    "searchOptions": "Hae vaihtoehtoja...",
+    "optionsCount": "{count, plural, one {# vaihtoehto} other {# vaihtoehtoa}}",
+    "moreCount": "+ {count} lisää",
+    "clearAllSelected": "Tyhjennä kaikki {count} valittua vaihtoehtoa"
   }
 }

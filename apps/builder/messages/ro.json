@@ -5433,5 +5433,23 @@
     "saved": "Salvat",
     "loadError": "Setările de notificare nu au putut fi încărcate",
     "saveError": "Modificarea nu a putut fi salvată"
+  },
+  "uiLabels": {
+    "sortAsc": "Crescător",
+    "sortDesc": "Descrescător",
+    "hide": "Ascunde",
+    "view": "Vizualizare",
+    "toggleColumns": "Afișează sau ascunde coloanele",
+    "searchColumns": "Caută coloane...",
+    "noColumnsFound": "Nu s-au găsit coloane.",
+    "clearFilters": "Șterge filtrele",
+    "resetFilters": "Resetează filtrele",
+    "close": "Închide",
+    "selectOption": "Selectează o opțiune",
+    "selectOptions": "Selectează opțiuni",
+    "searchOptions": "Caută opțiuni...",
+    "optionsCount": "{count, plural, one {# opțiune} few {# opțiuni} other {# de opțiuni}}",
+    "moreCount": "+ încă {count}",
+    "clearAllSelected": "Șterge toate cele {count} opțiuni selectate"
   }
 }

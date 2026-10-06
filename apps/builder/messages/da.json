@@ -5433,5 +5433,23 @@
     "saved": "Gemt",
     "loadError": "Notifikationsindstillingerne kunne ikke indlæses",
     "saveError": "Ændringen kunne ikke gemmes"
+  },
+  "uiLabels": {
+    "sortAsc": "Stigende",
+    "sortDesc": "Faldende",
+    "hide": "Skjul",
+    "view": "Visning",
+    "toggleColumns": "Vis eller skjul kolonner",
+    "searchColumns": "Søg i kolonner...",
+    "noColumnsFound": "Ingen kolonner fundet.",
+    "clearFilters": "Ryd filtre",
+    "resetFilters": "Nulstil filtre",
+    "close": "Luk",
+    "selectOption": "Vælg mulighed",
+    "selectOptions": "Vælg muligheder",
+    "searchOptions": "Søg i muligheder...",
+    "optionsCount": "{count, plural, one {# mulighed} other {# muligheder}}",
+    "moreCount": "+ {count} mere",
+    "clearAllSelected": "Ryd alle {count} valgte muligheder"
   }
 }

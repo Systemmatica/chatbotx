@@ -5433,5 +5433,23 @@
     "saved": "Saved",
     "loadError": "Could not load notification settings",
     "saveError": "Could not save the change"
+  },
+  "uiLabels": {
+    "sortAsc": "Asc",
+    "sortDesc": "Desc",
+    "hide": "Hide",
+    "view": "View",
+    "toggleColumns": "Toggle columns",
+    "searchColumns": "Search columns...",
+    "noColumnsFound": "No columns found.",
+    "clearFilters": "Clear filters",
+    "resetFilters": "Reset filters",
+    "close": "Close",
+    "selectOption": "Select option",
+    "selectOptions": "Select options",
+    "searchOptions": "Search options...",
+    "optionsCount": "{count, plural, one {# option} other {# options}}",
+    "moreCount": "+ {count} more",
+    "clearAllSelected": "Clear all {count} selected options"
   }
 }

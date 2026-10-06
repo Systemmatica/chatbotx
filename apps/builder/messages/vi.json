@@ -5433,5 +5433,23 @@
     "saved": "Đã lưu",
     "loadError": "Không tải được cài đặt thông báo",
     "saveError": "Không lưu được thay đổi"
+  },
+  "uiLabels": {
+    "sortAsc": "Tăng dần",
+    "sortDesc": "Giảm dần",
+    "hide": "Ẩn",
+    "view": "Hiển thị",
+    "toggleColumns": "Ẩn/hiện cột",
+    "searchColumns": "Tìm cột...",
+    "noColumnsFound": "Không tìm thấy cột.",
+    "clearFilters": "Xóa bộ lọc",
+    "resetFilters": "Đặt lại bộ lọc",
+    "close": "Đóng",
+    "selectOption": "Chọn tùy chọn",
+    "selectOptions": "Chọn các tùy chọn",
+    "searchOptions": "Tìm tùy chọn...",
+    "optionsCount": "{count, plural, other {# tùy chọn}}",
+    "moreCount": "+ {count} nữa",
+    "clearAllSelected": "Xóa tất cả {count} tùy chọn đã chọn"
   }
 }

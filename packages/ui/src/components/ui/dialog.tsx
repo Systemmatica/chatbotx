@@ -6,6 +6,7 @@ import { XIcon } from "lucide-react"
 
 import { cn } from "@chatbotx.io/ui/lib/utils"
 import { Button } from "@chatbotx.io/ui/components/ui/button"
+import { useUiLabels } from "@chatbotx.io/ui/components/ui-labels"
 
 type DialogChangeEventDetails = DialogPrimitive.Root.ChangeEventDetails
 
@@ -49,6 +50,7 @@ function DialogContent({
 }: DialogPrimitive.Popup.Props & {
   showCloseButton?: boolean
 }) {
+  const uiLabels = useUiLabels()
   return (
     <DialogPortal>
       <DialogOverlay />
@@ -62,7 +64,7 @@ function DialogContent({
       >
         {children}
         {showCloseButton && (
-          <DialogPrimitive.Close data-slot="dialog-close" render={<Button variant="ghost" className="absolute top-2 inset-e-2" size="sm"><XIcon /><span className="sr-only">Close</span></Button>} />
+          <DialogPrimitive.Close data-slot="dialog-close" render={<Button variant="ghost" className="absolute top-2 inset-e-2" size="sm"><XIcon /><span className="sr-only">{uiLabels.close ?? "Close"}</span></Button>} />
         )}
       </DialogPrimitive.Popup>
     </DialogPortal>
@@ -87,6 +89,7 @@ function DialogFooter({
 }: React.ComponentProps<"div"> & {
   showCloseButton?: boolean
 }) {
+  const uiLabels = useUiLabels()
   return (
     <div
       data-slot="dialog-footer"
@@ -98,7 +101,7 @@ function DialogFooter({
     >
       {children}
       {showCloseButton && (
-        <DialogPrimitive.Close render={<Button variant="outline">Close</Button>} />
+        <DialogPrimitive.Close render={<Button variant="outline">{uiLabels.close ?? "Close"}</Button>} />
       )}
     </div>
   )

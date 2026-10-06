@@ -5433,5 +5433,23 @@
     "saved": "已儲存",
     "loadError": "無法載入通知設定",
     "saveError": "無法儲存變更"
+  },
+  "uiLabels": {
+    "sortAsc": "升冪",
+    "sortDesc": "降冪",
+    "hide": "隱藏",
+    "view": "檢視",
+    "toggleColumns": "顯示或隱藏欄位",
+    "searchColumns": "搜尋欄位...",
+    "noColumnsFound": "找不到欄位。",
+    "clearFilters": "清除篩選",
+    "resetFilters": "重設篩選",
+    "close": "關閉",
+    "selectOption": "選擇選項",
+    "selectOptions": "選擇選項",
+    "searchOptions": "搜尋選項...",
+    "optionsCount": "{count, plural, other {# 個選項}}",
+    "moreCount": "+ 另外 {count} 個",
+    "clearAllSelected": "清除全部 {count} 個已選選項"
   }
 }

@@ -5433,5 +5433,23 @@
     "saved": "Opgeslagen",
     "loadError": "Meldingsinstellingen konden niet worden geladen",
     "saveError": "Wijziging kon niet worden opgeslagen"
+  },
+  "uiLabels": {
+    "sortAsc": "Oplopend",
+    "sortDesc": "Aflopend",
+    "hide": "Verbergen",
+    "view": "Weergave",
+    "toggleColumns": "Kolommen tonen of verbergen",
+    "searchColumns": "Kolommen zoeken...",
+    "noColumnsFound": "Geen kolommen gevonden.",
+    "clearFilters": "Filters wissen",
+    "resetFilters": "Filters resetten",
+    "close": "Sluiten",
+    "selectOption": "Optie selecteren",
+    "selectOptions": "Opties selecteren",
+    "searchOptions": "Opties zoeken...",
+    "optionsCount": "{count, plural, one {# optie} other {# opties}}",
+    "moreCount": "+ {count} meer",
+    "clearAllSelected": "Alle {count} geselecteerde opties wissen"
   }
 }

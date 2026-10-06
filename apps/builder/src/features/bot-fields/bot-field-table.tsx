@@ -174,7 +174,7 @@ export function BotFieldsTable({
       },
       {
         id: "actions",
-        header: "Actions",
+        header: t("actions.actions"),
         cell: ({ row }) => (
           <DropdownMenu>
             <DropdownMenuTrigger

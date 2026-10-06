@@ -4,6 +4,7 @@ import type * as React from "react"
 import { Dialog as SheetPrimitive } from "@base-ui/react/dialog"
 import { XIcon } from "lucide-react"
 
+import { useUiLabels } from "@chatbotx.io/ui/components/ui-labels"
 import { cn } from "@chatbotx.io/ui/lib/utils"
 
 function Sheet({ ...props }: React.ComponentProps<typeof SheetPrimitive.Root>) {
@@ -52,6 +53,7 @@ function SheetContent({
 }: React.ComponentProps<typeof SheetPrimitive.Popup> & {
   side?: "top" | "right" | "bottom" | "left"
 }) {
+  const uiLabels = useUiLabels()
   return (
     <SheetPortal>
       <SheetOverlay />
@@ -74,7 +76,7 @@ function SheetContent({
         {children}
         <SheetPrimitive.Close className="ring-offset-background focus:ring-ring data-popup-open:bg-secondary absolute top-4 end-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none">
           <XIcon className="size-4" />
-          <span className="sr-only">Close</span>
+          <span className="sr-only">{uiLabels.close ?? "Close"}</span>
         </SheetPrimitive.Close>
       </SheetPrimitive.Popup>
     </SheetPortal>

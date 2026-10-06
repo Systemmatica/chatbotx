@@ -5433,5 +5433,23 @@
     "saved": "Gespeichert",
     "loadError": "Benachrichtigungseinstellungen konnten nicht geladen werden",
     "saveError": "Änderung konnte nicht gespeichert werden"
+  },
+  "uiLabels": {
+    "sortAsc": "Aufsteigend",
+    "sortDesc": "Absteigend",
+    "hide": "Ausblenden",
+    "view": "Ansicht",
+    "toggleColumns": "Spalten ein-/ausblenden",
+    "searchColumns": "Spalten suchen...",
+    "noColumnsFound": "Keine Spalten gefunden.",
+    "clearFilters": "Filter löschen",
+    "resetFilters": "Filter zurücksetzen",
+    "close": "Schließen",
+    "selectOption": "Option auswählen",
+    "selectOptions": "Optionen auswählen",
+    "searchOptions": "Optionen suchen...",
+    "optionsCount": "{count, plural, one {# Option} other {# Optionen}}",
+    "moreCount": "+ {count} weitere",
+    "clearAllSelected": "Alle {count} ausgewählten Optionen entfernen"
   }
 }

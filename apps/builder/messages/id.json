@@ -5433,5 +5433,23 @@
     "saved": "Tersimpan",
     "loadError": "Gagal memuat pengaturan notifikasi",
     "saveError": "Gagal menyimpan perubahan"
+  },
+  "uiLabels": {
+    "sortAsc": "Naik",
+    "sortDesc": "Turun",
+    "hide": "Sembunyikan",
+    "view": "Tampilan",
+    "toggleColumns": "Tampilkan atau sembunyikan kolom",
+    "searchColumns": "Cari kolom...",
+    "noColumnsFound": "Kolom tidak ditemukan.",
+    "clearFilters": "Hapus filter",
+    "resetFilters": "Atur ulang filter",
+    "close": "Tutup",
+    "selectOption": "Pilih opsi",
+    "selectOptions": "Pilih opsi",
+    "searchOptions": "Cari opsi...",
+    "optionsCount": "{count, plural, other {# opsi}}",
+    "moreCount": "+ {count} lainnya",
+    "clearAllSelected": "Hapus semua {count} opsi yang dipilih"
   }
 }

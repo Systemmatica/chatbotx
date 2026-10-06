@@ -277,7 +277,10 @@ export function KanbanBoardDialog({
                 >
                   <SelectValue placeholder={t("actions.pleaseSelect")} />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent
+                  align="start"
+                  className="max-h-64 min-w-(--anchor-width)"
+                >
                   {fieldOptions.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
                       {option.label}

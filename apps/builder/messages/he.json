@@ -5433,5 +5433,23 @@
     "saved": "נשמר",
     "loadError": "לא ניתן לטעון את הגדרות ההתראות",
     "saveError": "לא ניתן לשמור את השינוי"
+  },
+  "uiLabels": {
+    "sortAsc": "סדר עולה",
+    "sortDesc": "סדר יורד",
+    "hide": "הסתרה",
+    "view": "תצוגה",
+    "toggleColumns": "הצגה או הסתרה של עמודות",
+    "searchColumns": "חיפוש עמודות...",
+    "noColumnsFound": "לא נמצאו עמודות.",
+    "clearFilters": "ניקוי מסננים",
+    "resetFilters": "איפוס מסננים",
+    "close": "סגירה",
+    "selectOption": "בחירת אפשרות",
+    "selectOptions": "בחירת אפשרויות",
+    "searchOptions": "חיפוש אפשרויות...",
+    "optionsCount": "{count, plural, one {# אפשרות} other {# אפשרויות}}",
+    "moreCount": "+ עוד {count}",
+    "clearAllSelected": "ניקוי כל {count} האפשרויות שנבחרו"
   }
 }

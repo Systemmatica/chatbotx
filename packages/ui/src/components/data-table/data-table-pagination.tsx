@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@chatbotx.io/ui/components/ui/select"
+import { useUiLabels } from "@chatbotx.io/ui/components/ui-labels"
 import { cn } from "@chatbotx.io/ui/lib/utils"
 
 interface DataTablePaginationProps<TData> extends React.ComponentProps<"div"> {
@@ -35,10 +36,20 @@ export type DataTablePaginationLabels = {
 export function DataTablePagination<TData>({
   table,
   pageSizeOptions = [10, 20, 30, 40, 50],
-  labels,
+  labels: labelsProp,
   className,
   ...props
 }: DataTablePaginationProps<TData>) {
+  const contextLabels = useUiLabels()
+  const labels: DataTablePaginationLabels = {
+    selectedRows: labelsProp?.selectedRows ?? contextLabels.selectedRows,
+    rowsPerPage: labelsProp?.rowsPerPage ?? contextLabels.rowsPerPage,
+    pageOf: labelsProp?.pageOf ?? contextLabels.pageOf,
+    firstPage: labelsProp?.firstPage ?? contextLabels.firstPage,
+    previousPage: labelsProp?.previousPage ?? contextLabels.previousPage,
+    nextPage: labelsProp?.nextPage ?? contextLabels.nextPage,
+    lastPage: labelsProp?.lastPage ?? contextLabels.lastPage,
+  }
   const selectedRows = table.getFilteredSelectedRowModel().rows.length
   const totalRows = table.getFilteredRowModel().rows.length
   const page = table.getState().pagination.pageIndex + 1

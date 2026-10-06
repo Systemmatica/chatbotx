@@ -5433,5 +5433,23 @@
     "saved": "保存しました",
     "loadError": "通知設定を読み込めませんでした",
     "saveError": "変更を保存できませんでした"
+  },
+  "uiLabels": {
+    "sortAsc": "昇順",
+    "sortDesc": "降順",
+    "hide": "非表示",
+    "view": "表示",
+    "toggleColumns": "列の表示切り替え",
+    "searchColumns": "列を検索...",
+    "noColumnsFound": "列が見つかりません。",
+    "clearFilters": "フィルターをクリア",
+    "resetFilters": "フィルターをリセット",
+    "close": "閉じる",
+    "selectOption": "オプションを選択",
+    "selectOptions": "オプションを選択",
+    "searchOptions": "オプションを検索...",
+    "optionsCount": "{count, plural, other {# 件のオプション}}",
+    "moreCount": "+ 他 {count} 件",
+    "clearAllSelected": "選択した {count} 件のオプションをすべてクリア"
   }
 }

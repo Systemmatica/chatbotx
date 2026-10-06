@@ -5433,5 +5433,23 @@
     "saved": "Enregistré",
     "loadError": "Impossible de charger les paramètres de notification",
     "saveError": "Impossible d'enregistrer la modification"
+  },
+  "uiLabels": {
+    "sortAsc": "Croissant",
+    "sortDesc": "Décroissant",
+    "hide": "Masquer",
+    "view": "Affichage",
+    "toggleColumns": "Afficher ou masquer les colonnes",
+    "searchColumns": "Rechercher des colonnes...",
+    "noColumnsFound": "Aucune colonne trouvée.",
+    "clearFilters": "Effacer les filtres",
+    "resetFilters": "Réinitialiser les filtres",
+    "close": "Fermer",
+    "selectOption": "Sélectionner une option",
+    "selectOptions": "Sélectionner des options",
+    "searchOptions": "Rechercher des options...",
+    "optionsCount": "{count, plural, one {# option} other {# options}}",
+    "moreCount": "+ {count} de plus",
+    "clearAllSelected": "Effacer les {count} options sélectionnées"
   }
 }

@@ -11,6 +11,7 @@ import { DataTableSliderFilter } from "@chatbotx.io/ui/components/data-table/dat
 import { DataTableViewOptions } from "@chatbotx.io/ui/components/data-table/data-table-view-options"
 import { Button } from "@chatbotx.io/ui/components/ui/button"
 import { Input } from "@chatbotx.io/ui/components/ui/input"
+import { useUiLabels } from "@chatbotx.io/ui/components/ui-labels"
 import { cn } from "@chatbotx.io/ui/lib/utils"
 
 interface DataTableToolbarProps<TData> extends React.ComponentProps<"div"> {
@@ -25,6 +26,7 @@ export function DataTableToolbar<TData>({
   locale,
   ...props
 }: DataTableToolbarProps<TData>) {
+  const uiLabels = useUiLabels()
   const isFiltered = table.getState().columnFilters.length > 0
 
   const columns = React.useMemo(
@@ -56,14 +58,14 @@ export function DataTableToolbar<TData>({
         ))}
         {isFiltered && (
           <Button
-            aria-label="Reset filters"
+            aria-label={uiLabels.resetFilters ?? "Reset filters"}
             variant="outline"
             size="sm"
             className="border-dashed"
             onClick={onReset}
           >
             <X />
-            Reset
+            {uiLabels.reset ?? "Reset"}
           </Button>
         )}
       </div>

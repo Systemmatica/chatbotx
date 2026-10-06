@@ -21,6 +21,7 @@ import {
   PopoverTrigger,
 } from "@chatbotx.io/ui/components/ui/popover"
 import { Separator } from "@chatbotx.io/ui/components/ui/separator"
+import { useUiLabels } from "@chatbotx.io/ui/components/ui-labels"
 import { cn } from "@chatbotx.io/ui/lib/utils"
 import type { Option } from "@chatbotx.io/ui/types/data-table"
 
@@ -37,6 +38,7 @@ export function DataTableFacetedFilter<TData, TValue>({
   options,
   multiple,
 }: DataTableFacetedFilterProps<TData, TValue>) {
+  const uiLabels = useUiLabels()
   const [open, setOpen] = React.useState(false)
 
   const columnFilterValue = column?.getFilterValue()
@@ -137,7 +139,9 @@ export function DataTableFacetedFilter<TData, TValue>({
         <Command>
           <CommandInput placeholder={title} />
           <CommandList className="max-h-full">
-            <CommandEmpty>No results found.</CommandEmpty>
+            <CommandEmpty>
+              {uiLabels.noResultsFound ?? "No results found."}
+            </CommandEmpty>
             <CommandGroup className="max-h-[18.75rem] overflow-y-auto overflow-x-hidden">
               {options.map((option) => {
                 const isSelected = selectedValues.has(option.value)
@@ -176,7 +180,7 @@ export function DataTableFacetedFilter<TData, TValue>({
                     onSelect={() => onReset()}
                     className="justify-center text-center"
                   >
-                    Clear filters
+                    {uiLabels.clearFilters ?? "Clear filters"}
                   </CommandItem>
                 </CommandGroup>
               </>

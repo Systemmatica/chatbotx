@@ -13,6 +13,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@chatbotx.io/ui/components/ui/popover"
+import { useUiLabels } from "@chatbotx.io/ui/components/ui-labels"
 import { cn } from "@chatbotx.io/ui/lib/utils"
 import { Check, ChevronsUpDown } from "lucide-react"
 import { useMemo, useState } from "react"
@@ -95,6 +96,7 @@ export function ComboboxField<T extends FieldValues>({
   clearLabel,
   emptyValue,
 }: ComboboxFieldProps<T>) {
+  const uiLabels = useUiLabels()
   const [open, setOpen] = useState(false)
 
   const flattenedOptions = useMemo(
@@ -140,7 +142,7 @@ export function ComboboxField<T extends FieldValues>({
               render={
                 <Button
                   aria-expanded={open}
-                  aria-label={label || "Select option"}
+                  aria-label={label || uiLabels.selectOption || "Select option"}
                   className={cn(
                     "w-full justify-between",
                     className,
@@ -150,7 +152,10 @@ export function ComboboxField<T extends FieldValues>({
                   variant="outline"
                 >
                   <span className="min-w-0 truncate">
-                    {selectedLabel || placeholder || "Please select..."}
+                    {selectedLabel ||
+                      placeholder ||
+                      uiLabels.pleaseSelect ||
+                      "Please select..."}
                   </span>
                   <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
                 </Button>
@@ -165,10 +170,14 @@ export function ComboboxField<T extends FieldValues>({
               <Command>
                 <CommandInput
                   className="h-9"
-                  placeholder={searchPlaceholder ?? "Search..."}
+                  placeholder={
+                    searchPlaceholder ?? uiLabels.search ?? "Search..."
+                  }
                 />
                 <CommandList>
-                  <CommandEmpty>{emptyText ?? "No record found."}</CommandEmpty>
+                  <CommandEmpty>
+                    {emptyText ?? uiLabels.noRecordFound ?? "No record found."}
+                  </CommandEmpty>
                   {allowClear && (
                     <CommandItem
                       className="text-muted-foreground"

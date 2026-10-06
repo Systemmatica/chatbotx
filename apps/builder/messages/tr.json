@@ -5433,5 +5433,23 @@
     "saved": "Kaydedildi",
     "loadError": "Bildirim ayarları yüklenemedi",
     "saveError": "Değişiklik kaydedilemedi"
+  },
+  "uiLabels": {
+    "sortAsc": "Artan",
+    "sortDesc": "Azalan",
+    "hide": "Gizle",
+    "view": "Görünüm",
+    "toggleColumns": "Sütunları göster veya gizle",
+    "searchColumns": "Sütun ara...",
+    "noColumnsFound": "Sütun bulunamadı.",
+    "clearFilters": "Filtreleri temizle",
+    "resetFilters": "Filtreleri sıfırla",
+    "close": "Kapat",
+    "selectOption": "Seçenek seçin",
+    "selectOptions": "Seçenekleri seçin",
+    "searchOptions": "Seçenek ara...",
+    "optionsCount": "{count, plural, one {# seçenek} other {# seçenek}}",
+    "moreCount": "+ {count} daha",
+    "clearAllSelected": "Seçili {count} seçeneğin tümünü temizle"
   }
 }

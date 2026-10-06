@@ -5433,5 +5433,23 @@
     "saved": "已保存",
     "loadError": "无法加载通知设置",
     "saveError": "无法保存更改"
+  },
+  "uiLabels": {
+    "sortAsc": "升序",
+    "sortDesc": "降序",
+    "hide": "隐藏",
+    "view": "视图",
+    "toggleColumns": "显示或隐藏列",
+    "searchColumns": "搜索列...",
+    "noColumnsFound": "未找到列。",
+    "clearFilters": "清除筛选",
+    "resetFilters": "重置筛选",
+    "close": "关闭",
+    "selectOption": "选择选项",
+    "selectOptions": "选择选项",
+    "searchOptions": "搜索选项...",
+    "optionsCount": "{count, plural, other {# 个选项}}",
+    "moreCount": "+ 另外 {count} 个",
+    "clearAllSelected": "清除全部 {count} 个已选选项"
   }
 }

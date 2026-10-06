@@ -5433,5 +5433,23 @@
     "saved": "Сохранено",
     "loadError": "Не удалось загрузить настройки уведомлений",
     "saveError": "Не удалось сохранить изменение"
+  },
+  "uiLabels": {
+    "sortAsc": "По возрастанию",
+    "sortDesc": "По убыванию",
+    "hide": "Скрыть",
+    "view": "Вид",
+    "toggleColumns": "Показать или скрыть столбцы",
+    "searchColumns": "Поиск столбцов...",
+    "noColumnsFound": "Столбцы не найдены.",
+    "clearFilters": "Сбросить фильтры",
+    "resetFilters": "Сбросить фильтры",
+    "close": "Закрыть",
+    "selectOption": "Выберите вариант",
+    "selectOptions": "Выберите варианты",
+    "searchOptions": "Поиск вариантов...",
+    "optionsCount": "{count, plural, one {# вариант} few {# варианта} many {# вариантов} other {# варианта}}",
+    "moreCount": "+ ещё {count}",
+    "clearAllSelected": "Очистить выбранное ({count})"
   }
 }

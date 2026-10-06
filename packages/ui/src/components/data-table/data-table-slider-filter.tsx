@@ -13,6 +13,7 @@ import {
 } from "@chatbotx.io/ui/components/ui/popover"
 import { Separator } from "@chatbotx.io/ui/components/ui/separator"
 import { Slider } from "@chatbotx.io/ui/components/ui/slider"
+import { useUiLabels } from "@chatbotx.io/ui/components/ui-labels"
 import { cn } from "@chatbotx.io/ui/lib/utils"
 
 interface Range {
@@ -40,6 +41,7 @@ export function DataTableSliderFilter<TData>({
   column,
   title,
 }: DataTableSliderFilterProps<TData>) {
+  const uiLabels = useUiLabels()
   const id = React.useId()
 
   const columnFilterValue = getIsValidRange(column.getFilterValue())
@@ -235,7 +237,7 @@ export function DataTableSliderFilter<TData>({
           size="sm"
           onClick={onReset}
         >
-          Clear
+          {uiLabels.clear ?? "Clear"}
         </Button>
       </PopoverContent>
     </Popover>

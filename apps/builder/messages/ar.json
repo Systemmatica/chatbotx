@@ -5433,5 +5433,23 @@
     "saved": "تم الحفظ",
     "loadError": "تعذر تحميل إعدادات الإشعارات",
     "saveError": "تعذر حفظ التغيير"
+  },
+  "uiLabels": {
+    "sortAsc": "تصاعدي",
+    "sortDesc": "تنازلي",
+    "hide": "إخفاء",
+    "view": "العرض",
+    "toggleColumns": "إظهار الأعمدة أو إخفاؤها",
+    "searchColumns": "البحث في الأعمدة...",
+    "noColumnsFound": "لم يتم العثور على أعمدة.",
+    "clearFilters": "مسح عوامل التصفية",
+    "resetFilters": "إعادة تعيين عوامل التصفية",
+    "close": "إغلاق",
+    "selectOption": "اختر خيارًا",
+    "selectOptions": "اختر خيارات",
+    "searchOptions": "البحث في الخيارات...",
+    "optionsCount": "{count, plural, one {# خيار} two {# خياران} few {# خيارات} other {# خيار}}",
+    "moreCount": "+ {count} أخرى",
+    "clearAllSelected": "مسح جميع الخيارات المحددة ({count})"
   }
 }

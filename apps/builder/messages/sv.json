@@ -5433,5 +5433,23 @@
     "saved": "Sparat",
     "loadError": "Det gick inte att läsa in aviseringsinställningarna",
     "saveError": "Det gick inte att spara ändringen"
+  },
+  "uiLabels": {
+    "sortAsc": "Stigande",
+    "sortDesc": "Fallande",
+    "hide": "Dölj",
+    "view": "Vy",
+    "toggleColumns": "Visa eller dölj kolumner",
+    "searchColumns": "Sök kolumner...",
+    "noColumnsFound": "Inga kolumner hittades.",
+    "clearFilters": "Rensa filter",
+    "resetFilters": "Återställ filter",
+    "close": "Stäng",
+    "selectOption": "Välj alternativ",
+    "selectOptions": "Välj alternativ",
+    "searchOptions": "Sök alternativ...",
+    "optionsCount": "{count, plural, one {# alternativ} other {# alternativ}}",
+    "moreCount": "+ {count} till",
+    "clearAllSelected": "Rensa alla {count} valda alternativ"
   }
 }
