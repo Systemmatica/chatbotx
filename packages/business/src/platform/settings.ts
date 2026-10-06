@@ -12,6 +12,7 @@ import { integrationContextEnv } from "../integration-context/keys"
 import { hasEnterpriseFeatures } from "../user/entitlements"
 import { workspaceService } from "../workspace/service"
 import { deriveUrls } from "./derive-urls"
+import { configuredBrandName } from "./wordmark"
 
 const TRAILING_SLASH_RE = /\/$/
 
@@ -37,6 +38,32 @@ export type TenantSettings = {
   helpItems: TenantHelpItemModel[]
 }
 
+/**
+ * Logo/favicon defaults: explicit PLATFORM_LOGO_*_URL / PLATFORM_FAVICON_URL
+ * win; with only PLATFORM_BRAND_NAME set, a generated text logo is served
+ * from /api/brand/*.svg; otherwise the bundled ChatbotX assets.
+ */
+const defaultBrandAssets = (appUrl: string) => {
+  const generated = configuredBrandName() !== null
+  return {
+    logoLightUrl:
+      process.env.PLATFORM_LOGO_LIGHT_URL?.trim() ||
+      (generated
+        ? `${appUrl}/api/brand/wordmark-light.svg`
+        : `${appUrl}/brand/logo_white.svg`),
+    logoDarkUrl:
+      process.env.PLATFORM_LOGO_DARK_URL?.trim() ||
+      (generated
+        ? `${appUrl}/api/brand/wordmark-dark.svg`
+        : `${appUrl}/brand/logo_black.svg`),
+    faviconUrl:
+      process.env.PLATFORM_FAVICON_URL?.trim() ||
+      (generated
+        ? `${appUrl}/api/brand/icon-dark.svg`
+        : `${appUrl}/brand/icon_black.svg`),
+  }
+}
+
 const buildDefaults = (helpItems: TenantHelpItemModel[]): TenantSettings => {
   const env = integrationContextEnv()
   const derived = deriveUrls(
@@ -50,10 +77,8 @@ const buildDefaults = (helpItems: TenantHelpItemModel[]): TenantSettings => {
     storageUrl: derived.storageUrl,
     // Self-hosted instances name the product via PLATFORM_BRAND_NAME; the
     // tenant brandName (Enterprise branding) still wins when licensed.
-    name: process.env.PLATFORM_BRAND_NAME?.trim() || "ChatbotX",
-    logoLightUrl: `${derived.appUrl}/brand/logo_white.svg`,
-    logoDarkUrl: `${derived.appUrl}/brand/logo_black.svg`,
-    faviconUrl: `${derived.appUrl}/brand/icon_black.svg`,
+    name: configuredBrandName() ?? "ChatbotX",
+    ...defaultBrandAssets(derived.appUrl),
     theme: null,
     customJS: null,
     customCSS: null,
@@ -90,9 +115,7 @@ const applyCustomDomain = (
     appUrl: derived.appUrl,
     wsUrl: derived.wsUrl,
     storageUrl: derived.storageUrl,
-    logoLightUrl: `${derived.appUrl}/brand/logo_white.svg`,
-    logoDarkUrl: `${derived.appUrl}/brand/logo_black.svg`,
-    faviconUrl: `${derived.appUrl}/brand/icon_black.svg`,
+    ...defaultBrandAssets(derived.appUrl),
   }
 }
 
