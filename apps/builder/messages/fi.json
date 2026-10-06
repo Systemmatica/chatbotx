@@ -3772,6 +3772,52 @@
     "exportTakingLong": "Vienti kestää odotettua kauemmin",
     "exportTakingLongDescription": "Vientiä käsitellään edelleen. Voit sulkea tämän valintaikkunan ja tarkistaa tilanteen muutaman minuutin kuluttua vientihistoriasta."
   },
+  "kanban": {
+    "title": "Kanban",
+    "board": "Board",
+    "boardDescription": "Contacts are shown as cards in columns by the value of a status field. Drag a card to change the status.",
+    "newBoard": "New board",
+    "editBoard": "Edit board",
+    "deleteBoardDescription": "The board will be deleted. Contacts and their status field values are kept.",
+    "noStatus": "No status",
+    "stages": "Stages",
+    "stagesDescription": "Each stage name is the exact field value that puts a contact in that column. Renaming a stage does not change values contacts already have.",
+    "stageName": "Stage name",
+    "stageColor": "Stage color",
+    "addStage": "Add stage",
+    "statusField": "Status field",
+    "statusFieldDescription": "A Short Text custom field. Use the \"Set Custom Field\" action in a flow to move contacts between stages.",
+    "fieldMode": {
+      "existing": "Use existing field",
+      "new": "Create new field"
+    },
+    "newFieldName": "New field name",
+    "noShortTextFields": "There are no Short Text fields yet. A new one will be created.",
+    "defaultFieldName": "status",
+    "defaultStages": {
+      "new": "New",
+      "inProgress": "In progress",
+      "done": "Done"
+    },
+    "emptyTitle": "No boards yet",
+    "emptyDescription": "Create a board to see your contacts by status and move them between stages.",
+    "emptyColumn": "No contacts",
+    "loadMore": "Load more",
+    "allTags": "All tags",
+    "refresh": "Refresh",
+    "noLastMessage": "No messages yet",
+    "unnamedContact": "Unnamed contact",
+    "openChat": "Open chat",
+    "noConversation": "This contact has no conversation yet",
+    "moveFailed": "Couldn't move the contact. The change was reverted.",
+    "validation": {
+      "nameRequired": "Enter a board name",
+      "fieldRequired": "Choose a status field or enter a new field name",
+      "stagesRequired": "Add at least one stage",
+      "emptyStageName": "Every stage needs a name",
+      "duplicateStageNames": "Stage names must be unique"
+    }
+  },
   "auditLogs": {
     "title": "Tarkastuslokit"
   },

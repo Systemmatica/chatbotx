@@ -98,6 +98,7 @@ import { integrationTiktokRelations } from "./integration-tiktok"
 import { integrationWebchatRelations } from "./integration-webchat"
 import { integrationWhatsappRelations } from "./integration-whatsapp"
 import { integrationZaloRelations } from "./integration-zalo"
+import { kanbanBoardRelations } from "./kanban-board"
 import { magicLinkRelations } from "./magic-link"
 import { messageRelations } from "./message"
 import { messengerMessageTemplateRelations } from "./messenger-message-template"
@@ -264,4 +265,5 @@ export const relations = {
   ...minigameRelations,
   ...minigameContactRelations,
   ...minigamePlayRelations,
+  ...kanbanBoardRelations,
 }

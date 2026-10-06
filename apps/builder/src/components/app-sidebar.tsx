@@ -17,6 +17,7 @@ import {
   MessageCircleMoreIcon,
   RadioIcon,
   SlidersHorizontalIcon,
+  SquareKanbanIcon,
   UsersIcon,
   WebhookIcon,
   WorkflowIcon,
@@ -109,6 +110,13 @@ export function AppSidebar({
         title: t("fields.contacts.label"),
         url: `/space/${workspaceId}/contacts`,
         icon: UsersIcon,
+        permission: PERMISSION_NAV.contacts,
+      },
+      {
+        id: "kanban",
+        title: t("kanban.title"),
+        url: `/space/${workspaceId}/kanban`,
+        icon: SquareKanbanIcon,
         permission: PERMISSION_NAV.contacts,
       },
       {

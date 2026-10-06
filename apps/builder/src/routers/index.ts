@@ -50,6 +50,9 @@ export const router = {
   couponsAPI: lazy(() =>
     import("@/features/coupons/api").then((m) => ({ default: m.couponsAPI })),
   ),
+  kanbanAPI: lazy(() =>
+    import("@/features/kanban/api").then((m) => ({ default: m.kanbanAPI })),
+  ),
   dynamicImagesAPI: lazy(() =>
     import("@/features/dynamic-images/api").then((m) => ({
       default: m.dynamicImagesAPI,
