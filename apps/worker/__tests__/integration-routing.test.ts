@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from "vitest"
 
-const { resolveIncomingTextRouting } = await import(
+const { isBotCommand, resolveIncomingTextRouting } = await import(
   "../src/integration/routing"
 )
 
@@ -119,5 +119,43 @@ describe("resolveIncomingTextRouting", () => {
     ).resolves.toEqual({ type: "none" })
 
     expect(isConversationActive).not.toHaveBeenCalled()
+  })
+
+  test("a bot command overrides a pending challenge and clears it", async () => {
+    await expect(
+      resolveIncomingTextRouting({
+        conversation: challengeConversation as never,
+        hasActionableInput: true,
+        hasText: true,
+        text: "/start",
+        isConversationActive: async () => true,
+      }),
+    ).resolves.toEqual({
+      type: "automatedResponse",
+      conversation: challengeConversation,
+      clearsChallenge: true,
+    })
+  })
+
+  test("plain text still answers a pending challenge", async () => {
+    await expect(
+      resolveIncomingTextRouting({
+        conversation: challengeConversation as never,
+        hasActionableInput: true,
+        hasText: true,
+        text: "Никита / CEO",
+        isConversationActive: async () => true,
+      }),
+    ).resolves.toMatchObject({ type: "challenge" })
+  })
+
+  test("recognises Telegram bot commands only", () => {
+    expect(isBotCommand("/start")).toBe(true)
+    expect(isBotCommand(" /start ref_42")).toBe(true)
+    expect(isBotCommand("/help@my_bot")).toBe(true)
+    expect(isBotCommand("1/2")).toBe(false)
+    expect(isBotCommand("/ ")).toBe(false)
+    expect(isBotCommand("https://x.y/start")).toBe(false)
+    expect(isBotCommand(null)).toBe(false)
   })
 })

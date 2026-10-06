@@ -132,6 +132,7 @@ async function startIntegrationWorker() {
                 isFromContact && (message.text || hasAttachment || isLocation),
               ),
               hasText: Boolean(isFromContact && message.text),
+              text: message.text,
               isConversationActive: (conversation) =>
                 conversationService.ensureActive(conversation),
             })
@@ -154,6 +155,13 @@ async function startIntegrationWorker() {
                 },
               )
             } else if (routing.type === "automatedResponse") {
+              if (routing.clearsChallenge) {
+                await conversationService.updateChallenge({
+                  workspaceId: routing.conversation.workspaceId,
+                  conversationId: routing.conversation.id,
+                  challenge: undefined,
+                })
+              }
               await automatedResponseService.enqueue({
                 conversationId: routing.conversation.id,
                 contactInboxId: message.contactInboxId,
