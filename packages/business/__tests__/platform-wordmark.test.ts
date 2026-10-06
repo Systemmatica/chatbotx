@@ -14,7 +14,7 @@ describe("platform wordmark", () => {
   })
 
   test("monogram uses the first letter, upper-cased", () => {
-    expect(renderMonogramSvg("systemmatica", "dark")).toContain(">S</text>")
+    expect(renderMonogramSvg("starlight", "dark")).toContain(">S</text>")
     expect(renderMonogramSvg("ёлка", "dark")).toContain(">Ё</text>")
   })
 })
