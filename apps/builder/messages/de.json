@@ -2167,7 +2167,8 @@
       "import": "Flow importieren",
       "export": "Exportieren",
       "importStarted": "Der Flow wird importiert. Ergebnisse im Importverlauf prüfen.",
-      "importJsonOnly": "Nur JSON-Dateien"
+      "importJsonOnly": "Nur JSON-Dateien",
+      "notifyAgent": "Mitarbeiter benachrichtigen"
     },
     "splitTraffic": {
       "balanceHint": "Die Gesamtsumme muss 100 % ergeben.",
@@ -2275,7 +2276,12 @@
     "sendText": {
       "tiktokTitleTruncated": "Wenn Schaltflächen angehängt sind, sendet TikTok nur die ersten 40 Zeichen dieser Nachricht – der Rest wird abgeschnitten."
     },
-    "dataWasSaved": "Daten wurden gespeichert"
+    "dataWasSaved": "Daten wurden gespeichert",
+    "notifyAgent": {
+      "textLabel": "Nachricht für Mitarbeiter",
+      "textPlaceholder": "z. B. Der Kontakt hat den Bezahlschritt erreicht",
+      "description": "Geht an das Telegram der Mitarbeiter, die Benachrichtigungen verbunden haben. Variablen werden unterstützt."
+    }
   },
   "folders": {
     "heading": {
@@ -5397,5 +5403,31 @@
         "empty": "Noch keine Spielprotokolle"
       }
     }
+  },
+  "staffNotifications": {
+    "menuItem": "Telegram-Benachrichtigungen",
+    "title": "Telegram-Benachrichtigungen",
+    "description": "Erhalte eine Telegram-Nachricht, wenn ein Kontakt einen Menschen braucht.",
+    "connected": "Telegram ist verbunden",
+    "connectHint": "Klicke auf die Schaltfläche: Telegram öffnet sich, tippe dort auf Start. Der Link ist 15 Minuten gültig.",
+    "connect": "Telegram verbinden",
+    "waiting": "Warte darauf, dass du in Telegram auf Start tippst…",
+    "disconnect": "Trennen",
+    "connectedToast": "Telegram verbunden",
+    "disconnectedToast": "Telegram getrennt",
+    "typesTitle": "Benachrichtige mich, wenn",
+    "types": {
+      "newMessageToHuman": "ein Kontakt geschrieben hat und kein Bot geantwortet hat",
+      "notifyAdmin": "der Flow-Schritt „Mitarbeiter benachrichtigen“ läuft oder ein Chat an einen Menschen übergeben wird",
+      "contactStuck": "ein Kontakt in einem Flow-Schritt feststeckt"
+    },
+    "stuckTitle": "Wann ein Kontakt als festgesteckt gilt",
+    "stuckDescription": "Zeit ohne Fortschritt im Flow. Gilt für den ganzen Workspace.",
+    "stuckOff": "Nicht benachrichtigen",
+    "stuckHours": "{count, plural, one {# Stunde} other {# Stunden}}",
+    "stuckDays": "{count, plural, one {# Tag} other {# Tage}}",
+    "saved": "Gespeichert",
+    "loadError": "Benachrichtigungseinstellungen konnten nicht geladen werden",
+    "saveError": "Änderung konnte nicht gespeichert werden"
   }
 }

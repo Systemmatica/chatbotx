@@ -48,6 +48,9 @@ export const workspaceMemberNotificationTypesSchema = z.object({
   notifyAdmin: z.boolean(),
   newMessageToHuman: z.boolean(),
   newOrder: z.boolean(),
+  // Added later: rows written before it lack the key, and readers treat a
+  // missing key as enabled (see `resolveStaffNotificationTypes`).
+  contactStuck: z.boolean().optional(),
 })
 export type WorkspaceMemberNotificationTypes = z.infer<
   typeof workspaceMemberNotificationTypesSchema

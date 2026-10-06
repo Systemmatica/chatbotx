@@ -2167,7 +2167,8 @@
       "import": "Importar fluxo",
       "export": "Exportar",
       "importStarted": "O fluxo está sendo importado. Verifique o histórico de importações para ver os resultados.",
-      "importJsonOnly": "Somente arquivos JSON"
+      "importJsonOnly": "Somente arquivos JSON",
+      "notifyAgent": "Notificar a equipe"
     },
     "splitTraffic": {
       "balanceHint": "A soma total deve ser igual a 100%.",
@@ -2275,7 +2276,12 @@
     "sendText": {
       "tiktokTitleTruncated": "Quando há botões anexados, o TikTok envia apenas os primeiros 40 caracteres desta mensagem — o restante será cortado."
     },
-    "dataWasSaved": "Dados salvos"
+    "dataWasSaved": "Dados salvos",
+    "notifyAgent": {
+      "textLabel": "Mensagem para a equipe",
+      "textPlaceholder": "ex.: O contato chegou à etapa de pagamento",
+      "description": "Enviada ao Telegram de quem conectou as notificações. Aceita variáveis."
+    }
   },
   "folders": {
     "heading": {
@@ -5397,5 +5403,31 @@
         "empty": "Ainda não há registros de jogadas"
       }
     }
+  },
+  "staffNotifications": {
+    "menuItem": "Notificações no Telegram",
+    "title": "Notificações no Telegram",
+    "description": "Receba uma mensagem no Telegram quando um contato precisar de uma pessoa.",
+    "connected": "Telegram conectado",
+    "connectHint": "Clique no botão: o Telegram abre, toque em Iniciar. O link vale por 15 minutos.",
+    "connect": "Conectar Telegram",
+    "waiting": "Aguardando você tocar em Iniciar no Telegram…",
+    "disconnect": "Desconectar",
+    "connectedToast": "Telegram conectado",
+    "disconnectedToast": "Telegram desconectado",
+    "typesTitle": "Avise-me quando",
+    "types": {
+      "newMessageToHuman": "Um contato escreveu e nenhum bot respondeu",
+      "notifyAdmin": "A etapa “Notificar a equipe” é executada ou a conversa vai para um atendente",
+      "contactStuck": "Um contato está parado em uma etapa do fluxo"
+    },
+    "stuckTitle": "Quando um contato é considerado parado",
+    "stuckDescription": "Tempo sem avançar no fluxo. Vale para todo o espaço de trabalho.",
+    "stuckOff": "Não avisar",
+    "stuckHours": "{count, plural, one {# hora} other {# horas}}",
+    "stuckDays": "{count, plural, one {# dia} other {# dias}}",
+    "saved": "Salvo",
+    "loadError": "Não foi possível carregar as configurações de notificação",
+    "saveError": "Não foi possível salvar a alteração"
   }
 }

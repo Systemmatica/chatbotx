@@ -2167,7 +2167,8 @@
       "import": "Importer flow",
       "export": "Eksporter",
       "importStarted": "Flowet importeres. Tjek importhistorikken for resultater.",
-      "importJsonOnly": "Kun JSON-filer"
+      "importJsonOnly": "Kun JSON-filer",
+      "notifyAgent": "Giv teamet besked"
     },
     "splitTraffic": {
       "balanceHint": "Den i alt sum must equal 100%.",
@@ -2275,7 +2276,12 @@
     "sendText": {
       "tiktokTitleTruncated": "Når der er tilføjet knapper, sender TikTok kun de første 40 tegn af denne besked — resten bliver klippet væk."
     },
-    "dataWasSaved": "Data blev gemt"
+    "dataWasSaved": "Data blev gemt",
+    "notifyAgent": {
+      "textLabel": "Besked til teamet",
+      "textPlaceholder": "fx Kontakten nåede betalingstrinnet",
+      "description": "Sendes til Telegram for dem i teamet, der har tilsluttet notifikationer. Variabler understøttes."
+    }
   },
   "folders": {
     "heading": {
@@ -5397,5 +5403,31 @@
         "empty": "Ingen spiloptegnelser endnu"
       }
     }
+  },
+  "staffNotifications": {
+    "menuItem": "Telegram-notifikationer",
+    "title": "Telegram-notifikationer",
+    "description": "Få en besked i Telegram, når en kontakt har brug for et menneske.",
+    "connected": "Telegram er tilsluttet",
+    "connectHint": "Klik på knappen: Telegram åbner, tryk på Start der. Linket gælder i 15 minutter.",
+    "connect": "Tilslut Telegram",
+    "waiting": "Venter på, at du trykker på Start i Telegram…",
+    "disconnect": "Afbryd",
+    "connectedToast": "Telegram tilsluttet",
+    "disconnectedToast": "Telegram afbrudt",
+    "typesTitle": "Giv mig besked, når",
+    "types": {
+      "newMessageToHuman": "En kontakt skrev, og ingen bot svarede",
+      "notifyAdmin": "Flowtrinnet »Giv teamet besked« kører, eller en chat overdrages til et menneske",
+      "contactStuck": "En kontakt sidder fast på et flowtrin"
+    },
+    "stuckTitle": "Hvornår en kontakt regnes som fastlåst",
+    "stuckDescription": "Tid uden fremskridt i flowet. Gælder hele arbejdsområdet.",
+    "stuckOff": "Giv ikke besked",
+    "stuckHours": "{count, plural, one {# time} other {# timer}}",
+    "stuckDays": "{count, plural, one {# dag} other {# dage}}",
+    "saved": "Gemt",
+    "loadError": "Notifikationsindstillingerne kunne ikke indlæses",
+    "saveError": "Ændringen kunne ikke gemmes"
   }
 }

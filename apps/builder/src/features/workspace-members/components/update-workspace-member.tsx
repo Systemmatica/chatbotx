@@ -137,10 +137,23 @@ export function UpdateWorkspaceMemberForm({
 
   useEffect(() => {
     if (workspaceMember) {
+      // Stored jsonb may be `{}` or miss keys: a missing key means "on",
+      // the default every member is created with.
+      const types = workspaceMember.notificationTypes ?? {}
+      const channels = workspaceMember.notificationChannels ?? {}
       reset({
         permissions: workspaceMember.permissions,
-        // notificationTypes: workspaceMember.notificationTypes,
-        // notificationChannels: workspaceMember.notificationChannels,
+        notificationTypes: {
+          notifyAdmin: types.notifyAdmin !== false,
+          newMessageToHuman: types.newMessageToHuman !== false,
+          newOrder: types.newOrder !== false,
+        },
+        notificationChannels: {
+          messenger: channels.messenger !== false,
+          email: channels.email !== false,
+          telegram: channels.telegram !== false,
+          browser: channels.browser !== false,
+        },
       })
     }
   }, [workspaceMember, reset])

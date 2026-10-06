@@ -22,6 +22,10 @@ import { runImport } from "./handlers/run-import"
 import { sendAppointmentReminder } from "./handlers/send-appointment-reminder"
 import { sendAuditLog } from "./handlers/send-audit-log"
 import { sendErrorLog } from "./handlers/send-error-log"
+import {
+  deliverStaffNotification,
+  notifyStaff,
+} from "./handlers/staff-notification"
 import { handleSyncChannelLabels } from "./handlers/sync-channel-labels"
 import { syncExternalCalendarEvent } from "./handlers/sync-external-calendar-event"
 import { handleSyncTag } from "./handlers/sync-tag"
@@ -117,6 +121,18 @@ async function startDefaultWorker() {
             return
           }
           await sendAppointmentReminder(job.data.data)
+          return
+        case DefaultJobAction.notifyStaff:
+          if (await isBlockedJob(job.data.data)) {
+            return
+          }
+          await notifyStaff(job.data.data, job.id ?? String(Date.now()))
+          return
+        case DefaultJobAction.deliverStaffNotification:
+          if (await isBlockedJob(job.data.data)) {
+            return
+          }
+          await deliverStaffNotification(job.data.data)
           return
         default:
           logger.warn(`Unknown job name: ${job.name}`)

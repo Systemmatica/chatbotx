@@ -2886,7 +2886,8 @@
       "import": "Importera flöde",
       "export": "Exportera",
       "importStarted": "Flödet importeras. Kontrollera importhistoriken för resultat.",
-      "importJsonOnly": "Endast JSON-filer"
+      "importJsonOnly": "Endast JSON-filer",
+      "notifyAgent": "Meddela teamet"
     },
     "sendCarousel": {
       "addSlide": "Lägg till kort",
@@ -3020,7 +3021,12 @@
     "sendText": {
       "tiktokTitleTruncated": "När knappar är kopplade skickar TikTok bara de första 40 tecknen i det här meddelandet — resten klipps bort."
     },
-    "dataWasSaved": "Uppgifterna sparades"
+    "dataWasSaved": "Uppgifterna sparades",
+    "notifyAgent": {
+      "textLabel": "Meddelande till teamet",
+      "textPlaceholder": "t.ex. Kontakten nådde betalningssteget",
+      "description": "Skickas till Telegram för de i teamet som kopplat aviseringar. Variabler stöds."
+    }
   },
   "folders": {
     "heading": {
@@ -5397,5 +5403,31 @@
         "empty": "Inga spelloggar ännu"
       }
     }
+  },
+  "staffNotifications": {
+    "menuItem": "Telegram-aviseringar",
+    "title": "Telegram-aviseringar",
+    "description": "Få ett meddelande i Telegram när en kontakt behöver en människa.",
+    "connected": "Telegram är kopplat",
+    "connectHint": "Klicka på knappen: Telegram öppnas, tryck på Starta där. Länken gäller i 15 minuter.",
+    "connect": "Koppla Telegram",
+    "waiting": "Väntar på att du trycker på Starta i Telegram…",
+    "disconnect": "Koppla från",
+    "connectedToast": "Telegram kopplat",
+    "disconnectedToast": "Telegram frånkopplat",
+    "typesTitle": "Meddela mig när",
+    "types": {
+      "newMessageToHuman": "En kontakt skrev och ingen bot svarade",
+      "notifyAdmin": "Flödessteget ”Meddela teamet” körs eller en chatt lämnas över till en människa",
+      "contactStuck": "En kontakt har fastnat på ett flödessteg"
+    },
+    "stuckTitle": "När en kontakt räknas som fast",
+    "stuckDescription": "Tid utan framsteg i flödet. Gäller hela arbetsytan.",
+    "stuckOff": "Meddela inte",
+    "stuckHours": "{count, plural, one {# timme} other {# timmar}}",
+    "stuckDays": "{count, plural, one {# dag} other {# dagar}}",
+    "saved": "Sparat",
+    "loadError": "Det gick inte att läsa in aviseringsinställningarna",
+    "saveError": "Det gick inte att spara ändringen"
   }
 }

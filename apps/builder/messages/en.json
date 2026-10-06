@@ -2339,7 +2339,8 @@
       "import": "Import Flow",
       "export": "Export",
       "importStarted": "Flow is importing. Check the import history for results.",
-      "importJsonOnly": "JSON files only"
+      "importJsonOnly": "JSON files only",
+      "notifyAgent": "Notify staff"
     },
     "splitTraffic": {
       "balanceHint": "The total sum must equal 100%.",
@@ -2447,7 +2448,12 @@
     "sendText": {
       "tiktokTitleTruncated": "With buttons attached, TikTok only sends the first 40 characters of this message — the rest will be cut off."
     },
-    "dataWasSaved": "Data was saved"
+    "dataWasSaved": "Data was saved",
+    "notifyAgent": {
+      "textLabel": "Message for staff",
+      "textPlaceholder": "e.g. The contact reached the payment step",
+      "description": "Sent to the Telegram of staff who connected notifications. Variables are supported."
+    }
   },
   "folders": {
     "heading": {
@@ -5397,5 +5403,31 @@
         "empty": "No play records yet"
       }
     }
+  },
+  "staffNotifications": {
+    "menuItem": "Telegram notifications",
+    "title": "Telegram notifications",
+    "description": "Get a Telegram message when a contact needs a person.",
+    "connected": "Telegram is connected",
+    "connectHint": "Press the button: Telegram opens, tap Start there. The link is valid for 15 minutes.",
+    "connect": "Connect Telegram",
+    "waiting": "Waiting for you to tap Start in Telegram…",
+    "disconnect": "Disconnect",
+    "connectedToast": "Telegram connected",
+    "disconnectedToast": "Telegram disconnected",
+    "typesTitle": "Notify me when",
+    "types": {
+      "newMessageToHuman": "A contact wrote and no bot answered",
+      "notifyAdmin": "The flow step “Notify staff” runs or a chat is handed to a human",
+      "contactStuck": "A contact is stuck on a flow step"
+    },
+    "stuckTitle": "When a contact counts as stuck",
+    "stuckDescription": "Time without moving on in the flow. Applies to the whole workspace.",
+    "stuckOff": "Don't notify",
+    "stuckHours": "{count, plural, one {# hour} other {# hours}}",
+    "stuckDays": "{count, plural, one {# day} other {# days}}",
+    "saved": "Saved",
+    "loadError": "Could not load notification settings",
+    "saveError": "Could not save the change"
   }
 }

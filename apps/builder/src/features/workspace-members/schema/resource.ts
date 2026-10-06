@@ -1,4 +1,8 @@
-import { workspaceMemberPermissionsSchema } from "@chatbotx.io/database/partials"
+import {
+  workspaceMemberNotificationChannelsSchema,
+  workspaceMemberNotificationTypesSchema,
+  workspaceMemberPermissionsSchema,
+} from "@chatbotx.io/database/partials"
 import {
   createSelectSchema,
   workspaceMemberModel,
@@ -12,9 +16,12 @@ export const workspaceMemberResource = createSelectSchema(
     userId: z.string(),
     workspaceId: z.string(),
   },
-).extend({
-  permissions: workspaceMemberPermissionsSchema,
-  // notificationTypes: workspaceMemberNotificationTypesSchema.partial(),
-  // notificationChannels: workspaceMemberNotificationChannelsSchema.partial(),
-})
+)
+  // The member's private Telegram chat id never leaves the server.
+  .omit({ telegramChatId: true })
+  .extend({
+    permissions: workspaceMemberPermissionsSchema,
+    notificationTypes: workspaceMemberNotificationTypesSchema.partial(),
+    notificationChannels: workspaceMemberNotificationChannelsSchema.partial(),
+  })
 export type WorkspaceMemberResource = z.infer<typeof workspaceMemberResource>

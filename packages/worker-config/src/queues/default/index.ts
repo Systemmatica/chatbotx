@@ -40,6 +40,8 @@ export const DefaultJobAction = {
   checkMetaCatalogSync: "checkMetaCatalogSync",
   syncExternalCalendarEvent: "syncExternalCalendarEvent",
   sendAppointmentReminder: "sendAppointmentReminder",
+  notifyStaff: "notifyStaff",
+  deliverStaffNotification: "deliverStaffNotification",
 } as const
 
 export const syncExternalCalendarEventJobId = (
@@ -51,6 +53,66 @@ export const sendAppointmentReminderJobId = (
   appointmentId: string,
   reminderConfigId: string,
 ) => `appt-reminder-${appointmentId}-${reminderConfigId}`
+
+/**
+ * Something staff should hear about on Telegram. Producers only describe the
+ * event; the `notifyStaff` job resolves recipients and renders the text, so
+ * the hot path (incoming message, flow step) never touches Telegram.
+ */
+export type StaffNotificationEvent =
+  | {
+      /** A contact wrote and no bot answered (human mode or nothing matched). */
+      kind: "incomingMessage"
+      conversationId: string
+      contactInboxId: string
+      text: string
+    }
+  | {
+      /** The flow ran a "Notify staff" step; `text` is already rendered. */
+      kind: "stepReached"
+      conversationId: string
+      contactInboxId: string
+      text: string
+    }
+  | {
+      /** A trigger handed the conversation over to a human. */
+      kind: "handoff"
+      conversationId: string
+    }
+  | {
+      /** The contact has sat on the same flow node past the workspace threshold. */
+      kind: "contactStuck"
+      contactInboxId: string
+      flowId: string
+      nodeId: string
+      /** ISO timestamp of `ContactInbox.currentNodeAt` that was found stale. */
+      reachedAt: string
+    }
+  | {
+      /** Too many newly stuck contacts in one scan: one message per step group. */
+      kind: "contactStuckSummary"
+      total: number
+      thresholdHours: number
+      groups: { flowId: string; nodeId: string; count: number }[]
+    }
+
+export type JobNotifyStaff = {
+  type: typeof DefaultJobAction.notifyStaff
+  data: {
+    workspaceId: string
+    event: StaffNotificationEvent
+  }
+}
+
+export type JobDeliverStaffNotification = {
+  type: typeof DefaultJobAction.deliverStaffNotification
+  data: {
+    workspaceId: string
+    workspaceMemberId: string
+    /** Telegram HTML (already escaped). */
+    html: string
+  }
+}
 
 export type ExportContactsFilter = {
   keyword?: string
@@ -265,3 +327,5 @@ export type DefaultJobData =
   | JobCheckMetaCatalogSync
   | JobSyncExternalCalendarEvent
   | JobSendAppointmentReminder
+  | JobNotifyStaff
+  | JobDeliverStaffNotification

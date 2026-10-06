@@ -409,7 +409,8 @@
       "import": "ייבוא זרימה",
       "export": "ייצוא",
       "importStarted": "הזרימה בתהליך ייבוא. בדקו את היסטוריית הייבוא לתוצאות.",
-      "importJsonOnly": "קבצי JSON בלבד"
+      "importJsonOnly": "קבצי JSON בלבד",
+      "notifyAgent": "הודעה לצוות"
     },
     "splitTraffic": {
       "balanceHint": "הסכום הכולל חייב להיות 100%.",
@@ -517,7 +518,12 @@
     "sendText": {
       "tiktokTitleTruncated": "כאשר מצורפים כפתורים, טיקטוק שולח רק את 40 התווים הראשונים של ההודעה הזו — השאר ייחתך."
     },
-    "dataWasSaved": "הנתונים נשמרו"
+    "dataWasSaved": "הנתונים נשמרו",
+    "notifyAgent": {
+      "textLabel": "הודעה לצוות",
+      "textPlaceholder": "למשל: איש הקשר הגיע לשלב התשלום",
+      "description": "נשלחת ל-Telegram של אנשי הצוות שחיברו התראות. אפשר להשתמש במשתנים."
+    }
   },
   "folders": {
     "heading": {
@@ -5397,5 +5403,31 @@
         "empty": "אין עדיין רשומות משחק"
       }
     }
+  },
+  "staffNotifications": {
+    "menuItem": "התראות Telegram",
+    "title": "התראות Telegram",
+    "description": "קבלו הודעה ב-Telegram כשאיש קשר צריך אדם.",
+    "connected": "Telegram מחובר",
+    "connectHint": "לחצו על הכפתור: Telegram ייפתח, ושם הקישו על התחל. הקישור תקף ל-15 דקות.",
+    "connect": "חיבור Telegram",
+    "waiting": "ממתינים שתקישו על התחל ב-Telegram…",
+    "disconnect": "ניתוק",
+    "connectedToast": "Telegram חובר",
+    "disconnectedToast": "Telegram נותק",
+    "typesTitle": "להודיע לי כאשר",
+    "types": {
+      "newMessageToHuman": "איש קשר כתב ואף בוט לא ענה",
+      "notifyAdmin": "שלב התהליך „הודעה לצוות” רץ או שהשיחה הועברה לאדם",
+      "contactStuck": "איש קשר תקוע בשלב בתהליך"
+    },
+    "stuckTitle": "מתי איש קשר נחשב תקוע",
+    "stuckDescription": "זמן ללא התקדמות בתהליך. חל על כל סביבת העבודה.",
+    "stuckOff": "לא להודיע",
+    "stuckHours": "{count, plural, one {# שעה} other {# שעות}}",
+    "stuckDays": "{count, plural, one {# יום} other {# ימים}}",
+    "saved": "נשמר",
+    "loadError": "לא ניתן לטעון את הגדרות ההתראות",
+    "saveError": "לא ניתן לשמור את השינוי"
   }
 }

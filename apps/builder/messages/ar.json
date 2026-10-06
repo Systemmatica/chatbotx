@@ -2241,7 +2241,8 @@
       "import": "استيراد التدفق",
       "export": "تصدير",
       "importStarted": "جارٍ استيراد التدفق. يرجى مراجعة سجل الاستيراد للحصول على النتائج.",
-      "importJsonOnly": "ملفات JSON فقط"
+      "importJsonOnly": "ملفات JSON فقط",
+      "notifyAgent": "إشعار الفريق"
     },
     "splitTraffic": {
       "balanceHint": "يجب أن يساوي مجموع النسب 100%.",
@@ -2349,7 +2350,12 @@
     "sendText": {
       "tiktokTitleTruncated": "عند إرفاق أزرار، يرسل TikTok أول 40 حرفًا فقط من هذه الرسالة، وسيتم قص الباقي."
     },
-    "dataWasSaved": "تم حفظ البيانات"
+    "dataWasSaved": "تم حفظ البيانات",
+    "notifyAgent": {
+      "textLabel": "رسالة للفريق",
+      "textPlaceholder": "مثال: وصل جهة الاتصال إلى خطوة الدفع",
+      "description": "تُرسل إلى Telegram لأعضاء الفريق الذين ربطوا الإشعارات. المتغيرات مدعومة."
+    }
   },
   "folders": {
     "heading": {
@@ -5397,5 +5403,31 @@
         "empty": "لا توجد سجلات لعب بعد"
       }
     }
+  },
+  "staffNotifications": {
+    "menuItem": "إشعارات Telegram",
+    "title": "إشعارات Telegram",
+    "description": "استلم رسالة على Telegram عندما تحتاج جهة اتصال إلى شخص.",
+    "connected": "Telegram متصل",
+    "connectHint": "اضغط الزر: سيفتح Telegram، ثم اضغط «ابدأ». الرابط صالح لمدة 15 دقيقة.",
+    "connect": "ربط Telegram",
+    "waiting": "في انتظار ضغطك على «ابدأ» في Telegram…",
+    "disconnect": "قطع الاتصال",
+    "connectedToast": "تم ربط Telegram",
+    "disconnectedToast": "تم قطع اتصال Telegram",
+    "typesTitle": "أشعرني عندما",
+    "types": {
+      "newMessageToHuman": "تكتب جهة اتصال ولا يرد أي بوت",
+      "notifyAdmin": "تعمل خطوة «إشعار الفريق» أو تُحوَّل المحادثة إلى شخص",
+      "contactStuck": "تتوقف جهة اتصال عند خطوة في التدفق"
+    },
+    "stuckTitle": "متى تُعتبر جهة الاتصال متوقفة",
+    "stuckDescription": "المدة دون تقدم في التدفق. تنطبق على مساحة العمل بالكامل.",
+    "stuckOff": "لا تُشعرني",
+    "stuckHours": "{count, plural, one {# ساعة} two {# ساعة} few {# ساعات} other {# ساعة}}",
+    "stuckDays": "{count, plural, one {# يوم} two {# يوم} few {# أيام} other {# يومًا}}",
+    "saved": "تم الحفظ",
+    "loadError": "تعذر تحميل إعدادات الإشعارات",
+    "saveError": "تعذر حفظ التغيير"
   }
 }

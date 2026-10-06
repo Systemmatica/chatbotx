@@ -9,6 +9,9 @@ type IncomingRoutingDecision =
       challenge: NonNullable<ConversationAttributes["challenge"]>
     }
   | { type: "automatedResponse"; conversation: ConversationModel }
+  // The contact sent actionable input but a human handles the conversation
+  // (bot disabled): no bot reacts, staff may need to be told.
+  | { type: "humanMode"; conversation: ConversationModel }
 
 export async function resolveIncomingTextRouting(props: {
   conversation: ConversationModel
@@ -25,7 +28,7 @@ export async function resolveIncomingTextRouting(props: {
 
   const conversation = props.conversation
   if (!(await props.isConversationActive(conversation))) {
-    return { type: "none" }
+    return { type: "humanMode", conversation }
   }
 
   const challenge = (

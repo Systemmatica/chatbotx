@@ -2241,7 +2241,8 @@
       "import": "Akışı içe aktar",
       "export": "Dışa aktar",
       "importStarted": "Akış içe aktarılıyor. Sonuçlar için içe aktarma geçmişini kontrol edin.",
-      "importJsonOnly": "Yalnızca JSON dosyaları"
+      "importJsonOnly": "Yalnızca JSON dosyaları",
+      "notifyAgent": "Ekibi bilgilendir"
     },
     "splitTraffic": {
       "balanceHint": "Toplam %100 olmalıdır.",
@@ -2349,7 +2350,12 @@
     "sendText": {
       "tiktokTitleTruncated": "Butonlar eklendiğinde TikTok bu mesajın yalnızca ilk 40 karakterini gönderir — geri kalanı kesilir."
     },
-    "dataWasSaved": "Veriler kaydedildi"
+    "dataWasSaved": "Veriler kaydedildi",
+    "notifyAgent": {
+      "textLabel": "Ekip için mesaj",
+      "textPlaceholder": "örn. Kişi ödeme adımına ulaştı",
+      "description": "Bildirimleri bağlayan ekip üyelerinin Telegram'ına gönderilir. Değişkenler desteklenir."
+    }
   },
   "folders": {
     "heading": {
@@ -5397,5 +5403,31 @@
         "empty": "Henüz oyun kaydı yok"
       }
     }
+  },
+  "staffNotifications": {
+    "menuItem": "Telegram bildirimleri",
+    "title": "Telegram bildirimleri",
+    "description": "Bir kişinin insana ihtiyacı olduğunda Telegram'dan mesaj alın.",
+    "connected": "Telegram bağlı",
+    "connectHint": "Düğmeye basın: Telegram açılır, orada Başlat'a dokunun. Bağlantı 15 dakika geçerlidir.",
+    "connect": "Telegram'ı bağla",
+    "waiting": "Telegram'da Başlat'a dokunmanız bekleniyor…",
+    "disconnect": "Bağlantıyı kes",
+    "connectedToast": "Telegram bağlandı",
+    "disconnectedToast": "Telegram bağlantısı kesildi",
+    "typesTitle": "Beni şu durumlarda bilgilendir",
+    "types": {
+      "newMessageToHuman": "Bir kişi yazdı ve hiçbir bot yanıt vermedi",
+      "notifyAdmin": "“Ekibi bilgilendir” akış adımı çalıştı veya sohbet bir insana devredildi",
+      "contactStuck": "Bir kişi bir akış adımında takıldı"
+    },
+    "stuckTitle": "Bir kişi ne zaman takılmış sayılır",
+    "stuckDescription": "Akışta ilerlemeden geçen süre. Tüm çalışma alanı için geçerlidir.",
+    "stuckOff": "Bildirme",
+    "stuckHours": "{count, plural, one {# saat} other {# saat}}",
+    "stuckDays": "{count, plural, one {# gün} other {# gün}}",
+    "saved": "Kaydedildi",
+    "loadError": "Bildirim ayarları yüklenemedi",
+    "saveError": "Değişiklik kaydedilemedi"
   }
 }

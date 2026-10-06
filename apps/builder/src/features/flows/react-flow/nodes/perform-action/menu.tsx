@@ -361,6 +361,11 @@ export const performActionMenus = (t: TranslationFn): MenuItem[] => [
         icon: PackageOpenIcon,
         stepType: stepTypes.enum.unarchiveConversation,
       },
+      {
+        label: t("flows.actions.notifyAgent"),
+        icon: BellRingIcon,
+        stepType: stepTypes.enum.notifyAgent,
+      },
     ],
   },
   {

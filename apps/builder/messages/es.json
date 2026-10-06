@@ -2241,7 +2241,8 @@
       "import": "Importar flujo",
       "export": "Exportar",
       "importStarted": "El flujo se está importando. Consulta el historial de importaciones para ver los resultados.",
-      "importJsonOnly": "Solo archivos JSON"
+      "importJsonOnly": "Solo archivos JSON",
+      "notifyAgent": "Notificar al equipo"
     },
     "splitTraffic": {
       "balanceHint": "La suma total debe ser igual al 100 %.",
@@ -2349,7 +2350,12 @@
     "sendText": {
       "tiktokTitleTruncated": "Cuando se adjuntan botones, TikTok solo envía los primeros 40 caracteres de este mensaje; el resto se recortará."
     },
-    "dataWasSaved": "Datos guardados"
+    "dataWasSaved": "Datos guardados",
+    "notifyAgent": {
+      "textLabel": "Mensaje para el equipo",
+      "textPlaceholder": "p. ej. El contacto llegó al paso de pago",
+      "description": "Se envía al Telegram del equipo que conectó las notificaciones. Admite variables."
+    }
   },
   "folders": {
     "heading": {
@@ -5397,5 +5403,31 @@
         "empty": "Aún no hay registros de jugadas"
       }
     }
+  },
+  "staffNotifications": {
+    "menuItem": "Notificaciones de Telegram",
+    "title": "Notificaciones de Telegram",
+    "description": "Recibe un mensaje en Telegram cuando un contacto necesita a una persona.",
+    "connected": "Telegram está conectado",
+    "connectHint": "Pulsa el botón: se abrirá Telegram, toca Iniciar allí. El enlace es válido durante 15 minutos.",
+    "connect": "Conectar Telegram",
+    "waiting": "Esperando a que toques Iniciar en Telegram…",
+    "disconnect": "Desconectar",
+    "connectedToast": "Telegram conectado",
+    "disconnectedToast": "Telegram desconectado",
+    "typesTitle": "Avísame cuando",
+    "types": {
+      "newMessageToHuman": "Un contacto escribió y ningún bot respondió",
+      "notifyAdmin": "Se ejecuta el paso «Notificar al equipo» o el chat pasa a una persona",
+      "contactStuck": "Un contacto está atascado en un paso del flujo"
+    },
+    "stuckTitle": "Cuándo se considera atascado un contacto",
+    "stuckDescription": "Tiempo sin avanzar en el flujo. Se aplica a todo el espacio de trabajo.",
+    "stuckOff": "No avisar",
+    "stuckHours": "{count, plural, one {# hora} other {# horas}}",
+    "stuckDays": "{count, plural, one {# día} other {# días}}",
+    "saved": "Guardado",
+    "loadError": "No se pudieron cargar los ajustes de notificaciones",
+    "saveError": "No se pudo guardar el cambio"
   }
 }

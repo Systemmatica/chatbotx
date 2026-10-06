@@ -34,6 +34,7 @@ import { registerSchedules } from "./handlers/register-schedules"
 import { scanAppointmentReminders } from "./handlers/scan-appointment-reminders"
 import { scanCoexistRuns } from "./handlers/scan-coexist-runs"
 import { scanSmartDelay } from "./handlers/scan-smart-delay"
+import { scanStuckContacts } from "./handlers/scan-stuck-contacts"
 import { syncUserQuota } from "./handlers/sync-user-quota"
 import { teardownExpiredTrial } from "./handlers/teardown-expired-trial"
 import { unsubscribeExpiredTrials } from "./handlers/unsubscribe-expired-trials"
@@ -151,6 +152,10 @@ async function startScheduleWorker() {
 
         case ScheduleJobData.teardownExpiredTrial:
           await teardownExpiredTrial(job.data.data.userId)
+          return
+
+        case ScheduleJobData.scanStuckContacts:
+          await scanStuckContacts()
           return
 
         default:

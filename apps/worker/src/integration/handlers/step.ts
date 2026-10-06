@@ -67,6 +67,7 @@ import {
 } from "./messenger-user-menu"
 import { handleSendMetaCapiEventStep } from "./meta-conversions/send-meta-capi-event-step-handler"
 import { addOrUpdateMoosendContact } from "./moosend-handler"
+import { notifyAgent } from "./notify-agent"
 import { questionnaires } from "./questionnaires"
 import { sendEmail } from "./send-email"
 import { addSendGridContact } from "./sendgrid-handler"
@@ -395,7 +396,7 @@ export const flowStepHandlers: Record<
   [stepTypes.enum.klaviyoSyncProfile]: syncKlaviyoProfile,
   [stepTypes.enum.moosendCreateContact]: addOrUpdateMoosendContact,
   [stepTypes.enum.sendGridAddContact]: addSendGridContact,
-  [stepTypes.enum.notifyAgent]: undefined,
+  [stepTypes.enum.notifyAgent]: notifyAgent,
   [stepTypes.enum.openWebsite]: undefined,
   [stepTypes.enum.aiAnalyzeImage]: handleAIAnalyzeImage,
   [stepTypes.enum.aiDeleteMessageHistory]: handleAIDeleteMessageHistory,

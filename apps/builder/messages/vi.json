@@ -2241,7 +2241,8 @@
       "import": "Nhập luồng",
       "export": "Xuất",
       "importStarted": "Luồng đang được nhập. Kiểm tra lịch sử nhập để xem kết quả.",
-      "importJsonOnly": "Chỉ tệp JSON"
+      "importJsonOnly": "Chỉ tệp JSON",
+      "notifyAgent": "Thông báo nhân viên"
     },
     "splitTraffic": {
       "balanceHint": "Tổng phần trăm phải bằng 100%.",
@@ -2349,7 +2350,12 @@
     "sendText": {
       "tiktokTitleTruncated": "Khi có gắn nút, TikTok chỉ gửi tối đa 40 ký tự đầu của tin nhắn này — phần còn lại sẽ bị cắt bỏ."
     },
-    "dataWasSaved": "Đã lưu dữ liệu"
+    "dataWasSaved": "Đã lưu dữ liệu",
+    "notifyAgent": {
+      "textLabel": "Tin nhắn cho nhân viên",
+      "textPlaceholder": "vd: Khách đã đến bước thanh toán",
+      "description": "Gửi đến Telegram của nhân viên đã kết nối thông báo. Hỗ trợ biến."
+    }
   },
   "folders": {
     "heading": {
@@ -5397,5 +5403,31 @@
         "empty": "Chưa có bản ghi lượt chơi nào"
       }
     }
+  },
+  "staffNotifications": {
+    "menuItem": "Thông báo Telegram",
+    "title": "Thông báo Telegram",
+    "description": "Nhận tin nhắn Telegram khi khách hàng cần người hỗ trợ.",
+    "connected": "Đã kết nối Telegram",
+    "connectHint": "Nhấn nút: Telegram sẽ mở, chạm Bắt đầu ở đó. Liên kết có hiệu lực 15 phút.",
+    "connect": "Kết nối Telegram",
+    "waiting": "Đang chờ bạn chạm Bắt đầu trong Telegram…",
+    "disconnect": "Ngắt kết nối",
+    "connectedToast": "Đã kết nối Telegram",
+    "disconnectedToast": "Đã ngắt kết nối Telegram",
+    "typesTitle": "Thông báo cho tôi khi",
+    "types": {
+      "newMessageToHuman": "Khách nhắn tin và không bot nào trả lời",
+      "notifyAdmin": "Bước “Thông báo nhân viên” chạy hoặc cuộc trò chuyện được chuyển cho người",
+      "contactStuck": "Khách bị kẹt ở một bước trong luồng"
+    },
+    "stuckTitle": "Khi nào khách được coi là bị kẹt",
+    "stuckDescription": "Thời gian không tiến triển trong luồng. Áp dụng cho toàn bộ không gian làm việc.",
+    "stuckOff": "Không thông báo",
+    "stuckHours": "{count, plural, other {# giờ}}",
+    "stuckDays": "{count, plural, other {# ngày}}",
+    "saved": "Đã lưu",
+    "loadError": "Không tải được cài đặt thông báo",
+    "saveError": "Không lưu được thay đổi"
   }
 }

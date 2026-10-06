@@ -1,6 +1,7 @@
 import {
   integrationService,
   isPlatformAdmin,
+  isStaffNotifierConfigured,
   isSuperAdmin,
   isWorkspaceScheduledForDeletion,
   quotaEnforcementService,
@@ -120,6 +121,7 @@ export default async function WorkspaceLayout({
         permissions={targetWorkspaceMember.permissions}
         quota={quotaSummary}
         scheduledForDeletion={scheduledForDeletion}
+        staffNotificationsAvailable={isStaffNotifierConfigured()}
         workspaceId={workspaceId}
       />
       <SidebarInset>

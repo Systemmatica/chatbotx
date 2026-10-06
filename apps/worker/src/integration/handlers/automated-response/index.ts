@@ -5,7 +5,11 @@ import {
 } from "@chatbotx.io/ai"
 import { aiContextService } from "@chatbotx.io/ai/server"
 import { automatedResponseService } from "@chatbotx.io/automated-response"
-import { aiAgentService, workspaceService } from "@chatbotx.io/business"
+import {
+  aiAgentService,
+  staffNotificationService,
+  workspaceService,
+} from "@chatbotx.io/business"
 import { isMessageStorageError } from "@chatbotx.io/database/errors"
 import {
   aiAgentProviderModels,
@@ -29,6 +33,7 @@ import { normalizeError } from "universal-error-normalizer"
 import { sendTypingToChannel } from "../../../chat/handlers/send-message"
 import { detectConversationAndContactInbox } from "../../../lib/db"
 import { logger } from "../../../lib/logger"
+import { describeIncomingForStaff } from "../../staff-notify"
 import { triggerDefaultReplyFlow } from "./default-reply"
 import { replyByAI } from "./replies"
 
@@ -120,6 +125,16 @@ export async function processAutomatedResponse(
     return
   }
 
+  // No keyword, AI agent or default reply answered this message: a human
+  // has to. Enqueue-only and debounced per conversation; never throws.
+  const notifyStaffUnanswered = () =>
+    staffNotificationService.notifyIncomingMessage({
+      workspaceId: conversation.workspaceId,
+      conversationId: conversation.id,
+      contactInboxId: contactInbox.id,
+      text: triggerMessage ? describeIncomingForStaff(triggerMessage) : "",
+    })
+
   try {
     const aiAgent = await aiAgentService.findDefault(conversation.workspaceId)
 
@@ -142,6 +157,9 @@ export async function processAutomatedResponse(
             }
           : undefined,
       })
+      if (defaultReplyResult !== "triggered") {
+        await notifyStaffUnanswered()
+      }
       if (defaultReplyResult !== "triggered" && messageId) {
         await emit("analytics:dashboard", {
           eventType: "message:bot_received",
@@ -362,6 +380,9 @@ export async function processAutomatedResponse(
           }
         : undefined,
     })
+    if (defaultReplyResult !== "triggered") {
+      await notifyStaffUnanswered()
+    }
     if (defaultReplyResult !== "triggered" && messageId) {
       await emit("analytics:dashboard", {
         eventType: "message:bot_received",

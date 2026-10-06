@@ -1,5 +1,8 @@
 import { automatedResponseService } from "@chatbotx.io/automated-response"
-import { conversationService } from "@chatbotx.io/business"
+import {
+  conversationService,
+  staffNotificationService,
+} from "@chatbotx.io/business"
 import { emit } from "@chatbotx.io/event-bus"
 import { getStoryReply } from "@chatbotx.io/sdk"
 import {
@@ -54,6 +57,7 @@ import { captureTemplateFlowResponse } from "./handlers/template-flow-response"
 import { runWaitResume } from "./handlers/wait-resume"
 import { runIntegrationJobWithWebhookContext } from "./job-context"
 import { resolveIncomingTextRouting } from "./routing"
+import { describeIncomingForStaff } from "./staff-notify"
 import { closeChatQueueEvents } from "./utils/message"
 
 async function startIntegrationWorker() {
@@ -158,6 +162,16 @@ async function startIntegrationWorker() {
                 workspaceId: routing.conversation.workspaceId,
               })
             } else if (isNotPostbackOrQuickReply) {
+              if (routing.type === "humanMode") {
+                // Human mode: the bot stays silent, so tell linked staff
+                // (debounced per conversation, enqueue-only, never throws).
+                await staffNotificationService.notifyIncomingMessage({
+                  workspaceId: routing.conversation.workspaceId,
+                  conversationId: routing.conversation.id,
+                  contactInboxId: message.contactInboxId,
+                  text: describeIncomingForStaff(message),
+                })
+              }
               // Track no response for messages without content or not from contact
               // (postback/quickReply are tracked in their own handlers)
               await emit("analytics:dashboard", {

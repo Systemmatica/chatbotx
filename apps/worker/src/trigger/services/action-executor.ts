@@ -3,6 +3,7 @@ import {
   contactCustomFieldService,
   conversationService,
   metaConversionsService,
+  staffNotificationService,
   tagSyncService,
 } from "@chatbotx.io/business"
 import { and, db, eq, inArray } from "@chatbotx.io/database/client"
@@ -314,9 +315,11 @@ export class ActionExecutor {
           },
         })
         if (action.notifyAdmins) {
-          baseLogger.info(
-            `Notifying admins for conversation ${conversation.id}`,
-          )
+          // Enqueue only; delivery runs in the default worker. Never throws.
+          await staffNotificationService.notifyHandoff({
+            workspaceId,
+            conversationId: conversation.id,
+          })
         }
         break
 

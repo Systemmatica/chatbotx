@@ -20,13 +20,20 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@chatbotx.io/ui/components/ui/sidebar"
-import { CreditCard, Crown, Settings2, ShieldCheck } from "lucide-react"
+import {
+  BellRingIcon,
+  CreditCard,
+  Crown,
+  Settings2,
+  ShieldCheck,
+} from "lucide-react"
 import Link from "next/link"
 import { useTranslations } from "next-intl"
 import { useState } from "react"
 import { UpgradePlanDialog } from "@/enterprise/features/billing/upgrade-plan-dialog"
 import { isCloud } from "@/env"
 import { SignOut } from "@/features/auth/sign-out"
+import { StaffNotificationsDialog } from "@/features/staff-notifications/components/staff-notifications-dialog"
 import { EditProfileDialog } from "@/features/workspaces/components/edit-profile-dialog"
 import { RefreshAllChannelTokensButton } from "@/features/workspaces/components/refresh-all-channel-tokens-button"
 import { useUserAvatarUrl } from "@/lib/auth/avatar"
@@ -38,6 +45,8 @@ export function NavUser({
   isSuperAdmin,
   isPlatformAdmin,
   planName,
+  workspaceId,
+  staffNotificationsAvailable = false,
 }: {
   user: {
     name: string
@@ -47,10 +56,17 @@ export function NavUser({
   isSuperAdmin?: boolean
   isPlatformAdmin?: boolean
   planName?: string | null
+  workspaceId?: string
+  /** The platform Telegram notifier bot is configured (server env). */
+  staffNotificationsAvailable?: boolean
 }) {
   const { isMobile } = useSidebar()
   const t = useTranslations()
   const [upgradeOpen, setUpgradeOpen] = useState(false)
+  const [staffNotificationsOpen, setStaffNotificationsOpen] = useState(false)
+  const showStaffNotifications = Boolean(
+    staffNotificationsAvailable && workspaceId,
+  )
   const avatarUrl = useUserAvatarUrl(user.avatar)
 
   return (
@@ -58,6 +74,13 @@ export function NavUser({
       <SidebarMenuItem>
         {isCloud() && (
           <UpgradePlanDialog onOpenChange={setUpgradeOpen} open={upgradeOpen} />
+        )}
+        {showStaffNotifications && workspaceId && (
+          <StaffNotificationsDialog
+            onOpenChange={setStaffNotificationsOpen}
+            open={staffNotificationsOpen}
+            workspaceId={workspaceId}
+          />
         )}
         <DropdownMenu>
           <DropdownMenuTrigger
@@ -142,6 +165,21 @@ export function NavUser({
                       </Link>
                     }
                   />
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+              </>
+            )}
+            {showStaffNotifications && (
+              <>
+                <DropdownMenuGroup>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setStaffNotificationsOpen(true)
+                    }}
+                  >
+                    <BellRingIcon className="me-2 h-4 w-4" />
+                    {t("staffNotifications.menuItem")}
+                  </DropdownMenuItem>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
               </>

@@ -61,6 +61,7 @@ export function AppSidebar({
   quota,
   scheduledForDeletion = false,
   hiddenFeatures = [],
+  staffNotificationsAvailable = false,
   ...props
 }: ComponentProps<typeof Sidebar> & {
   workspaceId: string
@@ -73,6 +74,7 @@ export function AppSidebar({
   quota: QuotaSummary
   scheduledForDeletion?: boolean
   hiddenFeatures?: string[]
+  staffNotificationsAvailable?: boolean
 }) {
   const t = useTranslations()
   const { data: session } = authClient.useSession()
@@ -223,7 +225,9 @@ export function AppSidebar({
           isPlatformAdmin={isPlatformAdmin}
           isSuperAdmin={isSuperAdmin}
           planName={quota.planName}
+          staffNotificationsAvailable={staffNotificationsAvailable}
           user={data.user}
+          workspaceId={workspaceId}
         />
         <NavHelp />
       </SidebarFooter>

@@ -2889,7 +2889,8 @@
       "import": "导入流程",
       "export": "导出",
       "importStarted": "流程正在导入中，请稍后查看导入记录以获取结果。",
-      "importJsonOnly": "仅限 JSON 文件"
+      "importJsonOnly": "仅限 JSON 文件",
+      "notifyAgent": "通知员工"
     },
     "additionalSteps": "附加步骤",
     "aiAnalyzeImage": {
@@ -3023,7 +3024,12 @@
     "sendText": {
       "tiktokTitleTruncated": "附加按钮后，TikTok 只会发送这条消息的前 40 个字符——其余部分将被截断。"
     },
-    "dataWasSaved": "数据已保存"
+    "dataWasSaved": "数据已保存",
+    "notifyAgent": {
+      "textLabel": "发给员工的消息",
+      "textPlaceholder": "例如：联系人已到达付款步骤",
+      "description": "发送到已连接通知的员工的 Telegram。支持变量。"
+    }
   },
   "folders": {
     "heading": {
@@ -5397,5 +5403,31 @@
     },
     "monthLabel": "月份",
     "yearLabel": "年份"
+  },
+  "staffNotifications": {
+    "menuItem": "Telegram 通知",
+    "title": "Telegram 通知",
+    "description": "当联系人需要人工处理时，通过 Telegram 收到消息。",
+    "connected": "Telegram 已连接",
+    "connectHint": "点击按钮会打开 Telegram，在那里点“开始”。链接 15 分钟内有效。",
+    "connect": "连接 Telegram",
+    "waiting": "正在等待你在 Telegram 中点“开始”…",
+    "disconnect": "断开连接",
+    "connectedToast": "Telegram 已连接",
+    "disconnectedToast": "Telegram 已断开",
+    "typesTitle": "在以下情况通知我",
+    "types": {
+      "newMessageToHuman": "联系人发来消息且没有机器人回复",
+      "notifyAdmin": "流程步骤“通知员工”运行或对话转给人工",
+      "contactStuck": "联系人卡在某个流程步骤"
+    },
+    "stuckTitle": "联系人多久算卡住",
+    "stuckDescription": "在流程中没有进展的时间。适用于整个工作区。",
+    "stuckOff": "不通知",
+    "stuckHours": "{count, plural, other {# 小时}}",
+    "stuckDays": "{count, plural, other {# 天}}",
+    "saved": "已保存",
+    "loadError": "无法加载通知设置",
+    "saveError": "无法保存更改"
   }
 }

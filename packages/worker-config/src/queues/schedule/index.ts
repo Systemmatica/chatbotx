@@ -34,6 +34,7 @@ export const ScheduleJobData = {
   refreshChannelTokens: "refreshChannelTokens",
   unsubscribeExpiredTrials: "unsubscribeExpiredTrials",
   teardownExpiredTrial: "teardownExpiredTrial",
+  scanStuckContacts: "scanStuckContacts",
 } as const
 
 /**
@@ -184,6 +185,11 @@ export type ScheduleJobTeardownExpiredTrial = {
   data: { userId: string }
 }
 
+export type ScheduleJobScanStuckContacts = {
+  type: typeof ScheduleJobData.scanStuckContacts
+  data: Record<string, never>
+}
+
 export type ScheduleJobData =
   | ScheduleJobBroadcast
   | ScheduleJobEnqueueBroadcast
@@ -209,6 +215,7 @@ export type ScheduleJobData =
   | ScheduleJobRefreshChannelTokens
   | ScheduleJobUnsubscribeExpiredTrials
   | ScheduleJobTeardownExpiredTrial
+  | ScheduleJobScanStuckContacts
 
 export const scheduleQueue = isNoRedisEnv()
   ? fakeQueue

@@ -17,6 +17,20 @@ export async function register() {
       "@chatbotx.io/business/license-startup"
     )
     await assertLicenseAtStartup()
+
+    // Staff Telegram notifier: point the bot's webhook at this builder on
+    // every boot (idempotent). Not awaited so a slow or unreachable Telegram
+    // never delays startup; a no-op when NOTIFY_TELEGRAM_BOT_TOKEN is unset.
+    import("@chatbotx.io/business")
+      .then(({ staffNotificationService }) =>
+        staffNotificationService.registerWebhookOnBoot(),
+      )
+      .catch((err: unknown) => {
+        console.error(
+          "[staff-notifier] could not start webhook registration",
+          err,
+        )
+      })
   }
 
   await import("./lib/orpc/orpc.server")

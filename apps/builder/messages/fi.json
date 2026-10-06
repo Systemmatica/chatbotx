@@ -2167,7 +2167,8 @@
       "import": "Tuo vuo",
       "export": "Vie",
       "importStarted": "Vuota tuodaan. Tarkista tuontihistoriasta tulokset.",
-      "importJsonOnly": "Vain JSON-tiedostot"
+      "importJsonOnly": "Vain JSON-tiedostot",
+      "notifyAgent": "Ilmoita tiimille"
     },
     "splitTraffic": {
       "balanceHint": "Kokonaissumman on oltava 100 %.",
@@ -2275,7 +2276,12 @@
     "sendText": {
       "tiktokTitleTruncated": "Kun painikkeita on liitetty, TikTok lähettää vain tämän viestin ensimmäiset 40 merkkiä — loput katkaistaan."
     },
-    "dataWasSaved": "Tiedot tallennettiin"
+    "dataWasSaved": "Tiedot tallennettiin",
+    "notifyAgent": {
+      "textLabel": "Viesti tiimille",
+      "textPlaceholder": "esim. Kontakti pääsi maksuvaiheeseen",
+      "description": "Lähetetään Telegramiin niille, jotka ovat yhdistäneet ilmoitukset. Muuttujat ovat tuettuja."
+    }
   },
   "folders": {
     "heading": {
@@ -5397,5 +5403,31 @@
         "empty": "Ei pelitapahtumia vielä"
       }
     }
+  },
+  "staffNotifications": {
+    "menuItem": "Telegram-ilmoitukset",
+    "title": "Telegram-ilmoitukset",
+    "description": "Saat Telegram-viestin, kun kontakti tarvitsee ihmistä.",
+    "connected": "Telegram on yhdistetty",
+    "connectHint": "Paina painiketta: Telegram avautuu, napauta siellä Aloita. Linkki on voimassa 15 minuuttia.",
+    "connect": "Yhdistä Telegram",
+    "waiting": "Odotetaan, että napautat Aloita Telegramissa…",
+    "disconnect": "Katkaise yhteys",
+    "connectedToast": "Telegram yhdistetty",
+    "disconnectedToast": "Telegram-yhteys katkaistu",
+    "typesTitle": "Ilmoita minulle, kun",
+    "types": {
+      "newMessageToHuman": "Kontakti kirjoitti eikä mikään botti vastannut",
+      "notifyAdmin": "Kulun vaihe ”Ilmoita tiimille” suoritetaan tai keskustelu siirtyy ihmiselle",
+      "contactStuck": "Kontakti on jumissa kulun vaiheessa"
+    },
+    "stuckTitle": "Milloin kontakti katsotaan jumiutuneeksi",
+    "stuckDescription": "Aika ilman etenemistä kulussa. Koskee koko työtilaa.",
+    "stuckOff": "Älä ilmoita",
+    "stuckHours": "{count, plural, one {# tunti} other {# tuntia}}",
+    "stuckDays": "{count, plural, one {# päivä} other {# päivää}}",
+    "saved": "Tallennettu",
+    "loadError": "Ilmoitusasetuksia ei voitu ladata",
+    "saveError": "Muutosta ei voitu tallentaa"
   }
 }

@@ -2167,7 +2167,8 @@
       "import": "フローをインポート",
       "export": "エクスポート",
       "importStarted": "フローをインポート中です。結果はインポート履歴でご確認ください。",
-      "importJsonOnly": "JSONファイルのみ"
+      "importJsonOnly": "JSONファイルのみ",
+      "notifyAgent": "スタッフに通知"
     },
     "splitTraffic": {
       "balanceHint": "合計は100%になる必要があります。",
@@ -2275,7 +2276,12 @@
     "sendText": {
       "tiktokTitleTruncated": "ボタンを追加すると、TikTokはこのメッセージの最初の40文字までしか送信しません。残りは切り捨てられます。"
     },
-    "dataWasSaved": "データが保存されました"
+    "dataWasSaved": "データが保存されました",
+    "notifyAgent": {
+      "textLabel": "スタッフへのメッセージ",
+      "textPlaceholder": "例: 連絡先が支払いステップに到達しました",
+      "description": "通知を接続したスタッフの Telegram に送信されます。変数を使用できます。"
+    }
   },
   "folders": {
     "heading": {
@@ -5397,5 +5403,31 @@
         "empty": "プレイ記録はまだありません"
       }
     }
+  },
+  "staffNotifications": {
+    "menuItem": "Telegram 通知",
+    "title": "Telegram 通知",
+    "description": "連絡先が人の対応を必要とするとき、Telegram でメッセージを受け取ります。",
+    "connected": "Telegram に接続済み",
+    "connectHint": "ボタンを押すと Telegram が開きます。そこで「開始」をタップしてください。リンクの有効期限は 15 分です。",
+    "connect": "Telegram を接続",
+    "waiting": "Telegram で「開始」がタップされるのを待っています…",
+    "disconnect": "接続を解除",
+    "connectedToast": "Telegram を接続しました",
+    "disconnectedToast": "Telegram の接続を解除しました",
+    "typesTitle": "通知するタイミング",
+    "types": {
+      "newMessageToHuman": "連絡先からメッセージが届き、どのボットも返信しなかったとき",
+      "notifyAdmin": "フローの「スタッフに通知」ステップが実行されたとき、またはチャットが担当者に引き継がれたとき",
+      "contactStuck": "連絡先がフローのステップで止まっているとき"
+    },
+    "stuckTitle": "連絡先が止まっているとみなすまでの時間",
+    "stuckDescription": "フローで進まない時間です。ワークスペース全体に適用されます。",
+    "stuckOff": "通知しない",
+    "stuckHours": "{count, plural, other {# 時間}}",
+    "stuckDays": "{count, plural, other {# 日}}",
+    "saved": "保存しました",
+    "loadError": "通知設定を読み込めませんでした",
+    "saveError": "変更を保存できませんでした"
   }
 }

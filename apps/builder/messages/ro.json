@@ -137,7 +137,8 @@
       "import": "Importă fluxul",
       "export": "Exportă",
       "importStarted": "Fluxul se importă. Verifică istoricul importurilor pentru rezultate.",
-      "importJsonOnly": "Doar fișiere JSON"
+      "importJsonOnly": "Doar fișiere JSON",
+      "notifyAgent": "Anunță echipa"
     },
     "splitTraffic": {
       "balanceHint": "Suma totală trebuie să fie egală cu 100%.",
@@ -245,7 +246,12 @@
     "sendText": {
       "tiktokTitleTruncated": "Când sunt atașate butoane, TikTok trimite doar primele 40 de caractere din acest mesaj — restul va fi trunchiat."
     },
-    "dataWasSaved": "Datele au fost salvate"
+    "dataWasSaved": "Datele au fost salvate",
+    "notifyAgent": {
+      "textLabel": "Mesaj pentru echipă",
+      "textPlaceholder": "ex. Contactul a ajuns la pasul de plată",
+      "description": "Se trimite pe Telegram membrilor care au conectat notificările. Sunt acceptate variabile."
+    }
   },
   "folders": {
     "heading": {
@@ -5397,5 +5403,31 @@
         "empty": "Nu există încă înregistrări de joc"
       }
     }
+  },
+  "staffNotifications": {
+    "menuItem": "Notificări Telegram",
+    "title": "Notificări Telegram",
+    "description": "Primește un mesaj pe Telegram când un contact are nevoie de un om.",
+    "connected": "Telegram este conectat",
+    "connectHint": "Apasă butonul: se deschide Telegram, atinge Start acolo. Linkul este valabil 15 minute.",
+    "connect": "Conectează Telegram",
+    "waiting": "Așteptăm să atingi Start în Telegram…",
+    "disconnect": "Deconectează",
+    "connectedToast": "Telegram conectat",
+    "disconnectedToast": "Telegram deconectat",
+    "typesTitle": "Anunță-mă când",
+    "types": {
+      "newMessageToHuman": "Un contact a scris și niciun bot nu a răspuns",
+      "notifyAdmin": "Rulează pasul „Anunță echipa” sau conversația este preluată de un om",
+      "contactStuck": "Un contact a rămas blocat la un pas din flux"
+    },
+    "stuckTitle": "Când este considerat blocat un contact",
+    "stuckDescription": "Timp fără progres în flux. Se aplică întregului spațiu de lucru.",
+    "stuckOff": "Nu anunța",
+    "stuckHours": "{count, plural, one {# oră} few {# ore} other {# de ore}}",
+    "stuckDays": "{count, plural, one {# zi} few {# zile} other {# de zile}}",
+    "saved": "Salvat",
+    "loadError": "Setările de notificare nu au putut fi încărcate",
+    "saveError": "Modificarea nu a putut fi salvată"
   }
 }

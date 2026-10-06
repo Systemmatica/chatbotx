@@ -38,6 +38,7 @@ import { mailerLiteAddSubscriberSchema } from "./steps/mailer-lite-add-subscribe
 import { makeStepSchema } from "./steps/make"
 import { markEmailVerifiedStepSchema } from "./steps/mark-email-verified"
 import { moosendCreateContactSchema } from "./steps/moosend-create-contact"
+import { notifyAgentStepSchema } from "./steps/notify-agent"
 import { optInEmailStepSchema } from "./steps/opt-in-email"
 import { optOutEmailStepSchema } from "./steps/opt-out-email"
 import { questionnairesStepSchema } from "./steps/questionnaires"
@@ -75,6 +76,7 @@ const inboxSteps = [
   unfollowConversationStepSchema,
   archiveConversationStepSchema,
   unarchiveConversationStepSchema,
+  notifyAgentStepSchema,
 ]
 
 const contactSteps = [

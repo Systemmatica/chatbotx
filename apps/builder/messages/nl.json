@@ -2167,7 +2167,8 @@
       "import": "Flow importeren",
       "export": "Exporteren",
       "importStarted": "De flow wordt geïmporteerd. Bekijk de importgeschiedenis voor de resultaten.",
-      "importJsonOnly": "Alleen JSON-bestanden"
+      "importJsonOnly": "Alleen JSON-bestanden",
+      "notifyAgent": "Team waarschuwen"
     },
     "splitTraffic": {
       "balanceHint": "De totale som moet gelijk zijn aan 100%.",
@@ -2275,7 +2276,12 @@
     "sendText": {
       "tiktokTitleTruncated": "Als er knoppen zijn toegevoegd, verstuurt TikTok alleen de eerste 40 tekens van dit bericht — de rest wordt afgekapt."
     },
-    "dataWasSaved": "Gegevens zijn opgeslagen"
+    "dataWasSaved": "Gegevens zijn opgeslagen",
+    "notifyAgent": {
+      "textLabel": "Bericht voor het team",
+      "textPlaceholder": "bijv. Het contact heeft de betaalstap bereikt",
+      "description": "Wordt naar Telegram gestuurd van teamleden die meldingen hebben gekoppeld. Variabelen worden ondersteund."
+    }
   },
   "folders": {
     "heading": {
@@ -5397,5 +5403,31 @@
         "empty": "Nog geen speelrecords"
       }
     }
+  },
+  "staffNotifications": {
+    "menuItem": "Telegram-meldingen",
+    "title": "Telegram-meldingen",
+    "description": "Ontvang een Telegram-bericht wanneer een contact een mens nodig heeft.",
+    "connected": "Telegram is gekoppeld",
+    "connectHint": "Klik op de knop: Telegram opent, tik daar op Start. De link is 15 minuten geldig.",
+    "connect": "Telegram koppelen",
+    "waiting": "Wachten tot je in Telegram op Start tikt…",
+    "disconnect": "Ontkoppelen",
+    "connectedToast": "Telegram gekoppeld",
+    "disconnectedToast": "Telegram ontkoppeld",
+    "typesTitle": "Waarschuw me wanneer",
+    "types": {
+      "newMessageToHuman": "Een contact schreef en geen bot antwoordde",
+      "notifyAdmin": "De flowstap ‘Team waarschuwen’ draait of een chat naar een mens gaat",
+      "contactStuck": "Een contact vastzit op een flowstap"
+    },
+    "stuckTitle": "Wanneer een contact als vastgelopen geldt",
+    "stuckDescription": "Tijd zonder voortgang in de flow. Geldt voor de hele werkruimte.",
+    "stuckOff": "Niet waarschuwen",
+    "stuckHours": "{count, plural, one {# uur} other {# uur}}",
+    "stuckDays": "{count, plural, one {# dag} other {# dagen}}",
+    "saved": "Opgeslagen",
+    "loadError": "Meldingsinstellingen konden niet worden geladen",
+    "saveError": "Wijziging kon niet worden opgeslagen"
   }
 }

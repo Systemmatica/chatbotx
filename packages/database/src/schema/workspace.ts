@@ -46,6 +46,9 @@ export const workspaceModel = pgTable(
     brandColor: text().notNull().default("#016DFF"),
     developmentMode: boolean().default(false).notNull(),
     smartResponseDelaySeconds: integer(),
+    // Staff notifier: a contact that sits on the same flow step longer than
+    // this many hours is reported to linked members once. 0 = off.
+    stuckContactNotifyHours: integer().notNull().default(24),
     isActive: boolean().notNull().default(true),
     startTime: text(),
     endTime: text(),

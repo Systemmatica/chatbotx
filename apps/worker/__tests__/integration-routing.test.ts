@@ -32,7 +32,10 @@ describe("resolveIncomingTextRouting", () => {
         hasText: true,
         isConversationActive,
       }),
-    ).resolves.toEqual({ type: "none" })
+    ).resolves.toEqual({
+      type: "humanMode",
+      conversation: challengeConversation,
+    })
 
     expect(isConversationActive).toHaveBeenCalledWith(challengeConversation)
   })

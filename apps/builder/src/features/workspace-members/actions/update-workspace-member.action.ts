@@ -42,13 +42,29 @@ export const updateWorkspaceMemberAction = workspaceActionClient
       )
     }
 
+    // Merge notification settings over the stored jsonb so keys this form
+    // does not show (e.g. `contactStuck`, managed by the member in the
+    // Telegram notifications dialog) survive an admin edit.
+    const notificationTypes = {
+      ...workspaceMember.notificationTypes,
+      ...parsedInput.notificationTypes,
+    }
+    const notificationChannels = {
+      ...workspaceMember.notificationChannels,
+      ...parsedInput.notificationChannels,
+    }
+
     const updateInput = isCommunity()
       ? {
           ...parsedInput,
+          notificationTypes,
+          notificationChannels,
           permissions: getSuperAdminPermissions(),
         }
       : {
           ...parsedInput,
+          notificationTypes,
+          notificationChannels,
           permissions: normalizeContactsPermissions(parsedInput.permissions),
         }
 

@@ -47,6 +47,7 @@ import { mailerLiteAddSubscriberStep } from "./mailer-lite-add-subscriber"
 import { makeStep } from "./make"
 import { markEmailVerifiedStep } from "./mark-email-verified"
 import { moosendCreateContactStep } from "./moosend-create-contact"
+import { notifyAgentStep } from "./notify-agent"
 import { openWebsiteStep } from "./open-website"
 import { optInEmailStep } from "./opt-in-email"
 import { optOutEmailStep } from "./opt-out-email"
@@ -107,7 +108,7 @@ export const allSteps: Record<StepType, StepDefinition<any> | undefined> = {
   [stepTypes.enum.sendFile]: sendFileStep,
   [stepTypes.enum.addContactTag]: addContactTagStep,
   [stepTypes.enum.removeContactTag]: removeContactTagStep,
-  [stepTypes.enum.notifyAgent]: undefined,
+  [stepTypes.enum.notifyAgent]: notifyAgentStep,
   [stepTypes.enum.deleteContact]: deleteContactStep,
   [stepTypes.enum.callApi]: externalRequestStep,
   [stepTypes.enum.make]: makeStep,

@@ -2339,7 +2339,8 @@
       "import": "Импортировать цепочку",
       "export": "Экспорт",
       "importStarted": "Цепочка импортируется. Результаты можно посмотреть в истории импорта.",
-      "importJsonOnly": "Только файлы JSON"
+      "importJsonOnly": "Только файлы JSON",
+      "notifyAgent": "Уведомить сотрудников"
     },
     "splitTraffic": {
       "balanceHint": "Общая сумма должна составлять 100%.",
@@ -2447,7 +2448,12 @@
     "sendText": {
       "tiktokTitleTruncated": "При добавлении кнопок TikTok отправляет только первые 40 символов этого сообщения — остальное будет обрезано."
     },
-    "dataWasSaved": "Данные сохранены"
+    "dataWasSaved": "Данные сохранены",
+    "notifyAgent": {
+      "textLabel": "Текст для сотрудников",
+      "textPlaceholder": "Например: клиент дошёл до оплаты",
+      "description": "Придёт в Telegram сотрудникам, которые подключили уведомления. Можно вставлять переменные."
+    }
   },
   "folders": {
     "heading": {
@@ -5397,5 +5403,31 @@
         "empty": "Записей об играх пока нет"
       }
     }
+  },
+  "staffNotifications": {
+    "menuItem": "Уведомления в Telegram",
+    "title": "Уведомления в Telegram",
+    "description": "Получайте сообщение в Telegram, когда клиенту нужен живой человек.",
+    "connected": "Telegram подключён",
+    "connectHint": "Нажмите кнопку — откроется Telegram, там нажмите «Старт». Ссылка действует 15 минут.",
+    "connect": "Подключить Telegram",
+    "waiting": "Ждём, когда вы нажмёте «Старт» в Telegram…",
+    "disconnect": "Отключить",
+    "connectedToast": "Telegram подключён",
+    "disconnectedToast": "Telegram отключён",
+    "typesTitle": "Сообщать, когда",
+    "types": {
+      "newMessageToHuman": "Клиент написал, а бот не ответил",
+      "notifyAdmin": "Сработал шаг «Уведомить сотрудников» или диалог передан оператору",
+      "contactStuck": "Клиент застрял на шаге сценария"
+    },
+    "stuckTitle": "Когда клиент считается застрявшим",
+    "stuckDescription": "Сколько времени он не продвигается по сценарию. Настройка общая для всего рабочего пространства.",
+    "stuckOff": "Не сообщать",
+    "stuckHours": "{count, plural, one {# час} few {# часа} many {# часов} other {# часа}}",
+    "stuckDays": "{count, plural, one {# день} few {# дня} many {# дней} other {# дня}}",
+    "saved": "Сохранено",
+    "loadError": "Не удалось загрузить настройки уведомлений",
+    "saveError": "Не удалось сохранить изменение"
   }
 }

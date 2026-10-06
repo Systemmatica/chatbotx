@@ -2167,7 +2167,8 @@
       "import": "Impor Alur",
       "export": "Ekspor",
       "importStarted": "Alur sedang diimpor. Periksa riwayat impor untuk melihat hasilnya.",
-      "importJsonOnly": "Hanya file JSON"
+      "importJsonOnly": "Hanya file JSON",
+      "notifyAgent": "Beri tahu tim"
     },
     "splitTraffic": {
       "balanceHint": "Jumlah total harus sama dengan 100%.",
@@ -2275,7 +2276,12 @@
     "sendText": {
       "tiktokTitleTruncated": "Saat tombol dilampirkan, TikTok hanya mengirim 40 karakter pertama pesan ini — sisanya akan terpotong."
     },
-    "dataWasSaved": "Data telah disimpan"
+    "dataWasSaved": "Data telah disimpan",
+    "notifyAgent": {
+      "textLabel": "Pesan untuk tim",
+      "textPlaceholder": "mis. Kontak sudah sampai tahap pembayaran",
+      "description": "Dikirim ke Telegram anggota tim yang menghubungkan notifikasi. Mendukung variabel."
+    }
   },
   "folders": {
     "heading": {
@@ -5397,5 +5403,31 @@
         "empty": "Belum ada catatan permainan"
       }
     }
+  },
+  "staffNotifications": {
+    "menuItem": "Notifikasi Telegram",
+    "title": "Notifikasi Telegram",
+    "description": "Dapatkan pesan Telegram saat kontak membutuhkan manusia.",
+    "connected": "Telegram terhubung",
+    "connectHint": "Tekan tombol: Telegram terbuka, ketuk Mulai di sana. Tautan berlaku 15 menit.",
+    "connect": "Hubungkan Telegram",
+    "waiting": "Menunggu Anda mengetuk Mulai di Telegram…",
+    "disconnect": "Putuskan",
+    "connectedToast": "Telegram terhubung",
+    "disconnectedToast": "Telegram terputus",
+    "typesTitle": "Beri tahu saya saat",
+    "types": {
+      "newMessageToHuman": "Kontak menulis dan tidak ada bot yang menjawab",
+      "notifyAdmin": "Langkah alur “Beri tahu tim” berjalan atau obrolan dialihkan ke manusia",
+      "contactStuck": "Kontak tertahan di satu langkah alur"
+    },
+    "stuckTitle": "Kapan kontak dianggap tertahan",
+    "stuckDescription": "Waktu tanpa kemajuan di alur. Berlaku untuk seluruh ruang kerja.",
+    "stuckOff": "Jangan beri tahu",
+    "stuckHours": "{count, plural, other {# jam}}",
+    "stuckDays": "{count, plural, other {# hari}}",
+    "saved": "Tersimpan",
+    "loadError": "Gagal memuat pengaturan notifikasi",
+    "saveError": "Gagal menyimpan perubahan"
   }
 }

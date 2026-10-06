@@ -281,6 +281,22 @@ export const registerSchedules = async () => {
     },
   )
 
+  // Staff Telegram notifier: contacts stuck on a flow step. Registered even
+  // when the notifier env is unset; the handler is then a no-op.
+  await scheduleQueue.upsertJobScheduler(
+    ScheduleJobData.scanStuckContacts,
+    {
+      pattern: "*/15 * * * *",
+    },
+    {
+      name: ScheduleJobData.scanStuckContacts,
+      data: {
+        type: ScheduleJobData.scanStuckContacts,
+        data: {},
+      },
+    },
+  )
+
   await scheduleQueue.upsertJobScheduler(
     ScheduleJobData.refreshChannelTokens,
     {

@@ -53,6 +53,11 @@ export const router = {
   kanbanAPI: lazy(() =>
     import("@/features/kanban/api").then((m) => ({ default: m.kanbanAPI })),
   ),
+  staffNotificationsAPI: lazy(() =>
+    import("@/features/staff-notifications/api").then((m) => ({
+      default: m.staffNotificationsAPI,
+    })),
+  ),
   dynamicImagesAPI: lazy(() =>
     import("@/features/dynamic-images/api").then((m) => ({
       default: m.dynamicImagesAPI,

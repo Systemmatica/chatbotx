@@ -9,6 +9,7 @@ import {
   messageCleanupService,
   quotaEnforcementService,
   resolveTenantSettings,
+  staffNotificationService,
   workspaceService,
 } from "@chatbotx.io/business"
 import { resolveLastUserInputTracking } from "@chatbotx.io/business/contact-inbox"
@@ -356,18 +357,30 @@ export async function handleCreateWebchatMessage({
       )
     } else if (
       newMessage.text &&
-      !("postback" in parsedInput && parsedInput.postback) &&
-      (await conversationService.ensureActive(conversation))
+      !("postback" in parsedInput && parsedInput.postback)
     ) {
-      promises.push(
-        automatedResponseService.enqueue({
-          conversationId: conversation.id,
-          contactInboxId: contactInbox.id,
-          messageId: newMessage.id,
-          messageText: newMessage.text,
-          workspaceId: conversation.workspaceId,
-        }),
-      )
+      if (await conversationService.ensureActive(conversation)) {
+        promises.push(
+          automatedResponseService.enqueue({
+            conversationId: conversation.id,
+            contactInboxId: contactInbox.id,
+            messageId: newMessage.id,
+            messageText: newMessage.text,
+            workspaceId: conversation.workspaceId,
+          }),
+        )
+      } else {
+        // Human mode: no bot answers, so tell linked staff (debounced,
+        // enqueue-only, never throws).
+        promises.push(
+          staffNotificationService.notifyIncomingMessage({
+            workspaceId: conversation.workspaceId,
+            conversationId: conversation.id,
+            contactInboxId: contactInbox.id,
+            text: newMessage.text,
+          }),
+        )
+      }
     }
 
     if (isNewContact && contactInbox.sourceId) {

@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm"
-import { jsonb, pgEnum, pgTable } from "drizzle-orm/pg-core"
+import { jsonb, pgEnum, pgTable, text } from "drizzle-orm/pg-core"
 import {
   type WorkspaceMemberNotificationChannels,
   type WorkspaceMemberNotificationTypes,
@@ -42,4 +42,8 @@ export const workspaceMemberModel = pgTable("WorkspaceMember", {
     .$type<WorkspaceMemberPermissions>()
     .default(sql`'{}'`)
     .notNull(),
+  // Private chat with the platform staff-notifier Telegram bot, linked by the
+  // member through a one-time /start code. Null = not linked. Cleared when the
+  // member disconnects or blocks the bot.
+  telegramChatId: text(),
 })

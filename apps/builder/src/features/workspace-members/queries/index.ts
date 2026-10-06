@@ -37,6 +37,8 @@ export async function listWorkspaceMembers(
     db.query.workspaceMemberModel.findMany({
       ...pagination,
       where,
+      // A member's private Telegram chat id never reaches the browser.
+      columns: { telegramChatId: false },
       with: {
         user: true,
       },
@@ -59,6 +61,7 @@ export async function getWorkspaceMember(
       id: input.memberId,
       workspaceId: input.workspaceId,
     },
+    columns: { telegramChatId: false },
     with: {
       user: true,
     },
@@ -70,6 +73,7 @@ export const getAllWorkspaceMembers = async (userId: string) => {
     where: {
       userId,
     },
+    columns: { telegramChatId: false },
     with: {
       workspace: true,
     },

@@ -24,6 +24,7 @@ const {
   mockCheckGuestRateLimit,
   mockVerifyWebchatAccessToken,
   mockRepositoryCreate,
+  mockStaffNotifyIncoming,
   mockWorkspaceFind,
   tx,
   updateBuilder,
@@ -61,6 +62,7 @@ const {
     mockConversationFindBy: vi.fn(),
     mockChatQueueAdd: vi.fn().mockResolvedValue(undefined),
     mockConversationEnsureActive: vi.fn().mockResolvedValue(false),
+    mockStaffNotifyIncoming: vi.fn().mockResolvedValue(undefined),
     mockCreateMessageRepository: vi.fn().mockResolvedValue({
       create: mockRepositoryCreate,
       createWithAttachments: vi.fn(),
@@ -139,6 +141,9 @@ vi.mock("@chatbotx.io/business", () => ({
     .fn()
     .mockResolvedValue({ storageUrl: "https://storage.example.com" }),
   workspaceService: { find: mockWorkspaceFind },
+  staffNotificationService: {
+    notifyIncomingMessage: mockStaffNotifyIncoming,
+  },
   messageCleanupService: {
     cancelByInboxSource: vi.fn().mockResolvedValue(undefined),
   },
@@ -458,6 +463,27 @@ describe("handleCreateWebchatMessage", () => {
       messageId: "msg-1",
       messageText: "hello",
       workspaceId: "ws-1",
+    })
+  })
+
+  test("notifies staff instead of the bot when the conversation is in human mode", async () => {
+    mockConversationEnsureActive.mockResolvedValue(false)
+
+    await handleCreateWebchatMessage({
+      parsedInput: {
+        text: "hello",
+        workspaceId: "ws-1",
+        webchatId: "webchat-1",
+        guestConversationId: "guest-1",
+      },
+    })
+
+    expect(mockAutomatedResponseEnqueue).not.toHaveBeenCalled()
+    expect(mockStaffNotifyIncoming).toHaveBeenCalledWith({
+      workspaceId: "ws-1",
+      conversationId: "conv-1",
+      contactInboxId: "ci-1",
+      text: "hello",
     })
   })
 
