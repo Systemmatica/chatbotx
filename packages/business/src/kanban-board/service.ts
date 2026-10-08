@@ -88,9 +88,7 @@ class KanbanBoardService extends BaseService {
     refs: { contactId: string; flowId: string | null; blocked?: boolean }[]
   }): Promise<(ContactFlowStage | null)[]> {
     const flowIds = [
-      ...new Set(
-        input.refs.flatMap((ref) => (ref.flowId ? [ref.flowId] : [])),
-      ),
+      ...new Set(input.refs.flatMap((ref) => (ref.flowId ? [ref.flowId] : []))),
     ]
     const boards = await kanbanBoardRepository.listByFlowIds({
       workspaceId: input.workspaceId,

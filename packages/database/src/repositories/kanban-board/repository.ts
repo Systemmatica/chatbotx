@@ -87,7 +87,9 @@ const bucketExpression = (
     ? sql`WHEN c."blockedAt" IS NOT NULL THEN ${blockedStageName}::text `
     : sql``
   if (stageNames.length === 0) {
-    return blockedStageName ? sql`CASE ${blocked}ELSE NULL END` : sql`NULL::text`
+    return blockedStageName
+      ? sql`CASE ${blocked}ELSE NULL END`
+      : sql`NULL::text`
   }
   const names = sql.join(
     stageNames.map((name) => sql`${name}`),

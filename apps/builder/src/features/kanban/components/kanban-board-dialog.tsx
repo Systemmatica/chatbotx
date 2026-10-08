@@ -445,7 +445,9 @@ export function KanbanBoardDialog({
                               })
                             }
                             size="icon"
-                            title={t(`kanban.outcome.${stage.outcome ?? "none"}`)}
+                            title={t(
+                              `kanban.outcome.${stage.outcome ?? "none"}`,
+                            )}
                             type="button"
                             variant="ghost"
                           >

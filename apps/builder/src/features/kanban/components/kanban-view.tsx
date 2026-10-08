@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from "@chatbotx.io/ui/components/ui/select"
 import { useDebouncedCallback } from "@chatbotx.io/ui/hooks/use-debounced-callback"
+import { cn } from "@chatbotx.io/ui/lib/utils"
 import {
   DndContext,
   type DragEndEvent,
@@ -43,7 +44,6 @@ import {
 import { useTranslations } from "next-intl"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { toast } from "sonner"
-import { cn } from "@chatbotx.io/ui/lib/utils"
 import { useTagSelectOptions } from "@/features/tags/provider/tag-hook"
 import { client } from "@/lib/orpc/orpc"
 import { appendColumnCards, moveCardBetweenColumns } from "../lib/columns"
@@ -460,7 +460,11 @@ export function KanbanView({
           <SquareKanbanIcon className="size-10 text-muted-foreground" />
           <h5 className="font-semibold">{t("kanban.emptyTitle")}</h5>
           <p className="max-w-md text-muted-foreground text-sm">
-            {t(flowId ? "kanban.emptyFlowDescription" : "kanban.emptyDescription")}
+            {t(
+              flowId
+                ? "kanban.emptyFlowDescription"
+                : "kanban.emptyDescription",
+            )}
           </p>
           {canManageBoards ? (
             <Button onClick={openCreateDialog} type="button">

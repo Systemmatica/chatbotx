@@ -53,12 +53,12 @@ import "./react-flow-wrapper.css"
 import { createId } from "@chatbotx.io/utils"
 import type { FlowVersionResource } from "@/features/flow-versions/schema/resource"
 import { serializeFlowContent } from "../flow-version-content"
+import { FlowMiniMap } from "./components/flow-mini-map"
 import {
   getRoutableHandleId,
   replaceSourceHandleEdge,
   toRouteRemovals,
 } from "./edge-routing"
-import { FlowMiniMap } from "./components/flow-mini-map"
 import ButtonEdge from "./edges/button-edge"
 import { findNodeAtPoint } from "./node-hit-test"
 import { hasMeaningfulNodeChange } from "./react-flow-node-change"

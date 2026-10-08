@@ -29,9 +29,7 @@ export function FlowStageBadges({
   const stepLabel = formatStepLabel(step, t)
 
   return (
-    <div
-      className={cn("flex min-w-0 flex-wrap items-center gap-1", className)}
-    >
+    <div className={cn("flex min-w-0 flex-wrap items-center gap-1", className)}>
       <span
         className="max-w-[60%] truncate rounded-full border bg-background px-2 py-0.5 text-[11px] text-foreground"
         title={`${t("currentStep.flow")}: ${step.flowName}`}

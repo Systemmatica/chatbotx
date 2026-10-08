@@ -62,10 +62,7 @@ export default async function FlowSettingsPage({
                 {t("flowHub.keywordsDescription")}
               </p>
             </div>
-            <Link
-              className={buttonVariants({ size: "sm" })}
-              href={createHref}
-            >
+            <Link className={buttonVariants({ size: "sm" })} href={createHref}>
               <PlusIcon />
               {t("flowHub.addKeyword")}
             </Link>
