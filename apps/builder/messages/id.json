@@ -715,7 +715,14 @@
       "anyConditions": "Salah satu kondisi di bawah.",
       "label": "Filter kontak",
       "onlyContactsMatch": "Hanya kontak yang cocok dengan",
-      "moreOptions": "Opsi Lainnya"
+      "moreOptions": "Opsi Lainnya",
+      "addGroup": "Add group",
+      "removeGroup": "Remove group",
+      "group": "Group",
+      "groupMatchAll": "all conditions in the group",
+      "groupMatchAny": "any condition in the group",
+      "groupMatches": "Group matches",
+      "emptyGroup": "No conditions in this group yet — empty groups are ignored."
     },
     "contactNote": {
       "label": "Catatan Kontak"

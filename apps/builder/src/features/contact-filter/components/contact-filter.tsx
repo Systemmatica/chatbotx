@@ -8,10 +8,19 @@ import { useEffect, useMemo, useState } from "react"
 import { useFieldArray, useFormContext } from "react-hook-form"
 import { pruneExcludedConditions } from "../lib/prune-conditions"
 import { getBrowserTimezone } from "../lib/timezone"
-import type { ContactFilterCondition } from "../schemas"
+import {
+  type ContactFilterCondition,
+  type ContactFilterItem,
+  isContactFilterGroupItem,
+} from "../schemas"
 import { ContactFilterConditionEditDialog } from "./contact-filter-condition-dialog"
 import { ContactFilterConditionForm } from "./contact-filter-condition-form"
 import { ContactFilterConditionRow } from "./contact-filter-condition-row"
+import {
+  ContactFilterAddGroupButton,
+  ContactFilterGroupBlock,
+  createEmptyContactFilterGroup,
+} from "./contact-filter-group"
 import { useContactFilterConfigs } from "./use-contact-filter-configs"
 
 type ContactFilterProps = {
@@ -19,6 +28,11 @@ type ContactFilterProps = {
   excludeFields?: ContactFilterField[]
   inboxChannel?: string
   enableVariables?: boolean
+  /**
+   * Show "Add group" (Notion-style and/or groups). Defaults to true; turn it
+   * off where the persisted schema can't hold groups (flow Condition step).
+   */
+  allowGroups?: boolean
 }
 
 const EMPTY_EXCLUDE_FIELDS: ContactFilterField[] = []
@@ -28,6 +42,7 @@ export const ContactFilter = ({
   excludeFields = EMPTY_EXCLUDE_FIELDS,
   inboxChannel,
   enableVariables = false,
+  allowGroups = true,
 }: ContactFilterProps) => {
   const t = useTranslations()
   const { control, getValues, setValue } = useFormContext()
@@ -61,11 +76,11 @@ export const ContactFilter = ({
   useEffect(() => {
     const conditions =
       (getValues(`${parentName}.conditions`) as
-        | ContactFilterCondition[]
+        | ContactFilterItem[]
         | undefined) ?? []
     const pruned = pruneExcludedConditions(conditions, excludeFields)
 
-    if (pruned.length !== conditions.length) {
+    if (pruned !== conditions) {
       replace(pruned)
     }
   }, [excludeFields, getValues, parentName, replace])
@@ -74,12 +89,13 @@ export const ContactFilter = ({
     append(data)
   }
 
-  const editingCondition =
+  const editingItem =
     editingIndex === null
       ? null
-      : ((fields[editingIndex] as unknown as
-          | ContactFilterCondition
-          | undefined) ?? null)
+      : ((fields[editingIndex] as unknown as ContactFilterItem | undefined) ??
+        null)
+  const editingCondition =
+    editingItem && !isContactFilterGroupItem(editingItem) ? editingItem : null
 
   return (
     <div className="flex flex-col gap-2">
@@ -99,16 +115,39 @@ export const ContactFilter = ({
         ]}
       />
 
-      {fields.map((field, index) => (
-        <ContactFilterConditionRow
-          configs={configs}
-          key={field.id}
-          onEdit={() => setEditingIndex(index)}
-          onRemove={() => remove(index)}
-          operatorLabelByValue={operatorLabelByValue}
-          row={field as unknown as ContactFilterCondition}
-        />
-      ))}
+      {fields.map((field, index) => {
+        const item = field as unknown as ContactFilterItem
+        if (isContactFilterGroupItem(item)) {
+          return (
+            <ContactFilterGroupBlock
+              conditionOptions={conditionOptions}
+              configs={configs}
+              enableVariables={enableVariables}
+              filteredConfigs={filteredConfigs}
+              // useFieldArray adds `id` to the item; strip it so it isn't persisted.
+              group={{
+                type: "group",
+                operator: item.operator,
+                conditions: item.conditions,
+              }}
+              key={field.id}
+              onChange={(group) => update(index, group)}
+              onRemove={() => remove(index)}
+              operatorLabelByValue={operatorLabelByValue}
+            />
+          )
+        }
+        return (
+          <ContactFilterConditionRow
+            configs={configs}
+            key={field.id}
+            onEdit={() => setEditingIndex(index)}
+            onRemove={() => remove(index)}
+            operatorLabelByValue={operatorLabelByValue}
+            row={item}
+          />
+        )
+      })}
 
       <ContactFilterConditionForm
         conditionOptions={conditionOptions}
@@ -116,6 +155,12 @@ export const ContactFilter = ({
         enableVariables={enableVariables}
         onAdd={handleAdd}
       />
+
+      {allowGroups ? (
+        <ContactFilterAddGroupButton
+          onClick={() => append(createEmptyContactFilterGroup())}
+        />
+      ) : null}
 
       {editingCondition && editingIndex !== null ? (
         <ContactFilterConditionEditDialog

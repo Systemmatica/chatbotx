@@ -789,7 +789,14 @@
       "anyConditions": "أي من الشروط التالية.",
       "label": "تصفية جهات الاتصال",
       "onlyContactsMatch": "جهات الاتصال المطابقة فقط",
-      "moreOptions": "خيارات إضافية"
+      "moreOptions": "خيارات إضافية",
+      "addGroup": "Add group",
+      "removeGroup": "Remove group",
+      "group": "Group",
+      "groupMatchAll": "all conditions in the group",
+      "groupMatchAny": "any condition in the group",
+      "groupMatches": "Group matches",
+      "emptyGroup": "No conditions in this group yet — empty groups are ignored."
     },
     "contactNote": {
       "label": "ملاحظة جهة الاتصال"

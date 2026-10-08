@@ -80,9 +80,59 @@ export const singleContactFilterConditionSchema = z.union([
   ctwaRetargetConditionSchema,
 ]) as unknown as z.ZodType<ContactFilterCondition>
 
-export const contactFilterCriteriaSchema = z.object({
-  operator: z.enum(["and", "or"]),
+export const contactFilterOperatorSchema = z.enum(["and", "or"])
+export type ContactFilterOperator = z.infer<typeof contactFilterOperatorSchema>
+
+/**
+ * Notion-style condition group: its leaf conditions are combined with the
+ * group's own operator, and the group is one entry of the root `conditions`.
+ * Nesting is one level only — a group holds conditions, never other groups.
+ * An empty group is valid (fresh in the UI) and compiles to no predicate.
+ */
+export const contactFilterGroupSchema = z.object({
+  type: z.literal("group"),
+  operator: contactFilterOperatorSchema,
   conditions: z.array(singleContactFilterConditionSchema),
+})
+export type ContactFilterGroup = {
+  type: "group"
+  operator: ContactFilterOperator
+  conditions: ContactFilterCondition[]
+}
+
+/** One entry of the root `conditions`: a leaf condition or a group of them. */
+export type ContactFilterItem = ContactFilterCondition | ContactFilterGroup
+
+export const contactFilterItemSchema = z.union([
+  contactFilterGroupSchema,
+  singleContactFilterConditionSchema,
+]) as unknown as z.ZodType<ContactFilterItem>
+
+export const isContactFilterGroupItem = (
+  item: ContactFilterItem,
+): item is ContactFilterGroup =>
+  (item as { type?: unknown }).type === "group" &&
+  Array.isArray((item as { conditions?: unknown }).conditions)
+
+/** Leaf conditions of a filter with groups expanded (for counts / emptiness). */
+export const getContactFilterLeafConditions = (
+  filter: { conditions: ContactFilterItem[] } | null | undefined,
+): ContactFilterCondition[] =>
+  (filter?.conditions ?? []).flatMap((item) =>
+    isContactFilterGroupItem(item) ? item.conditions : [item],
+  )
+
+export const countContactFilterLeafConditions = (
+  filter: { conditions: ContactFilterItem[] } | null | undefined,
+): number => getContactFilterLeafConditions(filter).length
+
+export const contactFilterCriteriaSchema = z.object({
+  operator: contactFilterOperatorSchema,
+  /**
+   * Leaf conditions and/or groups. Legacy filters (flat list of conditions,
+   * no groups) remain valid unchanged and compile to the same SQL.
+   */
+  conditions: z.array(contactFilterItemSchema),
   /**
    * IANA timezone (the browser's local zone, captured at build/save time) used
    * to interpret naive date/datetime condition values. The backend defaults to

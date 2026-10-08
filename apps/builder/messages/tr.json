@@ -789,7 +789,14 @@
       "anyConditions": "Aşağıdaki koşullardan herhangi biri.",
       "label": "Kişi filtresi",
       "onlyContactsMatch": "Yalnızca şununla eşleşen kişiler",
-      "moreOptions": "Daha Fazla Seçenek"
+      "moreOptions": "Daha Fazla Seçenek",
+      "addGroup": "Add group",
+      "removeGroup": "Remove group",
+      "group": "Group",
+      "groupMatchAll": "all conditions in the group",
+      "groupMatchAny": "any condition in the group",
+      "groupMatches": "Group matches",
+      "emptyGroup": "No conditions in this group yet — empty groups are ignored."
     },
     "contactNote": {
       "label": "Kişi Notu"

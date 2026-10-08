@@ -1594,7 +1594,14 @@
       "anyConditions": "以下任何条件。",
       "label": "联系人过滤器",
       "moreOptions": "更多选项",
-      "onlyContactsMatch": "仅匹配的联系人"
+      "onlyContactsMatch": "仅匹配的联系人",
+      "addGroup": "Add group",
+      "removeGroup": "Remove group",
+      "group": "Group",
+      "groupMatchAll": "all conditions in the group",
+      "groupMatchAny": "any condition in the group",
+      "groupMatches": "Group matches",
+      "emptyGroup": "No conditions in this group yet — empty groups are ignored."
     },
     "contactId": {
       "label": "联系人 ID"

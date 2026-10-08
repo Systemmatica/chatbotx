@@ -789,7 +789,14 @@
       "anyConditions": "Any of the below conditions.",
       "label": "Contact filter",
       "onlyContactsMatch": "Only contacts, that match to",
-      "moreOptions": "More Options"
+      "moreOptions": "More Options",
+      "addGroup": "Add group",
+      "removeGroup": "Remove group",
+      "group": "Group",
+      "groupMatchAll": "all conditions in the group",
+      "groupMatchAny": "any condition in the group",
+      "groupMatches": "Group matches",
+      "emptyGroup": "No conditions in this group yet — empty groups are ignored."
     },
     "contactNote": {
       "label": "Contact Note"

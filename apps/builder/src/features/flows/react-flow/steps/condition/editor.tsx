@@ -56,6 +56,7 @@ const ConditionStepEditor = ({ parentName }: ConditionStepEditorProps) => {
                 </Button>
               </div>
               <ContactFilter
+                allowGroups={false}
                 enableVariables={true}
                 excludeFields={CONDITION_EXCLUDED_FILTER_FIELDS}
                 parentName={`${parentName}.cases.${index}`}

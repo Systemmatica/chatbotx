@@ -28,6 +28,7 @@ import { useFormContext, useWatch } from "react-hook-form"
 import { useChatStore } from "../chat/store/chat-store-provider"
 import { ContactFilterDialog } from "../contact-filter"
 import { EMAIL_PHONE_RESTRICTED_FILTER_FIELDS } from "../contact-filter/lib/restricted-fields"
+import { countContactFilterLeafConditions } from "../contact-filter/schemas"
 import { useConfiguredInboxTypeOptions } from "../inboxes/provider/inbox-hook"
 import { useContactAssigneeOptions } from "../users/provider/user-hook"
 
@@ -51,7 +52,9 @@ export function ConversationFilter({
 
   const inboxOptions = useConfiguredInboxTypeOptions()
 
-  const filterCount = filters.contactFilter?.conditions.length ?? 0
+  const filterCount = filters.contactFilter
+    ? countContactFilterLeafConditions(filters.contactFilter)
+    : 0
   const hasFilter = filterCount > 0
   const excludedFilterFields = useMemo(
     () =>

@@ -38,12 +38,19 @@ Filter object → API `contactFilter` param → buildContactWhere / buildContact
 **Filter shape** (`schemas/index.ts`):
 
 ```ts
-contactFilterCriteriaSchema = { operator: "and" | "or", conditions: ContactFilterCondition[] }
+contactFilterCriteriaSchema = { operator: "and" | "or", conditions: (ContactFilterCondition | ContactFilterGroup)[] }
+// group (one level only): { type: "group", operator: "and" | "or", conditions: ContactFilterCondition[] }
 // condition (static):  { field, operator, value? }
 // condition (boolean): { field, operator: "eq", value: "true"|"false" }  |  { field, operator: "isEmpty" }
 // condition (custom):  { field: "customField", customFieldId, valueType, operator, value? }
 ```
-`operator` is **top-level only** — the schema is **flat, no nested groups**.
+Groups are Notion-style and nest **one level** (root → groups → conditions);
+legacy flat filters stay valid and compile to the same SQL. Count/emptiness
+checks must use leaf counts (`countContactFilterLeafConditions` in the builder,
+`countContactFilterConditions` / `flattenContactFilterConditions` /
+`isContactFilterGroup` in `@chatbotx.io/database/queries`) — an empty group
+compiles to no predicate. The flow Condition step passes `allowGroups={false}`
+because `packages/flow-config` `conditionCaseSchema` is still flat.
 Operators + form-field types: `packages/database/src/partials/custom-field.ts`
 (`operatorTypes`, `FormFieldType`).
 
@@ -69,7 +76,9 @@ Operators + form-field types: `packages/database/src/partials/custom-field.ts`
 ## Backend query builder (`packages/database/src/queries/contact-filter.ts`)
 
 - `applyContactFilter(criteria)` → maps `conditions` to `{ AND: [...] }` or
-  `{ OR: [...] }`; `buildConditionWhere(condition)` switches on `field`.
+  `{ OR: [...] }`; a group becomes one nested `{ AND|OR: [...] }` entry
+  (parenthesised in SQL; empty groups dropped); `buildConditionWhere(condition)`
+  switches on `field`.
 - `buildContactWhere({ workspaceId, keyword?, contactFilter? })` → relational
   where for `contactModel`.
 - `buildContactInboxContactFilterSQL({ contactIdColumn, workspaceId, contactFilter })`
@@ -98,8 +107,7 @@ Operators + form-field types: `packages/database/src/partials/custom-field.ts`
   `relationsFilterToSQL` does **not** understand nested relation filter fields, so
   relation conditions must be `RAW` EXISTS subqueries correlated on the contact id.
 - **No forced/default-condition injection** — there is no mechanism to seed a
-  hidden condition into a user's filter. Because the schema is flat (no nested
-  groups), injecting a forced condition would force resolving AND-vs-OR against the
+  hidden condition into a user's filter. Even with groups, injecting a forced condition would force resolving AND-vs-OR against the
   user's own `operator`. **Enforce cross-cutting audience constraints in the
   backend query instead**, keyed off context — e.g. the broadcast 24h messaging
   window keys off `broadcast.subaction` in the worker (see below), never a filter
@@ -158,7 +166,9 @@ source for `lastIncomingMessageAt >= NOW() - INTERVAL '24 hours'`, used by:
 - Writing a negative/empty operator that drops NULL rows (breaks three-valued logic).
 - Trying to inject a forced/default condition into the flat schema — put the
   constraint in the query instead.
-- Expecting nested `(A OR B) AND C` — not supported; `operator` is top-level only.
+- Using `filter.conditions.length` as "number of conditions" — it counts a
+  group (even an empty one) as 1; use the leaf-count helpers.
+- Nesting groups deeper than one level — the Zod schema rejects it.
 
 ## Checklist for a filter change
 

@@ -525,7 +525,14 @@
       "anyConditions": "Een of meer van de onderstaande voorwaarden.",
       "label": "Contactfilter",
       "onlyContactsMatch": "Alleen contacten die voldoen aan",
-      "moreOptions": "Meer opties"
+      "moreOptions": "Meer opties",
+      "addGroup": "Add group",
+      "removeGroup": "Remove group",
+      "group": "Group",
+      "groupMatchAll": "all conditions in the group",
+      "groupMatchAny": "any condition in the group",
+      "groupMatches": "Group matches",
+      "emptyGroup": "No conditions in this group yet — empty groups are ignored."
     },
     "contactNote": {
       "label": "Contactnotitie"

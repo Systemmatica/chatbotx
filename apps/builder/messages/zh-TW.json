@@ -120,7 +120,14 @@
       "anyConditions": "以下任何條件。",
       "label": "聯絡人過濾器",
       "onlyContactsMatch": "僅匹配的聯絡人",
-      "moreOptions": "更多選項"
+      "moreOptions": "更多選項",
+      "addGroup": "Add group",
+      "removeGroup": "Remove group",
+      "group": "Group",
+      "groupMatchAll": "all conditions in the group",
+      "groupMatchAny": "any condition in the group",
+      "groupMatches": "Group matches",
+      "emptyGroup": "No conditions in this group yet — empty groups are ignored."
     },
     "contactNote": {
       "label": "聯絡人備註"

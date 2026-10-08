@@ -25,10 +25,23 @@ export type ContactFilterConditionInput = {
 }
 
 /**
+ * A parenthesised group of leaf conditions combined with its own operator
+ * (Notion-style). Groups nest exactly one level: the root's `conditions` may
+ * hold groups, a group's `conditions` hold only leaf conditions.
+ */
+export type ContactFilterGroupInput = {
+  type: "group"
+  operator: "and" | "or"
+  conditions: unknown[]
+}
+
+/**
  * `conditions` is typed `unknown[]` because the builder's Zod schema uses a
  * discriminated union with a `@ts-expect-error`, which degrades its inferred
  * element type. Each entry is validated by Zod at the request boundary, so it
- * is safely narrowed to {@link ContactFilterConditionInput} inside this module.
+ * is safely narrowed to {@link ContactFilterConditionInput} (or
+ * {@link ContactFilterGroupInput} when `type === "group"`) inside this module.
+ * Legacy filters (flat list, no groups) stay valid and compile to the same SQL.
  */
 export type ContactFilterCriteriaInput = {
   operator: "and" | "or"

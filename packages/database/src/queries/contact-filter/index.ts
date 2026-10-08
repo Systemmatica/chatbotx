@@ -29,6 +29,7 @@ import {
   buildCurrentFlowWhere,
   buildCurrentNodeMinutesAgoWhere,
 } from "./flow-position"
+import { countContactFilterConditions, isContactFilterGroup } from "./groups"
 import {
   buildBooleanColumn,
   buildBooleanFromTimestamp,
@@ -67,6 +68,11 @@ export {
   ctwaRetargetSegments,
 } from "./ctwa-retarget"
 export {
+  countContactFilterConditions,
+  flattenContactFilterConditions,
+  isContactFilterGroup,
+} from "./groups"
+export {
   EMAIL_PHONE_FILTER_FIELDS,
   pruneContactFilterFields,
   pruneEmailPhoneFilterConditions,
@@ -82,6 +88,7 @@ export {
 export type {
   ContactFilterConditionInput,
   ContactFilterCriteriaInput,
+  ContactFilterGroupInput,
   ContactWhereInput,
 } from "./types"
 export {
@@ -340,7 +347,7 @@ export const buildContactInboxContactFilterSQL = ({
   workspaceId: string
   contactFilter: FilterCriteriaInput
 }): SQL => {
-  if (contactFilter.conditions.length === 0) {
+  if (countContactFilterConditions(contactFilter) === 0) {
     return sql`TRUE`
   }
 
@@ -367,8 +374,7 @@ export function applyContactFilter(
   criteria: FilterCriteriaInput,
   workspaceId?: string,
 ): ContactWhere {
-  const conditions = criteria.conditions as FilterConditionInput[]
-  if (conditions.length === 0) {
+  if (criteria.conditions.length === 0) {
     return {}
   }
 
@@ -376,15 +382,50 @@ export function applyContactFilter(
     timezone: resolveFilterTimezone(criteria.timezone),
     workspaceId,
   }
-  const conditionWheres = conditions
-    .map((condition) => buildConditionWhere(condition, context))
-    .filter((w): w is ContactWhere => Object.keys(w).length > 0)
+
+  return combineConditionWheres(
+    criteria.operator,
+    criteria.conditions.map((item) =>
+      isContactFilterGroup(item)
+        ? buildGroupWhere(item.operator, item.conditions, context)
+        : buildConditionWhere(item as FilterConditionInput, context),
+    ),
+  )
+}
+
+/**
+ * A group is a parenthesised sub-filter: its leaf conditions are combined with
+ * the group's own operator and the result becomes one entry of the parent.
+ * Groups nest one level only — a nested group inside a group is ignored (the
+ * Zod schema rejects it at the boundary anyway). Empty groups / groups whose
+ * conditions all compile to nothing are dropped, like an unknown condition.
+ */
+function buildGroupWhere(
+  operator: FilterCriteriaInput["operator"],
+  conditions: unknown[],
+  context: ContactFilterContext,
+): ContactWhere {
+  return combineConditionWheres(
+    operator,
+    conditions.map((condition) =>
+      isContactFilterGroup(condition)
+        ? {}
+        : buildConditionWhere(condition as FilterConditionInput, context),
+    ),
+  )
+}
+
+function combineConditionWheres(
+  operator: FilterCriteriaInput["operator"],
+  wheres: ContactWhere[],
+): ContactWhere {
+  const conditionWheres = wheres.filter(hasWhereParts)
 
   if (conditionWheres.length === 0) {
     return {}
   }
 
-  if (criteria.operator === "or") {
+  if (operator === "or") {
     return { OR: conditionWheres }
   }
 

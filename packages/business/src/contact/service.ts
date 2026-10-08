@@ -14,6 +14,7 @@ import {
   buildContactWhere,
   type ContactFilterCriteriaInput,
   contactFilterHasPredicate,
+  countContactFilterConditions,
 } from "@chatbotx.io/database/queries"
 import {
   contactInboxModel,
@@ -153,7 +154,7 @@ class ContactService extends BaseService {
   }): Promise<boolean> {
     const { workspaceId, contactId, contactFilter } = props
     if (
-      contactFilter.conditions.length > 0 &&
+      countContactFilterConditions(contactFilter) > 0 &&
       !contactFilterHasPredicate(contactFilter)
     ) {
       return false

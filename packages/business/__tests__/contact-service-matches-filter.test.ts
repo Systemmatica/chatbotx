@@ -109,4 +109,79 @@ describe("contactService.matchesContactFilter", () => {
       }),
     })
   })
+  test("returns false without querying when every group compiles to no predicate", async () => {
+    await expect(
+      contactService.matchesContactFilter({
+        workspaceId: "ws-1",
+        contactId: "contact-1",
+        contactFilter: {
+          operator: "and",
+          conditions: [
+            {
+              type: "group",
+              operator: "or",
+              conditions: [
+                { field: "deletedCustomField", operator: "eq", value: "x" },
+              ],
+            },
+          ],
+        },
+      }),
+    ).resolves.toBe(false)
+
+    expect(findFirst).not.toHaveBeenCalled()
+  })
+
+  test("a filter with only empty groups matches like an empty filter", async () => {
+    findFirst.mockResolvedValue({ id: "contact-1" })
+
+    await expect(
+      contactService.matchesContactFilter({
+        workspaceId: "ws-1",
+        contactId: "contact-1",
+        contactFilter: {
+          operator: "and",
+          conditions: [{ type: "group", operator: "and", conditions: [] }],
+        },
+      }),
+    ).resolves.toBe(true)
+
+    expect(findFirst).toHaveBeenCalledWith({
+      columns: { id: true },
+      where: { workspaceId: "ws-1", id: "contact-1" },
+    })
+  })
+
+  test("queries with the grouped predicate: (A OR B) AND C", async () => {
+    findFirst.mockResolvedValue(undefined)
+
+    await expect(
+      contactService.matchesContactFilter({
+        workspaceId: "ws-1",
+        contactId: "contact-1",
+        contactFilter: {
+          operator: "and",
+          conditions: [
+            {
+              type: "group",
+              operator: "or",
+              conditions: [
+                { field: "fullName", operator: "contains", value: "Ada" },
+                { field: "email", operator: "contains", value: "ada@" },
+              ],
+            },
+            { field: "country", operator: "eq", value: "VN" },
+          ],
+        },
+      }),
+    ).resolves.toBe(false)
+
+    const where = findFirst.mock.calls[0]?.[0]?.where as {
+      AND: Record<string, unknown>[]
+    }
+    expect(where).toMatchObject({ workspaceId: "ws-1", id: "contact-1" })
+    expect(where.AND).toHaveLength(2)
+    expect(Object.keys(where.AND[0] ?? {})).toEqual(["OR"])
+    expect((where.AND[0] as { OR: unknown[] }).OR).toHaveLength(2)
+  })
 })

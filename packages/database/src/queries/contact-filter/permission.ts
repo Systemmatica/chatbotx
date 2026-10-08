@@ -1,4 +1,5 @@
 import { type ContactFilterField, contactFilterFields } from "../../partials"
+import { countContactFilterConditions, isContactFilterGroup } from "./groups"
 import type { ContactFilterCriteriaInput } from "./types"
 
 export const EMAIL_PHONE_FILTER_FIELDS = [
@@ -24,14 +25,30 @@ export function pruneContactFilterFields(
   if (!contactFilter) {
     return
   }
-  if (excludedFields.length === 0 || contactFilter.conditions.length === 0) {
+  if (
+    excludedFields.length === 0 ||
+    countContactFilterConditions(contactFilter) === 0
+  ) {
     return contactFilter
   }
 
   const excludedFieldSet = new Set<string>(excludedFields)
-  const conditions = contactFilter.conditions.filter((condition) => {
+  const isAllowed = (condition: unknown) => {
     const field = toConditionWithField(condition)?.field
     return typeof field !== "string" || !excludedFieldSet.has(field)
+  }
+  // Prune inside groups too; a group emptied by pruning is dropped (an empty
+  // group compiles to no predicate, but keeping it would still count as an
+  // entry in `conditions`).
+  const conditions = contactFilter.conditions.flatMap((item) => {
+    if (!isContactFilterGroup(item)) {
+      return isAllowed(item) ? [item] : []
+    }
+    const groupConditions = item.conditions.filter(isAllowed)
+    if (groupConditions.length === 0 && item.conditions.length > 0) {
+      return []
+    }
+    return [{ ...item, conditions: groupConditions }]
   })
 
   // Spread the original so boundary-only fields (notably `timezone`, which the

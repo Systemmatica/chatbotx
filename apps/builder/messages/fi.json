@@ -715,7 +715,14 @@
       "anyConditions": "Mikä tahansa seuraavista ehdoista.",
       "label": "Yhteystietosuodatin",
       "onlyContactsMatch": "Vain yhteystiedot, jotka täsmäävät",
-      "moreOptions": "Lisää vaihtoehtoja"
+      "moreOptions": "Lisää vaihtoehtoja",
+      "addGroup": "Add group",
+      "removeGroup": "Remove group",
+      "group": "Group",
+      "groupMatchAll": "all conditions in the group",
+      "groupMatchAny": "any condition in the group",
+      "groupMatches": "Group matches",
+      "emptyGroup": "No conditions in this group yet — empty groups are ignored."
     },
     "contactNote": {
       "label": "Yhteystiedon muistiinpano"

@@ -715,7 +715,14 @@
       "anyConditions": "Qualquer uma das condições abaixo.",
       "label": "Filtro de contactos",
       "onlyContactsMatch": "Apenas contactos que correspondam a",
-      "moreOptions": "Mais opções"
+      "moreOptions": "Mais opções",
+      "addGroup": "Add group",
+      "removeGroup": "Remove group",
+      "group": "Group",
+      "groupMatchAll": "all conditions in the group",
+      "groupMatchAny": "any condition in the group",
+      "groupMatches": "Group matches",
+      "emptyGroup": "No conditions in this group yet — empty groups are ignored."
     },
     "contactNote": {
       "label": "Nota do contacto"

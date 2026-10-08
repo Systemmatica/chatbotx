@@ -26,6 +26,7 @@ import {
   type ContactFilterCriteria,
   ContactListFilterButton,
   ContactListFilterPanel,
+  countContactFilterLeafConditions,
   EMPTY_CONTACT_FILTER,
   useContactFilterQueryState,
 } from "@/features/contact-filter"
@@ -180,7 +181,7 @@ export function ContactsTable({
     isContactFilterActive,
   )
   const isOptimisticContactFilterActive =
-    optimisticContactFilter.conditions.length > 0
+    countContactFilterLeafConditions(optimisticContactFilter) > 0
   const excludedFilterFields = useMemo(
     () =>
       canViewEmailAndPhone ? [] : [...EMAIL_PHONE_RESTRICTED_FILTER_FIELDS],

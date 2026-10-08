@@ -93,7 +93,14 @@
       "anyConditions": "Una qualsiasi delle condizioni seguenti.",
       "label": "Filtro contatti",
       "onlyContactsMatch": "Solo i contatti che corrispondono a",
-      "moreOptions": "Altre opzioni"
+      "moreOptions": "Altre opzioni",
+      "addGroup": "Add group",
+      "removeGroup": "Remove group",
+      "group": "Group",
+      "groupMatchAll": "all conditions in the group",
+      "groupMatchAny": "any condition in the group",
+      "groupMatches": "Group matches",
+      "emptyGroup": "No conditions in this group yet — empty groups are ignored."
     },
     "contactNote": {
       "label": "Nota del contatto"

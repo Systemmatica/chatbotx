@@ -1591,7 +1591,14 @@
       "anyConditions": "Något av villkoren nedan.",
       "label": "Kontaktfilter",
       "moreOptions": "Fler alternativ",
-      "onlyContactsMatch": "Endast kontakter som matchar"
+      "onlyContactsMatch": "Endast kontakter som matchar",
+      "addGroup": "Add group",
+      "removeGroup": "Remove group",
+      "group": "Group",
+      "groupMatchAll": "all conditions in the group",
+      "groupMatchAny": "any condition in the group",
+      "groupMatches": "Group matches",
+      "emptyGroup": "No conditions in this group yet — empty groups are ignored."
     },
     "contactId": {
       "label": "Kontakt-ID"

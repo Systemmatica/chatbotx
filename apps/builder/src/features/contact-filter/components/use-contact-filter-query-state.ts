@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react"
 import {
   type ContactFilterCriteria,
   contactFilterCriteriaSchema,
+  countContactFilterLeafConditions,
 } from "../schemas"
 
 export const EMPTY_CONTACT_FILTER: ContactFilterCriteria = {
@@ -70,6 +71,7 @@ export function useContactFilterQueryState({
   return {
     filter,
     setFilter,
-    isActive: filter.conditions.length > 0,
+    // Leaf count, not `conditions.length`: an empty group is not a filter.
+    isActive: countContactFilterLeafConditions(filter) > 0,
   }
 }

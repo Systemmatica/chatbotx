@@ -780,7 +780,14 @@
       "anyConditions": "Bất kỳ điều kiện nào bên dưới.",
       "label": "Bộ lọc liên hệ",
       "onlyContactsMatch": "Chỉ các liên hệ khớp với",
-      "moreOptions": "Thêm tùy chọn"
+      "moreOptions": "Thêm tùy chọn",
+      "addGroup": "Add group",
+      "removeGroup": "Remove group",
+      "group": "Group",
+      "groupMatchAll": "all conditions in the group",
+      "groupMatchAny": "any condition in the group",
+      "groupMatches": "Group matches",
+      "emptyGroup": "No conditions in this group yet — empty groups are ignored."
     },
     "contactNote": {
       "label": "Ghi chú liên hệ"

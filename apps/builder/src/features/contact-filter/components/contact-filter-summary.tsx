@@ -1,7 +1,12 @@
 "use client"
 
 import { useTranslations } from "next-intl"
-import type { ContactFilterCriteria } from "../schemas"
+import {
+  type ContactFilterCondition,
+  type ContactFilterCriteria,
+  countContactFilterLeafConditions,
+  isContactFilterGroupItem,
+} from "../schemas"
 import {
   formatCtwaRetargetChipLabel,
   formatFieldConditionValue,
@@ -18,7 +23,7 @@ export function ContactFilterSummary({
 }: ContactFilterSummaryProps) {
   const t = useTranslations()
 
-  if (!contactFilter || contactFilter.conditions.length === 0) {
+  if (!contactFilter || countContactFilterLeafConditions(contactFilter) === 0) {
     return (
       <div className="text-muted-foreground text-sm">
         {t("broadcasts.detail.noAudienceFilter")}
@@ -45,6 +50,80 @@ export function ContactFilterSummary({
       ? t("condition.operator.and")
       : t("condition.operator.or")
   const conditionKeyCounts = new Map<string, number>()
+  const renderCondition = (
+    condition: ContactFilterCondition,
+    keyPrefix: string,
+  ) => {
+    // Machine-generated, no-operator condition — render before any
+    // `condition.operator` access, which this branch doesn't have.
+    // `"segment" in condition` (not `condition.field === "ctwaRetarget"`)
+    // narrows cleanly — see the comment in
+    // `contact-filter-condition-row.tsx`.
+    if ("segment" in condition) {
+      return (
+        <div
+          className="rounded-md border bg-background px-3 py-2 text-sm"
+          key={`${keyPrefix}ctwaRetarget:${condition.segment}:${condition.adId ?? "all"}:${condition.since}:${condition.until}`}
+        >
+          {formatCtwaRetargetChipLabel(condition, t)}
+        </div>
+      )
+    }
+
+    const isCustomField = condition.field === "customField"
+    const isCouponTopic = condition.field === "couponTopic"
+    const fieldConfig = configs.find((config) => {
+      if (isCustomField && "customFieldId" in condition) {
+        return String(config.customFieldId) === String(condition.customFieldId)
+      }
+      if (isCouponTopic && "topicId" in condition) {
+        return String(config.topicId) === String(condition.topicId)
+      }
+      return config.name === condition.field
+    })
+    const fieldLabel =
+      fieldConfig?.label ??
+      (() => {
+        if (isCustomField) {
+          return t("fields.customField.label")
+        }
+        if (isCouponTopic) {
+          return t("condition.fields.couponTopic")
+        }
+        return t(`condition.fields.${condition.field}`)
+      })()
+    const conditionOperator =
+      operatorLabelByValue.get(condition.operator) ?? condition.operator
+    const valueDisplay = formatFieldConditionValue(
+      fieldConfig,
+      "value" in condition ? condition.value : undefined,
+    )
+    const conditionKey = [
+      keyPrefix,
+      condition.field,
+      "customFieldId" in condition ? condition.customFieldId : "",
+      "topicId" in condition ? condition.topicId : "",
+      condition.operator,
+      valueDisplay,
+    ].join(":")
+    const conditionKeyCount = conditionKeyCounts.get(conditionKey) ?? 0
+    conditionKeyCounts.set(conditionKey, conditionKeyCount + 1)
+
+    return (
+      <div
+        className="rounded-md border bg-background px-3 py-2 text-sm"
+        key={
+          conditionKeyCount === 0
+            ? conditionKey
+            : `${conditionKey}:${conditionKeyCount}`
+        }
+      >
+        <span className="font-medium">{fieldLabel}</span>{" "}
+        <span className="italic">{conditionOperator}</span>{" "}
+        {valueDisplay && <span>{valueDisplay}</span>}
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-2">
@@ -52,75 +131,28 @@ export function ContactFilterSummary({
         {operatorLabel}
       </div>
       <div className="space-y-2">
-        {contactFilter.conditions.map((condition) => {
-          // Machine-generated, no-operator condition — render before any
-          // `condition.operator` access, which this branch doesn't have.
-          // `"segment" in condition` (not `condition.field === "ctwaRetarget"`)
-          // narrows cleanly — see the comment in
-          // `contact-filter-condition-row.tsx`.
-          if ("segment" in condition) {
-            return (
-              <div
-                className="rounded-md border bg-background px-3 py-2 text-sm"
-                key={`ctwaRetarget:${condition.segment}:${condition.adId ?? "all"}:${condition.since}:${condition.until}`}
-              >
-                {formatCtwaRetargetChipLabel(condition, t)}
-              </div>
-            )
+        {contactFilter.conditions.map((item, index) => {
+          if (!isContactFilterGroupItem(item)) {
+            return renderCondition(item, "")
           }
-
-          const isCustomField = condition.field === "customField"
-          const isCouponTopic = condition.field === "couponTopic"
-          const fieldConfig = configs.find((config) => {
-            if (isCustomField && "customFieldId" in condition) {
-              return (
-                String(config.customFieldId) === String(condition.customFieldId)
-              )
-            }
-            if (isCouponTopic && "topicId" in condition) {
-              return String(config.topicId) === String(condition.topicId)
-            }
-            return config.name === condition.field
-          })
-          const fieldLabel =
-            fieldConfig?.label ??
-            (() => {
-              if (isCustomField) {
-                return t("fields.customField.label")
-              }
-              if (isCouponTopic) {
-                return t("condition.fields.couponTopic")
-              }
-              return t(`condition.fields.${condition.field}`)
-            })()
-          const conditionOperator =
-            operatorLabelByValue.get(condition.operator) ?? condition.operator
-          const valueDisplay = formatFieldConditionValue(
-            fieldConfig,
-            "value" in condition ? condition.value : undefined,
-          )
-          const conditionKey = [
-            condition.field,
-            "customFieldId" in condition ? condition.customFieldId : "",
-            "topicId" in condition ? condition.topicId : "",
-            condition.operator,
-            valueDisplay,
-          ].join(":")
-          const conditionKeyCount = conditionKeyCounts.get(conditionKey) ?? 0
-          conditionKeyCounts.set(conditionKey, conditionKeyCount + 1)
-
+          if (item.conditions.length === 0) {
+            return null
+          }
           return (
             <div
-              className="rounded-md border bg-background px-3 py-2 text-sm"
-              key={
-                conditionKeyCount === 0
-                  ? conditionKey
-                  : `${conditionKey}:${conditionKeyCount}`
-              }
+              className="space-y-2 rounded-md border border-dashed bg-muted/30 p-2"
+              // biome-ignore lint/suspicious/noArrayIndexKey: groups have no stable id; position is their identity.
+              key={`group-${index}`}
             >
-              <span className="font-medium">{fieldLabel}</span>{" "}
-              <span className="italic">{conditionOperator}</span>{" "}
-              {valueDisplay && <span>{valueDisplay}</span>}
+              <div className="text-muted-foreground text-xs uppercase">
+                {t("fields.contactFilter.group")} ·{" "}
+                {item.operator === "and"
+                  ? t("condition.operator.and")
+                  : t("condition.operator.or")}
+              </div>
+              {item.conditions.map((condition) =>
+                renderCondition(condition, `group-${index}:`),
+              )}
             </div>
           )
         })}

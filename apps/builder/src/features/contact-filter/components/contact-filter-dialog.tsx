@@ -15,7 +15,10 @@ import { useTranslations } from "next-intl"
 import type { ReactElement } from "react"
 import { useEffect, useState } from "react"
 import { useFormContext, useWatch } from "react-hook-form"
-import type { ContactFilterCriteria } from "../schemas"
+import {
+  type ContactFilterCriteria,
+  countContactFilterLeafConditions,
+} from "../schemas"
 import { CONTACT_FILTER_DIALOG_SIZE_CLASS } from "./contact-filter-dialog-layout"
 import { ContactListFilterPanel } from "./contact-list-filter"
 
@@ -32,6 +35,8 @@ type ContactFilterDialogCoreProps = {
   trigger?: ReactElement
   excludeFields?: ContactFilterField[]
   inboxChannel?: string
+  /** Show "Add group" (Notion-style and/or groups). Defaults to true. */
+  allowGroups?: boolean
 }
 
 const ContactFilterDialogCore = ({
@@ -42,6 +47,7 @@ const ContactFilterDialogCore = ({
   btnTitle,
   excludeFields,
   inboxChannel,
+  allowGroups,
 }: ContactFilterDialogCoreProps) => {
   const t = useTranslations()
   const [open, setOpen] = useState(false)
@@ -59,7 +65,7 @@ const ContactFilterDialogCore = ({
     onSubmitted?.(draft)
   }
 
-  const filterCount = draft.conditions.length
+  const filterCount = countContactFilterLeafConditions(draft)
 
   const handleCancel = () => {
     setOpen(false)
@@ -95,6 +101,7 @@ const ContactFilterDialogCore = ({
 
         <div className="flex flex-col gap-6">
           <ContactListFilterPanel
+            allowGroups={allowGroups}
             excludeFields={excludeFields}
             filter={draft}
             inboxChannel={inboxChannel}
@@ -128,6 +135,7 @@ export const ContactFilterDialog = (props: ContactFilterDialogProps = {}) => {
   if (props.value && props.onApply) {
     return (
       <ContactFilterDialogCore
+        allowGroups={props.allowGroups}
         btnTitle={props.btnTitle}
         excludeFields={props.excludeFields}
         inboxChannel={props.inboxChannel}
@@ -141,6 +149,7 @@ export const ContactFilterDialog = (props: ContactFilterDialogProps = {}) => {
 
   return (
     <ContactFilterDialogWithFormContext
+      allowGroups={props.allowGroups}
       btnTitle={props.btnTitle}
       excludeFields={props.excludeFields}
       inboxChannel={props.inboxChannel}
@@ -156,7 +165,9 @@ const ContactFilterDialogWithFormContext = ({
   onSubmitted,
   excludeFields,
   inboxChannel,
+  allowGroups,
 }: {
+  allowGroups?: boolean
   trigger?: ReactElement
   btnTitle?: string
   onSubmitted?: (submitted: ContactFilterCriteria) => void
@@ -172,6 +183,7 @@ const ContactFilterDialogWithFormContext = ({
 
   return (
     <ContactFilterDialogCore
+      allowGroups={allowGroups}
       btnTitle={btnTitle}
       excludeFields={excludeFields}
       inboxChannel={inboxChannel}

@@ -8,10 +8,22 @@ import { useTranslations } from "next-intl"
 import { useEffect, useMemo, useState } from "react"
 import { pruneExcludedConditions } from "../lib/prune-conditions"
 import { getBrowserTimezone } from "../lib/timezone"
-import type { ContactFilterCondition, ContactFilterCriteria } from "../schemas"
+import {
+  type ContactFilterCondition,
+  type ContactFilterCriteria,
+  type ContactFilterGroup,
+  countContactFilterLeafConditions,
+  isContactFilterGroupItem,
+} from "../schemas"
 import { ContactFilterConditionEditDialog } from "./contact-filter-condition-dialog"
 import { ContactFilterConditionForm } from "./contact-filter-condition-form"
 import { ContactFilterConditionRow } from "./contact-filter-condition-row"
+import {
+  ContactFilterAddGroupButton,
+  ContactFilterGroupBlock,
+  createEmptyContactFilterGroup,
+  getContactFilterConditionKey,
+} from "./contact-filter-group"
 import { useContactFilterConfigs } from "./use-contact-filter-configs"
 
 type ContactListFilterButtonProps = {
@@ -29,7 +41,7 @@ export function ContactListFilterButton({
 }: ContactListFilterButtonProps) {
   const t = useTranslations()
 
-  const filterCount = filter.conditions.length
+  const filterCount = countContactFilterLeafConditions(filter)
 
   return (
     <Button
@@ -50,6 +62,8 @@ type ContactListFilterPanelProps = {
   onFilterChange: (filter: ContactFilterCriteria) => void
   excludeFields?: ContactFilterField[]
   inboxChannel?: string
+  /** Show "Add group" (Notion-style and/or groups). Defaults to true. */
+  allowGroups?: boolean
 }
 
 const EMPTY_EXCLUDE_FIELDS: ContactFilterField[] = []
@@ -60,6 +74,7 @@ export function ContactListFilterPanel({
   onFilterChange,
   excludeFields = EMPTY_EXCLUDE_FIELDS,
   inboxChannel,
+  allowGroups = true,
 }: ContactListFilterPanelProps) {
   const t = useTranslations()
   const { configs, conditionOptions, operatorLabelByValue } =
@@ -75,7 +90,7 @@ export function ContactListFilterPanel({
 
   useEffect(() => {
     const pruned = pruneExcludedConditions(filter.conditions, excludeFields)
-    if (pruned.length !== filter.conditions.length) {
+    if (pruned !== filter.conditions) {
       onFilterChange({
         operator: pruned.length > 0 ? filter.operator : "and",
         conditions: pruned,
@@ -107,9 +122,16 @@ export function ContactListFilterPanel({
     })
   }
 
-  const handleUpdateCondition = (
+  const handleAddGroup = () => {
+    onFilterChange({
+      ...filter,
+      conditions: [...filter.conditions, createEmptyContactFilterGroup()],
+    })
+  }
+
+  const handleUpdateItem = (
     index: number,
-    condition: ContactFilterCondition,
+    condition: ContactFilterCondition | ContactFilterGroup,
   ) => {
     onFilterChange({
       ...filter,
@@ -128,13 +150,10 @@ export function ContactListFilterPanel({
     })
   }
 
-  const getConditionKey = (condition: ContactFilterCondition) =>
-    `${condition.field}-${"operator" in condition ? condition.operator : "none"}-${
-      "value" in condition ? JSON.stringify(condition.value) : "empty"
-    }`
-
-  const editingCondition =
+  const editingItem =
     editingIndex === null ? null : (filter.conditions[editingIndex] ?? null)
+  const editingCondition =
+    editingItem && !isContactFilterGroupItem(editingItem) ? editingItem : null
 
   return (
     <div
@@ -159,22 +178,40 @@ export function ContactListFilterPanel({
       </div>
 
       <div className="flex flex-col gap-2">
-        {filter.conditions.map((condition, index) => (
-          <ContactFilterConditionRow
-            configs={configs}
-            key={getConditionKey(condition)}
-            onEdit={() => setEditingIndex(index)}
-            onRemove={() => handleRemoveCondition(index)}
-            operatorLabelByValue={operatorLabelByValue}
-            row={condition}
-          />
-        ))}
+        {filter.conditions.map((item, index) =>
+          isContactFilterGroupItem(item) ? (
+            <ContactFilterGroupBlock
+              conditionOptions={conditionOptions}
+              configs={configs}
+              filteredConfigs={filteredConfigs}
+              group={item}
+              // biome-ignore lint/suspicious/noArrayIndexKey: groups have no stable id; position is their identity.
+              key={`group-${index}`}
+              onChange={(group) => handleUpdateItem(index, group)}
+              onRemove={() => handleRemoveCondition(index)}
+              operatorLabelByValue={operatorLabelByValue}
+            />
+          ) : (
+            <ContactFilterConditionRow
+              configs={configs}
+              key={getContactFilterConditionKey(item, index)}
+              onEdit={() => setEditingIndex(index)}
+              onRemove={() => handleRemoveCondition(index)}
+              operatorLabelByValue={operatorLabelByValue}
+              row={item}
+            />
+          ),
+        )}
 
         <ContactFilterConditionForm
           conditionOptions={conditionOptions}
           configs={filteredConfigs}
           onAdd={handleAddCondition}
         />
+
+        {allowGroups ? (
+          <ContactFilterAddGroupButton onClick={handleAddGroup} />
+        ) : null}
 
         {editingCondition && editingIndex !== null ? (
           <ContactFilterConditionEditDialog
@@ -184,7 +221,7 @@ export function ContactListFilterPanel({
             key={editingIndex}
             onClose={() => setEditingIndex(null)}
             onSubmit={(data) => {
-              handleUpdateCondition(editingIndex, data)
+              handleUpdateItem(editingIndex, data)
               setEditingIndex(null)
             }}
           />

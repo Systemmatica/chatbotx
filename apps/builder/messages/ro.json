@@ -1477,7 +1477,14 @@
       "anyConditions": "Oricare dintre condițiile de mai jos.",
       "label": "Filtru de contacte",
       "onlyContactsMatch": "Numai contactele care corespund",
-      "moreOptions": "Mai multe opțiuni"
+      "moreOptions": "Mai multe opțiuni",
+      "addGroup": "Add group",
+      "removeGroup": "Remove group",
+      "group": "Group",
+      "groupMatchAll": "all conditions in the group",
+      "groupMatchAny": "any condition in the group",
+      "groupMatches": "Group matches",
+      "emptyGroup": "No conditions in this group yet — empty groups are ignored."
     },
     "contactNote": {
       "label": "Notă de contact"

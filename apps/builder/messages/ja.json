@@ -715,7 +715,14 @@
       "anyConditions": "以下のいずれかの条件",
       "label": "連絡先フィルター",
       "onlyContactsMatch": "次の条件に一致する連絡先のみ",
-      "moreOptions": "その他のオプション"
+      "moreOptions": "その他のオプション",
+      "addGroup": "Add group",
+      "removeGroup": "Remove group",
+      "group": "Group",
+      "groupMatchAll": "all conditions in the group",
+      "groupMatchAny": "any condition in the group",
+      "groupMatches": "Group matches",
+      "emptyGroup": "No conditions in this group yet — empty groups are ignored."
     },
     "contactNote": {
       "label": "連絡先メモ"
