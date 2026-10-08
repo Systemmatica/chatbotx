@@ -70,4 +70,24 @@ describe("kanbanStagesSchema", () => {
         .success,
     ).toBe(false)
   })
+
+  test("keeps final outcome and blocked markers", () => {
+    const parsed = kanbanStagesSchema.parse([
+      { id: "a", name: "Won", outcome: "won" },
+      { id: "b", name: "Blocked", outcome: "lost", matchBlocked: true },
+    ])
+
+    expect(parsed[0]?.outcome).toBe("won")
+    expect(parsed[1]).toMatchObject({ outcome: "lost", matchBlocked: true })
+  })
+
+  test("allows only one stage that collects blocked contacts", () => {
+    const result = kanbanStagesSchema.safeParse([
+      { id: "a", name: "Blocked", matchBlocked: true },
+      { id: "b", name: "Also blocked", matchBlocked: true },
+    ])
+
+    expect(result.success).toBe(false)
+    expect(result.error?.issues[0]?.path).toEqual([1, "matchBlocked"])
+  })
 })

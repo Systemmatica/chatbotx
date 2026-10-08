@@ -33,6 +33,10 @@ vi.mock("@chatbotx.io/business", () => ({
       input.refs.map(() => null),
     resolveOne: async () => null,
   },
+  kanbanBoardService: {
+    resolveFlowStages: async (input: { refs: unknown[] }) =>
+      input.refs.map(() => null),
+  },
   pickLatestCurrentFlowNode: () => null,
 }))
 
