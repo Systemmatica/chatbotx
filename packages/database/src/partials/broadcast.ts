@@ -113,3 +113,11 @@ export const findBroadcastChannelCapability = (
 
 export const broadcastFlowTypes = z.enum(["flow", "template"])
 export type BroadcastFlowType = z.infer<typeof broadcastFlowTypes>
+
+/**
+ * Root flow folder holding the service flows generated for "Text" broadcasts
+ * (a message typed in the broadcast form instead of a chosen flow), so they
+ * stay out of the root flow list. Matched by name: a renamed or trashed
+ * folder just makes the next text broadcast create a fresh one.
+ */
+export const BROADCAST_TEXT_FLOW_FOLDER_NAME = "Рассылки"

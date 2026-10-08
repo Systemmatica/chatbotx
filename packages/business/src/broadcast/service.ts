@@ -12,6 +12,7 @@ import {
   type SQL,
 } from "@chatbotx.io/database/client"
 import {
+  BROADCAST_TEXT_FLOW_FOLDER_NAME,
   type ChannelType,
   dmConversationUsesSourceId,
   requiresRecentInteractionWindow,
@@ -31,15 +32,24 @@ import {
   messengerMessageTemplateModel,
   whatsappMessageTemplateModel,
 } from "@chatbotx.io/database/schema"
+import type { BroadcastModel } from "@chatbotx.io/database/types"
 import { chunkById } from "@chatbotx.io/database/utils"
 import type { WaTemplateParams } from "@chatbotx.io/flow-config"
 import { BaseService } from "../base.service"
+import { flowService } from "../flow/service"
+import { flowVersionService } from "../flow-version"
+import { folderService } from "../folder/service"
 import { inboxService } from "../inbox/service"
 import type {
   BroadcastAudienceInput,
   BroadcastAudiencePreviewRow,
   BroadcastTemplateDetail,
 } from "./schema"
+import {
+  type BroadcastTextMessage,
+  buildBroadcastTextFlowNode,
+  buildBroadcastTextName,
+} from "./text-message"
 
 const DEFAULT_CHUNK_SIZE = 1000
 const OPTION_LIST_LIMIT = 500
@@ -51,6 +61,11 @@ const MAX_PREVIEW_PER_PAGE = 50
 const BROADCAST_NAME_SEPARATOR = " - "
 
 type ContactInboxRow = typeof contactInboxModel.$inferSelect
+
+type BroadcastTextInsertValues = Omit<
+  typeof broadcastModel.$inferInsert,
+  "id" | "workspaceId" | "flowId" | "name" | "templateId" | "templateData"
+>
 type SelectOptionRow = { id: string; name: string }
 
 // Scopes a template lookup to a workspace, optionally narrowing it to the chosen
@@ -436,6 +451,59 @@ class BroadcastService extends BaseService {
           .limit(chunkSize),
       { chunkSize, callback: onChunk },
     )
+  }
+
+  /**
+   * "Text" broadcast: provisions a published single-node service flow
+   * (`sendText` + optional `openWebsite` link buttons) inside the root
+   * "Рассылки" flow folder and creates the broadcast pointing at it, all in
+   * one transaction. The broadcast worker, resend and copy then treat it as
+   * an ordinary flow broadcast — nothing downstream knows about text mode.
+   */
+  async createWithTextMessage(input: {
+    workspaceId: string
+    textMessage: BroadcastTextMessage
+    values: BroadcastTextInsertValues
+  }): Promise<BroadcastModel> {
+    const { workspaceId, textMessage } = input
+    const name = buildBroadcastTextName(textMessage)
+
+    const { broadcast, flowId } = await db.transaction(async (tx) => {
+      const folder = await folderService.findOrCreateRootByName({
+        workspaceId,
+        folderType: "flow",
+        name: BROADCAST_TEXT_FLOW_FOLDER_NAME,
+        tx,
+      })
+
+      const node = buildBroadcastTextFlowNode(textMessage)
+      const flow = await flowService.createPublishedDefault(tx, {
+        workspaceId,
+        name,
+        folderId: folder.id,
+        startNodeId: node.id,
+        nodes: [node],
+        edges: [],
+      })
+
+      const [row] = await tx
+        .insert(broadcastModel)
+        .values({
+          ...input.values,
+          workspaceId,
+          flowId: flow.flowId,
+          name,
+          templateId: null,
+          templateData: null,
+        })
+        .returning()
+
+      return { broadcast: row, flowId: flow.flowId }
+    })
+
+    await flowVersionService.invalidateList(flowId)
+
+    return broadcast
   }
 }
 

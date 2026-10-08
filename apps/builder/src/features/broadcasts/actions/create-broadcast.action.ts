@@ -11,7 +11,10 @@ import { workspaceIdrequestParams } from "@/features/common/schemas"
 import { canViewContactEmailAndPhone } from "@/features/contacts/permissions"
 import { getCurrentUserAndTargetWorkspace } from "@/lib/auth/utils"
 import { workspaceActionClient } from "@/lib/safe-action"
-import { createBroadcastRequest } from "../schemas/action"
+import {
+  broadcastContentTypes,
+  createBroadcastRequest,
+} from "../schemas/action"
 
 export const createBroadcastAction = workspaceActionClient
   .bindArgsSchemas(workspaceIdrequestParams)
@@ -49,7 +52,10 @@ export const createBroadcastAction = workspaceActionClient
       })
     }
 
-    if (!(parsedInput.flowId || parsedInput.templateId)) {
+    const isTextMessage =
+      parsedInput.contentType === broadcastContentTypes.enum.text
+
+    if (!(isTextMessage || parsedInput.flowId || parsedInput.templateId)) {
       return returnValidationErrors(createBroadcastRequest, {
         _errors: ["Validation Exception"],
         flowId: {
@@ -105,8 +111,9 @@ export const createBroadcastAction = workspaceActionClient
       }
     }
 
-    // Validate flow if flowId is provided
-    if (parsedInput.flowId) {
+    // Validate flow if flowId is provided (ignored in "Text" mode, where the
+    // server creates the flow itself)
+    if (!isTextMessage && parsedInput.flowId) {
       const flow = await db.query.flowModel.findFirst({
         where: {
           workspaceId,
@@ -124,7 +131,7 @@ export const createBroadcastAction = workspaceActionClient
       broadcastName = flow.name
     }
 
-    if (parsedInput.templateId) {
+    if (!isTextMessage && parsedInput.templateId) {
       const templateBroadcastName =
         await broadcastService.resolveTemplateBroadcastName({
           workspaceId,
@@ -146,11 +153,39 @@ export const createBroadcastAction = workspaceActionClient
       broadcastName = templateBroadcastName
     }
 
-    const { buttons, ...insertValues } = parsedInput
+    const {
+      buttons,
+      contentType: _contentType,
+      textMessage,
+      ...insertValues
+    } = parsedInput
     const contactFilter = pruneEmailPhoneFilterConditions(
       insertValues.contactFilter,
       canViewEmailAndPhone,
     )
+    const schedulesAt = startOfMinute(
+      new Date(parsedInput.schedulesAt ?? new Date()),
+    )
+
+    // "Text" mode: the server wraps the typed message into a published
+    // service flow (folder "Рассылки") and stores a regular flow broadcast,
+    // so the worker, resend and copy need no special handling.
+    if (isTextMessage && textMessage) {
+      return await broadcastService.createWithTextMessage({
+        workspaceId,
+        textMessage,
+        values: {
+          channel: insertValues.channel,
+          subaction: insertValues.subaction,
+          integrationWhatsappId: insertValues.integrationWhatsappId,
+          integrationMessengerId: insertValues.integrationMessengerId,
+          schedulesType: insertValues.schedulesType,
+          schedulesAt,
+          contactFilter,
+          status: "scheduled",
+        },
+      })
+    }
 
     const [broadcast] = await db
       .insert(broadcastModel)
@@ -160,9 +195,7 @@ export const createBroadcastAction = workspaceActionClient
         name: broadcastName,
         workspaceId,
         status: "scheduled",
-        schedulesAt: startOfMinute(
-          new Date(parsedInput.schedulesAt ?? new Date()),
-        ),
+        schedulesAt,
         templateData: parsedInput.templateData
           ? {
               ...(parsedInput.templateData as Record<string, unknown>),

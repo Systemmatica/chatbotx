@@ -19,6 +19,12 @@ export type CreateBroadcastDefaultValues = {
   schedulesType: "now"
   schedulesAt: null
   contactFilter: ContactFilterCriteria
+  contentType: "text" | "flow"
+  textMessage: {
+    text: string
+    version: "v2"
+    buttons: { label: string; url: string }[]
+  }
 }
 
 /**
@@ -46,5 +52,9 @@ export function buildCreateBroadcastDefaultValues(input: {
     schedulesType: "now",
     schedulesAt: null,
     contactFilter: input.initialContactFilter ?? EMPTY_CONTACT_FILTER,
+    // "Text" first: typing a message is the common case. Template
+    // subactions have no text mode and the form falls back to "flow".
+    contentType: "text",
+    textMessage: { text: "", version: "v2", buttons: [] },
   }
 }

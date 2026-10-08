@@ -5517,5 +5517,13 @@
     "noKeywords": "Эту цепочку пока не запускает ни одно ключевое слово.",
     "keywordOn": "Вкл",
     "keywordOff": "Выкл"
-  }
+  },
+  "broadcasts.contentType.text.title": "Текст",
+  "broadcasts.contentType.text.description": "Написать сообщение прямо здесь",
+  "broadcasts.contentType.flow.title": "Цепочка",
+  "broadcasts.contentType.flow.description": "Отправить готовую цепочку",
+  "broadcasts.textMessage.buttons": "Кнопки-ссылки",
+  "broadcasts.textMessage.buttonsDescription": "До {max} кнопок, открывающих ссылку",
+  "broadcasts.textMessage.addButton": "Добавить кнопку",
+  "broadcasts.textMessage.flowNotice": "Сообщение сохранится как цепочка в папке «{folder}»"
 }

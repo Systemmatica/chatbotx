@@ -5517,5 +5517,13 @@
     "noKeywords": "No keywords start this flow yet.",
     "keywordOn": "On",
     "keywordOff": "Off"
-  }
+  },
+  "broadcasts.contentType.text.title": "Text",
+  "broadcasts.contentType.text.description": "Type a message right here",
+  "broadcasts.contentType.flow.title": "Flow",
+  "broadcasts.contentType.flow.description": "Send an existing flow",
+  "broadcasts.textMessage.buttons": "Link buttons",
+  "broadcasts.textMessage.buttonsDescription": "Up to {max} buttons that open a link",
+  "broadcasts.textMessage.addButton": "Add button",
+  "broadcasts.textMessage.flowNotice": "The message will be saved as a flow in the \"{folder}\" folder"
 }

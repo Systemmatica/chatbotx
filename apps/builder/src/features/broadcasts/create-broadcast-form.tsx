@@ -44,7 +44,11 @@ import { toast } from "sonner"
 import { createBroadcastAction } from "@/features/broadcasts/actions/create-broadcast.action"
 import { BroadcastAudiencePreviewDialog } from "@/features/broadcasts/components/broadcast-audience-preview-dialog"
 import { BroadcastConfirmDialog } from "@/features/broadcasts/components/broadcast-confirm-dialog"
-import { createBroadcastRequest } from "@/features/broadcasts/schemas/action"
+import {
+  type BroadcastContentType,
+  broadcastContentTypes,
+  createBroadcastRequest,
+} from "@/features/broadcasts/schemas/action"
 import { useWorkspaceId } from "@/hooks/routing"
 import { ContactFilter } from "../contact-filter"
 import type { ContactFilterCriteria } from "../contact-filter/schemas"
@@ -58,8 +62,10 @@ import { TemplateParamsForm } from "../integration-whatsapp/message-templates/co
 import { TemplatePreview } from "../integration-whatsapp/message-templates/components/template-preview"
 import type { MessageTemplateWithComponents } from "../integration-whatsapp/message-templates/schema/resource"
 import { useIntegrationStore } from "../integration-whatsapp/provider/integration-store-context"
+import { BroadcastTextMessageEditor } from "./components/broadcast-text-message-editor"
 import { MessengerBroadcastFlowButtons } from "./components/messenger-broadcast-flow-buttons"
 import { getBroadcastExcludedFilterFields } from "./lib/broadcast-filter-fields"
+import { supportsBroadcastTextMessage } from "./lib/broadcast-text-message"
 import { buildCreateBroadcastDefaultValues } from "./lib/create-broadcast-defaults"
 
 type BroadcastConfig = {
@@ -429,6 +435,83 @@ function BroadcastFlowTypeSelector({
   )
 }
 
+function BroadcastContentTypeSelector() {
+  const t = useTranslations()
+  const { control, setValue } = useFormContext()
+  const selectedType =
+    (useWatch({ control, name: "contentType" }) as
+      | BroadcastContentType
+      | undefined) ?? broadcastContentTypes.enum.flow
+
+  const contentTypes: Array<{
+    value: BroadcastContentType
+    label: string
+    description: string
+  }> = [
+    {
+      value: broadcastContentTypes.enum.text,
+      label: t("broadcasts.contentType.text.title"),
+      description: t("broadcasts.contentType.text.description"),
+    },
+    {
+      value: broadcastContentTypes.enum.flow,
+      label: t("broadcasts.contentType.flow.title"),
+      description: t("broadcasts.contentType.flow.description"),
+    },
+  ]
+
+  const handleChange = (type: BroadcastContentType) => {
+    setValue("contentType", type, { shouldValidate: true })
+    if (type === broadcastContentTypes.enum.text) {
+      setValue("flowId", undefined, { shouldValidate: true })
+    }
+  }
+
+  return (
+    <div className="grid grid-cols-2 gap-3">
+      {contentTypes.map((contentType) => (
+        // biome-ignore lint/a11y/useSemanticElements: complex styling requires div
+        <div
+          aria-pressed={selectedType === contentType.value}
+          className={`flex cursor-pointer items-center gap-3 rounded-lg border p-4 transition-colors ${
+            selectedType === contentType.value
+              ? "border-primary bg-primary/5"
+              : "border-gray-200 hover:border-gray-300"
+          }`}
+          key={contentType.value}
+          onClick={() => handleChange(contentType.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault()
+              handleChange(contentType.value)
+            }
+          }}
+          role="button"
+          tabIndex={0}
+        >
+          <div
+            className={`flex h-5 w-5 items-center justify-center rounded-full border-2 ${
+              selectedType === contentType.value
+                ? "border-primary bg-primary"
+                : "border-gray-300"
+            }`}
+          >
+            {selectedType === contentType.value && (
+              <div className="h-2 w-2 rounded-full bg-white" />
+            )}
+          </div>
+          <div className="flex-1">
+            <div className="font-medium text-sm">{contentType.label}</div>
+            <div className="text-gray-500 text-xs">
+              {contentType.description}
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 type CreateBroadcastChooseFlowProps = {
   canViewEmailAndPhone: boolean
   channel: ChannelType
@@ -477,6 +560,12 @@ function CreateBroadcastChooseFlow(props: CreateBroadcastChooseFlowProps) {
 
   const { control, setValue, formState } = useFormContext()
   const watchedTemplateType = useWatch({ control, name: "templateType" })
+  const watchedContentType = useWatch({ control, name: "contentType" }) as
+    | BroadcastContentType
+    | undefined
+  const canSendText = supportsBroadcastTextMessage(props.subaction)
+  const isTextMessage =
+    canSendText && watchedContentType === broadcastContentTypes.enum.text
   const watchedSchedulesType = useWatch({ control, name: "schedulesType" })
   const watchedIntegrationWhatsappId = useWatch({
     control,
@@ -606,7 +695,21 @@ function CreateBroadcastChooseFlow(props: CreateBroadcastChooseFlowProps) {
     setValue("channel", null)
     setValue("subaction", null)
     setValue("buttons", [])
+    setValue("contentType", broadcastContentTypes.enum.flow)
   }, [])
+
+  // Template subactions have no "Text" mode — fall back to "Flow" so a
+  // leftover choice cannot block submit with a hidden validation error.
+  useEffect(() => {
+    if (
+      !canSendText &&
+      watchedContentType === broadcastContentTypes.enum.text
+    ) {
+      setValue("contentType", broadcastContentTypes.enum.flow, {
+        shouldValidate: true,
+      })
+    }
+  }, [canSendText, watchedContentType, setValue])
 
   useEffect(() => {
     if (props.channel) {
@@ -720,6 +823,7 @@ function CreateBroadcastChooseFlow(props: CreateBroadcastChooseFlowProps) {
       <Card>
         <CardContent className="flex flex-col gap-6">
           <BroadcastFlowTypeSelector subaction={props.subaction} />
+          {canSendText && <BroadcastContentTypeSelector />}
 
           {props.subaction ===
             broadcastSubactions.enum.whatsappTemplateMessage && (
@@ -849,21 +953,26 @@ function CreateBroadcastChooseFlow(props: CreateBroadcastChooseFlowProps) {
             </>
           )}
 
-          {(!watchedTemplateType ||
-            watchedTemplateType !== broadcastFlowTypes.enum.template) && (
-            <ComboboxField
-              emptyText={t("actions.noRecordFound")}
-              key="flowId"
-              label={t("fields.flowId.label")}
-              name="flowId"
-              options={flows.map((flow) => ({
-                label: flow.name,
-                value: flow.id,
-              }))}
-              placeholder={t("actions.pleaseSelect")}
-              required={true}
-            />
+          {isTextMessage && (
+            <BroadcastTextMessageEditor channel={props.channel} />
           )}
+
+          {!isTextMessage &&
+            (!watchedTemplateType ||
+              watchedTemplateType !== broadcastFlowTypes.enum.template) && (
+              <ComboboxField
+                emptyText={t("actions.noRecordFound")}
+                key="flowId"
+                label={t("fields.flowId.label")}
+                name="flowId"
+                options={flows.map((flow) => ({
+                  label: flow.name,
+                  value: flow.id,
+                }))}
+                placeholder={t("actions.pleaseSelect")}
+                required={true}
+              />
+            )}
         </CardContent>
       </Card>
 

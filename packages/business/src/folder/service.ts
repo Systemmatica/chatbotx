@@ -6,6 +6,7 @@ import {
   eq,
   inArray,
   or,
+  sql,
 } from "@chatbotx.io/database/client"
 import {
   automatedResponseTypeByFolderType,
@@ -147,6 +148,46 @@ class FolderService extends BaseService {
       .returning()
 
     return folder
+  }
+
+  /**
+   * Returns the first non-trashed root folder of `folderType` named `name`,
+   * creating it when none exists. Serialized per workspace/type/name with a
+   * transaction-scoped advisory lock so two concurrent callers cannot both
+   * miss the lookup and create duplicates — callers must pass the `tx` of
+   * the transaction they want the lock held for.
+   */
+  async findOrCreateRootByName(props: {
+    workspaceId: string
+    folderType: FolderType
+    name: string
+    tx: DatabaseClient
+  }): Promise<FolderModel> {
+    const { workspaceId, folderType, name, tx } = props
+    const lockKey = `folder-root:${workspaceId}:${folderType}:${name}`
+    await tx.execute(
+      sql`select pg_advisory_xact_lock(hashtextextended(${lockKey}, 0))`,
+    )
+
+    const existing = await tx.query.folderModel.findFirst({
+      where: {
+        workspaceId,
+        folderType,
+        name,
+        isTrash: false,
+        parentId: { isNull: true },
+      },
+      orderBy: { createdAt: "asc" },
+    })
+    if (existing) {
+      return existing
+    }
+
+    return await this.create({
+      workspaceId,
+      data: { name, parentId: null, folderType },
+      tx,
+    })
   }
 
   async update(props: {

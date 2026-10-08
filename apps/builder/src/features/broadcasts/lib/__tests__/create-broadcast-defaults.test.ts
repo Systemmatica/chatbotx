@@ -11,6 +11,8 @@ describe("buildCreateBroadcastDefaultValues", () => {
       schedulesType: "now",
       schedulesAt: null,
       contactFilter: { operator: "and", conditions: [] },
+      contentType: "text",
+      textMessage: { text: "", version: "v2", buttons: [] },
     })
   })
 
