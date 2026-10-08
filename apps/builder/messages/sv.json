@@ -546,6 +546,22 @@
     "whatsappWithin24Hours": {
       "description": "Kan innehålla kampanjer och skickas endast till användare som har skickat meddelanden till din bot under de senaste 24 timmarna.",
       "title": "Aktiva kontakter inom 24 timmar"
+    },
+    "contentType": {
+      "text": {
+        "title": "Text",
+        "description": "Type a message right here"
+      },
+      "flow": {
+        "title": "Flow",
+        "description": "Send an existing flow"
+      }
+    },
+    "textMessage": {
+      "buttons": "Link buttons",
+      "buttonsDescription": "Up to {max} buttons that open a link",
+      "addButton": "Add button",
+      "flowNotice": "The message will be saved as a flow in the \"{folder}\" folder"
     }
   },
   "channels": {
@@ -5525,14 +5541,6 @@
     "keywordOn": "On",
     "keywordOff": "Off"
   },
-  "broadcasts.contentType.text.title": "Text",
-  "broadcasts.contentType.text.description": "Type a message right here",
-  "broadcasts.contentType.flow.title": "Flow",
-  "broadcasts.contentType.flow.description": "Send an existing flow",
-  "broadcasts.textMessage.buttons": "Link buttons",
-  "broadcasts.textMessage.buttonsDescription": "Up to {max} buttons that open a link",
-  "broadcasts.textMessage.addButton": "Add button",
-  "broadcasts.textMessage.flowNotice": "The message will be saved as a flow in the \"{folder}\" folder",
   "leadMagnets": {
     "title": "Lead magnets",
     "description": "Where your leads come from: a book, an article, a checklist, a reel. A contact has received a lead magnet when it carries the lead magnet's tag.",

@@ -429,6 +429,22 @@
       "template": "القالب",
       "noTemplate": "لا يوجد قالب",
       "integration": "التكامل"
+    },
+    "contentType": {
+      "text": {
+        "title": "Text",
+        "description": "Type a message right here"
+      },
+      "flow": {
+        "title": "Flow",
+        "description": "Send an existing flow"
+      }
+    },
+    "textMessage": {
+      "buttons": "Link buttons",
+      "buttonsDescription": "Up to {max} buttons that open a link",
+      "addButton": "Add button",
+      "flowNotice": "The message will be saved as a flow in the \"{folder}\" folder"
     }
   },
   "condition": {
@@ -5525,14 +5541,6 @@
     "keywordOn": "On",
     "keywordOff": "Off"
   },
-  "broadcasts.contentType.text.title": "Text",
-  "broadcasts.contentType.text.description": "Type a message right here",
-  "broadcasts.contentType.flow.title": "Flow",
-  "broadcasts.contentType.flow.description": "Send an existing flow",
-  "broadcasts.textMessage.buttons": "Link buttons",
-  "broadcasts.textMessage.buttonsDescription": "Up to {max} buttons that open a link",
-  "broadcasts.textMessage.addButton": "Add button",
-  "broadcasts.textMessage.flowNotice": "The message will be saved as a flow in the \"{folder}\" folder",
   "leadMagnets": {
     "title": "Lead magnets",
     "description": "Where your leads come from: a book, an article, a checklist, a reel. A contact has received a lead magnet when it carries the lead magnet's tag.",

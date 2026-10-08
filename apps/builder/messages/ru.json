@@ -429,6 +429,22 @@
       "template": "Шаблон",
       "noTemplate": "Без шаблона",
       "integration": "Интеграция"
+    },
+    "contentType": {
+      "text": {
+        "title": "Текст",
+        "description": "Написать сообщение прямо здесь"
+      },
+      "flow": {
+        "title": "Цепочка",
+        "description": "Отправить готовую цепочку"
+      }
+    },
+    "textMessage": {
+      "buttons": "Кнопки-ссылки",
+      "buttonsDescription": "До {max} кнопок, открывающих ссылку",
+      "addButton": "Добавить кнопку",
+      "flowNotice": "Сообщение сохранится как цепочка в папке «{folder}»"
     }
   },
   "condition": {
@@ -5525,14 +5541,6 @@
     "keywordOn": "Вкл",
     "keywordOff": "Выкл"
   },
-  "broadcasts.contentType.text.title": "Текст",
-  "broadcasts.contentType.text.description": "Написать сообщение прямо здесь",
-  "broadcasts.contentType.flow.title": "Цепочка",
-  "broadcasts.contentType.flow.description": "Отправить готовую цепочку",
-  "broadcasts.textMessage.buttons": "Кнопки-ссылки",
-  "broadcasts.textMessage.buttonsDescription": "До {max} кнопок, открывающих ссылку",
-  "broadcasts.textMessage.addButton": "Добавить кнопку",
-  "broadcasts.textMessage.flowNotice": "Сообщение сохранится как цепочка в папке «{folder}»",
   "leadMagnets": {
     "title": "Лид-магниты",
     "description": "Откуда приходят лиды: книга, статья, чек-лист, рилс. Контакт получил лид-магнит, если у него стоит тег этого лид-магнита.",

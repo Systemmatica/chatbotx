@@ -28,6 +28,9 @@ const SendCardStepViewer = (props: SendCardStepViewerProps) => {
                 className="h-full w-full object-contain"
                 fill={true}
                 src={previewUrl}
+                // The browser loads step images itself: the Next optimizer
+                // refuses storage hosts that resolve to a private IP.
+                unoptimized
               />
             </div>
           ) : (
