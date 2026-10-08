@@ -14,6 +14,7 @@ import {
   ChevronsRight,
   LightbulbIcon,
   type LucideIcon,
+  MagnetIcon,
   MessageCircleMoreIcon,
   RadioIcon,
   SlidersHorizontalIcon,
@@ -112,6 +113,13 @@ export function AppSidebar({
         title: t("fields.contacts.label"),
         url: `/space/${workspaceId}/contacts`,
         icon: UsersIcon,
+        permission: PERMISSION_NAV.contacts,
+      },
+      {
+        id: "lead-magnets",
+        title: t("leadMagnets.title"),
+        url: `/space/${workspaceId}/lead-magnets`,
+        icon: MagnetIcon,
         permission: PERMISSION_NAV.contacts,
       },
       {

@@ -5525,5 +5525,43 @@
   "broadcasts.textMessage.buttons": "Link buttons",
   "broadcasts.textMessage.buttonsDescription": "Up to {max} buttons that open a link",
   "broadcasts.textMessage.addButton": "Add button",
-  "broadcasts.textMessage.flowNotice": "The message will be saved as a flow in the \"{folder}\" folder"
+  "broadcasts.textMessage.flowNotice": "The message will be saved as a flow in the \"{folder}\" folder",
+  "leadMagnets": {
+    "title": "Lead magnets",
+    "description": "Where your leads come from: a book, an article, a checklist, a reel. A contact has received a lead magnet when it carries the lead magnet's tag.",
+    "create": "Add lead magnet",
+    "edit": "Edit lead magnet",
+    "dialogDescription": "A tag is created for the lead magnet. Hand it out in a bot with the \"Add tag\" step.",
+    "namePlaceholder": "e.g. Launch checklist",
+    "tagHint": "Tag: {tag}. Add it with the \"Add tag\" step where the bot gives out the lead magnet.",
+    "kind": "Type",
+    "url": "Link",
+    "urlHint": "Link or file the contact gets. Optional.",
+    "recipients": "Received",
+    "showContacts": "Show contacts",
+    "tagLabel": "Tag: {tag}",
+    "tagMissing": "Tag was deleted. Save the lead magnet to restore it.",
+    "deleteTitle": "Delete \"{name}\"?",
+    "deleteDescription": "The lead magnet is removed from this list. The tag \"{tag}\" stays on contacts and in bots.",
+    "kinds": {
+      "book": "Book",
+      "article": "Article",
+      "template": "Template",
+      "video": "Video",
+      "checklist": "Checklist",
+      "other": "Other"
+    },
+    "empty": {
+      "title": "No lead magnets yet",
+      "description": "Add a lead magnet: a tag \"ЛМ: Name\" is created for it. The bot hands out the lead magnet with the standard \"Add tag\" step, and here you see how many contacts received it."
+    },
+    "validation": {
+      "nameRequired": "Enter a name"
+    },
+    "errors": {
+      "nameTaken": "A lead magnet with this name already exists",
+      "tagNameTaken": "Another tag already has this lead magnet's name",
+      "forbidden": "You don't have permission to manage lead magnets"
+    }
+  }
 }
