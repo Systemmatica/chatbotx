@@ -81,6 +81,11 @@ const CHANNEL_DELIVERABLE_STEP_TYPES = new Set<string>([
   stepTypes.enum.sendWaTemplateMessage,
   stepTypes.enum.whatsappFlow,
   stepTypes.enum.whatsappOptionList,
+  // Enqueued by `sendFlowMessage` like the steps above (see the matching set in
+  // integration/handlers/flow-utils.ts); without them the phone keyboard and
+  // its removal message were silently skipped here.
+  stepTypes.enum.requestPhone,
+  stepTypes.enum.removeReplyKeyboard,
 ])
 
 const isBlankTextCarrierStep = (step: SendFlowStepData) => {
