@@ -58,8 +58,12 @@ export function CreateAutomatedResponseForm(
               feature: t("fields.automatedResponse.label"),
             }),
           )
+          // Opened from a flow's settings tab: go back there.
+          const returnTo = searchParams.get("returnTo")
           router.push(
-            `/space/${workspaceId}/${basePath}?${searchParams.toString()}`,
+            returnTo?.startsWith(`/space/${workspaceId}/`)
+              ? returnTo
+              : `/space/${workspaceId}/${basePath}?${searchParams.toString()}`,
           )
         },
         onError: ({ error }) => {
@@ -74,7 +78,7 @@ export function CreateAutomatedResponseForm(
           folderId: folderId ?? null,
           keywords: [{ value: "" }],
           text: "",
-          flowId: "",
+          flowId: searchParams.get("flowId") ?? "",
         },
       },
       errorMapProps: {},

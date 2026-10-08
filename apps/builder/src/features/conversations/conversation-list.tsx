@@ -101,7 +101,7 @@ export default function ConversationList({
       channel: channelTypes.enum.omnichannel,
       assignedId: assignerFilterTypes.enum.all,
       tags: [],
-      contactFilter: {
+      contactFilter: filters.contactFilter ?? {
         operator: "and",
         conditions: [],
       },

@@ -151,7 +151,8 @@ const shouldAutoSelectConversation = ({
 }) =>
   !(activeConversationId || hasUrlConversationId) && conversations.length > 0
 
-export const createChatStore = () => {
+/** `initialFilters` preset the list, e.g. the inbox opened from a flow. */
+export const createChatStore = (initialFilters: ConversationFilters = {}) => {
   return createStore<ChatStore>((set, get, store) => ({
     // default conversation state
     isFirstLoadConversation: true,
@@ -161,7 +162,7 @@ export const createChatStore = () => {
     isBootstrappingUrlConversation: false,
     hasNextConversationPage: true,
     activeConversationId: null,
-    filters: {},
+    filters: initialFilters,
 
     // default message state
     messages: [],

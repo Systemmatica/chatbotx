@@ -14,5 +14,9 @@ export const kanbanBoardRelations = defineRelationsPart(schema, (r) => ({
       to: r.customFieldModel.id,
       optional: false,
     }),
+    flow: r.one.flowModel({
+      from: r.kanbanBoardModel.flowId,
+      to: r.flowModel.id,
+    }),
   },
 }))

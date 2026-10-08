@@ -2,6 +2,7 @@ import { index, jsonb, pgTable, text } from "drizzle-orm/pg-core"
 import type { KanbanStage } from "../partials/kanban"
 import { bigintAsString, sharedColumns } from "../partials/shared"
 import { customFieldModel } from "./custom-field"
+import { flowModel } from "./flow"
 import { workspaceModel } from "./workspace"
 
 /**
@@ -20,6 +21,10 @@ export const kanbanBoardModel = pgTable(
         onDelete: "cascade",
         onUpdate: "cascade",
       }),
+    flowId: bigintAsString().references(() => flowModel.id, {
+      onDelete: "set null",
+      onUpdate: "cascade",
+    }),
     workspaceId: bigintAsString()
       .notNull()
       .references(() => workspaceModel.id, {
@@ -31,6 +36,10 @@ export const kanbanBoardModel = pgTable(
     index("KanbanBoard_workspaceId_idx").using(
       "btree",
       table.workspaceId.asc().nullsLast(),
+    ),
+    index("KanbanBoard_flowId_idx").using(
+      "btree",
+      table.flowId.asc().nullsLast(),
     ),
     index("KanbanBoard_customFieldId_idx").using(
       "btree",

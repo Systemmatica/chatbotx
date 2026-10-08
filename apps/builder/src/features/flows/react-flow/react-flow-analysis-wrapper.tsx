@@ -15,6 +15,7 @@ import {
 import { useMemo } from "react"
 import type { FlowVersionResource } from "@/features/flow-versions/schema/resource"
 import type { SmartDelayNodeStats } from "../analytics/smart-delay-node-stats"
+import { FlowMiniMap } from "./components/flow-mini-map"
 import { analyticsNodeTypes, edgeTypes } from "./node-types-config"
 import FocusButton from "./panel-buttons/focus-button"
 import ZoomInButton from "./panel-buttons/zoom-in-button"
@@ -76,6 +77,7 @@ export function ReactFlowAnalyticsWrapper({
       proOptions={{ hideAttribution: true }}
     >
       <Background />
+      <FlowMiniMap />
       <Panel className="w-[254px]" position="bottom-center">
         <Controls
           className="overflow-hidden rounded-md shadow-none!"

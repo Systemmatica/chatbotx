@@ -43,9 +43,11 @@ import {
 import { useTranslations } from "next-intl"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { toast } from "sonner"
+import { cn } from "@chatbotx.io/ui/lib/utils"
 import { useTagSelectOptions } from "@/features/tags/provider/tag-hook"
 import { client } from "@/lib/orpc/orpc"
 import { appendColumnCards, moveCardBetweenColumns } from "../lib/columns"
+import type { KanbanTemplateId } from "../lib/templates"
 import type {
   KanbanBoardResource,
   KanbanCardResource,
@@ -64,9 +66,23 @@ const errorMessage = (error: unknown, fallback: string) =>
 type KanbanViewProps = {
   workspaceId: string
   canManageBoards: boolean
+  /** Show only this flow's boards; new boards become its funnel. */
+  flowId?: string
+  /** Preset proposed when creating a board. */
+  defaultTemplate?: KanbanTemplateId
+  /** Hide the page title (the flow page has its own header). */
+  hideTitle?: boolean
+  className?: string
 }
 
-export function KanbanView({ workspaceId, canManageBoards }: KanbanViewProps) {
+export function KanbanView({
+  workspaceId,
+  canManageBoards,
+  flowId,
+  defaultTemplate,
+  hideTitle = false,
+  className,
+}: KanbanViewProps) {
   const t = useTranslations()
   const tagOptions = useTagSelectOptions()
 
@@ -102,6 +118,7 @@ export function KanbanView({ workspaceId, canManageBoards }: KanbanViewProps) {
     try {
       const { data } = await client.kanbanAPI.listKanbanBoardsAPI({
         workspaceId,
+        flowId: flowId ?? null,
       })
       setBoards(data)
       setSelectedBoardId((current) =>
@@ -114,7 +131,7 @@ export function KanbanView({ workspaceId, canManageBoards }: KanbanViewProps) {
     } finally {
       setBoardsLoaded(true)
     }
-  }, [workspaceId, t])
+  }, [workspaceId, flowId, t])
 
   const loadCards = useCallback(async () => {
     if (!selectedBoardId) {
@@ -287,10 +304,17 @@ export function KanbanView({ workspaceId, canManageBoards }: KanbanViewProps) {
   }
 
   return (
-    <div className="flex h-[calc(100vh-7rem)] min-h-0 flex-col gap-4">
+    <div
+      className={cn(
+        "flex h-[calc(100vh-7rem)] min-h-0 flex-col gap-4",
+        className,
+      )}
+    >
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2">
-          <h4 className="font-bold text-xl">{t("kanban.title")}</h4>
+          {hideTitle ? null : (
+            <h4 className="font-bold text-xl">{t("kanban.title")}</h4>
+          )}
           {boards.length > 1 ? (
             <Select
               items={boardOptions}
@@ -436,7 +460,7 @@ export function KanbanView({ workspaceId, canManageBoards }: KanbanViewProps) {
           <SquareKanbanIcon className="size-10 text-muted-foreground" />
           <h5 className="font-semibold">{t("kanban.emptyTitle")}</h5>
           <p className="max-w-md text-muted-foreground text-sm">
-            {t("kanban.emptyDescription")}
+            {t(flowId ? "kanban.emptyFlowDescription" : "kanban.emptyDescription")}
           </p>
           {canManageBoards ? (
             <Button onClick={openCreateDialog} type="button">
@@ -449,6 +473,8 @@ export function KanbanView({ workspaceId, canManageBoards }: KanbanViewProps) {
 
       <KanbanBoardDialog
         board={editingBoard}
+        defaultTemplate={defaultTemplate}
+        flowId={flowId}
         onOpenChange={setDialogOpen}
         onSaved={handleSaved}
         open={dialogOpen}

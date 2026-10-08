@@ -8,11 +8,14 @@ import { INTEGRATION_SETTINGS_REGISTRY } from "@/features/integrations/settings-
 
 type IntegrationsAccordionShellProps = {
   readonly children?: ReactNode
+  /** HIDDEN_FEATURES ids; a provider is hidden by `integration-<slug>`. */
+  readonly hiddenFeatures?: readonly string[]
 }
 
 /** Integrations settings list — see `RouteAccordionShell` for navigation shape. */
 export function IntegrationsAccordionShell({
   children,
+  hiddenFeatures = [],
 }: IntegrationsAccordionShellProps) {
   const t = useTranslations()
   const params = useParams<{ workspaceId: string }>()
@@ -20,7 +23,10 @@ export function IntegrationsAccordionShell({
   return (
     <RouteAccordionShell
       basePath={`/space/${params.workspaceId}/settings/integrations`}
-      items={INTEGRATION_SETTINGS_REGISTRY.map((integration) => ({
+      items={INTEGRATION_SETTINGS_REGISTRY.filter(
+        (integration) =>
+          !hiddenFeatures.includes(`integration-${integration.slug}`),
+      ).map((integration) => ({
         value: integration.slug,
         label: (
           <div className="flex items-center gap-2">

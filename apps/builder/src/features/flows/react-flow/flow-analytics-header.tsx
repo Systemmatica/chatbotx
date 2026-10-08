@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { useState } from "react"
 import { AppBreadcrumb } from "@/components/app-breadcrumb"
+import { FlowHubTabs } from "../components/flow-hub-tabs"
 import type { FlowResource } from "../schemas/resource"
 
 export function FlowAnalyticsHeader({ flow }: { flow: FlowResource }) {
@@ -43,6 +44,8 @@ export function FlowAnalyticsHeader({ flow }: { flow: FlowResource }) {
           ]}
         />
       </div>
+
+      <FlowHubTabs flowId={flow.id} workspaceId={flow.workspaceId} />
 
       <Button
         disabled={isDeleting}

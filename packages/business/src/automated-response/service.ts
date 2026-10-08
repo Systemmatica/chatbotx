@@ -76,6 +76,21 @@ class AutomatedResponseService extends BaseService {
     return result
   }
 
+  /** Inbound keywords that start the given flow (flow settings tab). */
+  async listInboundByFlow(input: {
+    workspaceId: string
+    flowId: string
+  }): Promise<AutomatedResponseModel[]> {
+    return await db.query.automatedResponseModel.findMany({
+      where: {
+        workspaceId: input.workspaceId,
+        flowId: input.flowId,
+        type: "inbound",
+      },
+      orderBy: { id: "asc" },
+    })
+  }
+
   async findOrFail(
     input: FindAutomatedResponseRequest,
     tx?: DatabaseClient,

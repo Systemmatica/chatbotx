@@ -12,6 +12,10 @@ export const KANBAN_STAGE_NAME_MAX_LENGTH = 100
 
 const hexColorRegex = /^#[0-9a-fA-F]{6}$/
 
+/** Final stages of a funnel: a won deal/hire or a lost contact. */
+export const kanbanStageOutcomes = z.enum(["won", "lost"])
+export type KanbanStageOutcome = z.infer<typeof kanbanStageOutcomes>
+
 /**
  * A board column. `name` is the exact custom field value that places a contact
  * in this column, so renaming a stage does not move contacts by itself.
@@ -27,6 +31,13 @@ export const kanbanStageSchema = z.object({
     }),
   name: z.string().trim().min(1).max(KANBAN_STAGE_NAME_MAX_LENGTH),
   color: z.string().regex(hexColorRegex).nullish(),
+  outcome: kanbanStageOutcomes.nullish(),
+  /**
+   * Contacts who blocked the bot land here whatever their field value is
+   * (`Contact.blockedAt` is set when a send fails with "bot was blocked").
+   * At most one stage per board.
+   */
+  matchBlocked: z.boolean().nullish(),
 })
 
 export type KanbanStage = z.infer<typeof kanbanStageSchema>
@@ -42,6 +53,7 @@ export const kanbanStagesSchema = z
   .superRefine((stages, ctx) => {
     const seenIds = new Set<string>()
     const seenNames = new Set<string>()
+    let blockedStages = 0
 
     stages.forEach((stage, index) => {
       if (seenIds.has(stage.id)) {
@@ -61,5 +73,16 @@ export const kanbanStagesSchema = z
         })
       }
       seenNames.add(stage.name)
+
+      if (stage.matchBlocked) {
+        blockedStages += 1
+        if (blockedStages > 1) {
+          ctx.addIssue({
+            code: "custom",
+            message: "Only one stage can collect blocked contacts",
+            path: [index, "matchBlocked"],
+          })
+        }
+      }
     })
   })

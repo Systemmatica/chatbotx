@@ -3805,6 +3805,56 @@
       "stagesRequired": "Add at least one stage",
       "emptyStageName": "Every stage needs a name",
       "duplicateStageNames": "Stage names must be unique"
+    },
+    "template": "Template",
+    "templateDescription": "A ready set of stages. You can rename, reorder and add stages below.",
+    "stageMarkersDescription": "Circle icon marks a final stage: won (green) or lost (red). The block icon makes the stage collect contacts who blocked the bot.",
+    "matchBlocked": "Contacts who blocked the bot go here",
+    "emptyFlowDescription": "Create the funnel board of this flow: stages are statuses (where the person is in the funnel), the flow moves people between them with \"Set custom field\".",
+    "outcome": {
+      "none": "Regular stage",
+      "won": "Final stage: won",
+      "lost": "Final stage: lost"
+    },
+    "templates": {
+      "recruiting": {
+        "label": "Recruiting",
+        "boardName": "Hiring funnel",
+        "fieldName": "Hiring stage",
+        "stages": {
+          "entered": "Entered the bot",
+          "intro": "Introduction",
+          "questionnaire": "Questionnaire",
+          "videoInterview": "Video interview",
+          "testTask": "Test task",
+          "readyForInterview": "Ready for interview",
+          "offer": "Offer",
+          "rejected": "Rejected"
+        }
+      },
+      "marketing": {
+        "label": "Marketing",
+        "boardName": "Marketing funnel",
+        "fieldName": "Funnel stage",
+        "stages": {
+          "new": "New",
+          "leadMagnet": "Got a lead magnet",
+          "chainReady": "Chain prepared",
+          "watching": "Watching materials",
+          "consultation": "Consultation request",
+          "blocked": "Blocked the bot"
+        }
+      },
+      "simple": {
+        "label": "Simple",
+        "boardName": "Board",
+        "fieldName": "status",
+        "stages": {
+          "new": "New",
+          "inProgress": "In progress",
+          "done": "Done"
+        }
+      }
     }
   },
   "currentStep": {
@@ -5451,5 +5501,21 @@
     "optionsCount": "{count, plural, other {# 件のオプション}}",
     "moreCount": "+ 他 {count} 件",
     "clearAllSelected": "選択した {count} 件のオプションをすべてクリア"
+  },
+  "flowHub": {
+    "label": "Flow sections",
+    "builder": "Builder",
+    "kanban": "Board",
+    "chats": "Chats",
+    "analytics": "Analytics",
+    "settings": "Settings",
+    "stage": "Stage",
+    "miniMap": "Canvas overview",
+    "keywordsTitle": "Keywords",
+    "keywordsDescription": "Messages that start this flow. A contact who sends one of these words gets the flow from the start.",
+    "addKeyword": "Add keyword",
+    "noKeywords": "No keywords start this flow yet.",
+    "keywordOn": "On",
+    "keywordOff": "Off"
   }
 }

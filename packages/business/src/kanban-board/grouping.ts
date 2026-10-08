@@ -25,6 +25,8 @@ export type KanbanColumn = {
   /** Stage name; `null` for the "no status" column (label comes from i18n). */
   name: string | null
   color: string | null
+  outcome: KanbanStage["outcome"]
+  matchBlocked: boolean
   isNoStatus: boolean
   total: number
   cards: KanbanCard[]
@@ -47,6 +49,8 @@ export function buildKanbanColumns(input: {
     id: KANBAN_NO_STATUS_STAGE_ID,
     name: null,
     color: null,
+    outcome: null,
+    matchBlocked: false,
     isNoStatus: true,
     total: 0,
     cards: [],
@@ -55,6 +59,8 @@ export function buildKanbanColumns(input: {
     id: stage.id,
     name: stage.name,
     color: stage.color ?? null,
+    outcome: stage.outcome ?? null,
+    matchBlocked: Boolean(stage.matchBlocked),
     isNoStatus: false,
     total: 0,
     cards: [],

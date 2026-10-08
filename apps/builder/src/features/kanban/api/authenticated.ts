@@ -1,13 +1,13 @@
 import { kanbanBoardService } from "@chatbotx.io/business"
 import { ChatbotXException } from "@chatbotx.io/business/errors"
 import { requireContactPermissionScope } from "@/features/contacts/permissions"
-import { withWorkspaceIdSchema } from "@/features/workspaces/schema/resource"
 import { workspaceAuthorizedMidddleware } from "@/middlewares/auth"
 import { authorizedAPI } from "@/orpc"
 import {
   createKanbanBoardRequest,
   getKanbanBoardCardsRequest,
   kanbanBoardIdRequest,
+  listKanbanBoardsRequest,
   moveKanbanCardRequest,
   updateKanbanBoardRequest,
 } from "../schemas/request"
@@ -42,13 +42,14 @@ export const kanbanAuthenticatedAPI = {
       summary: "List Kanban boards",
       tags,
     })
-    .input(withWorkspaceIdSchema)
+    .input(listKanbanBoardsRequest)
     .use(workspaceAuthorizedMidddleware, (input) => input.workspaceId)
     .output(listKanbanBoardsResponse)
     .handler(async ({ input }) => {
       await requireContactPermissionScope(input.workspaceId)
       const data = await kanbanBoardService.list({
         workspaceId: input.workspaceId,
+        flowId: input.flowId,
       })
       return { data }
     }),

@@ -9,10 +9,15 @@ export const kanbanBoardIdRequest = withWorkspaceIdSchema.and(
   z.object({ boardId: zodBigintAsString() }),
 )
 
+export const listKanbanBoardsRequest = withWorkspaceIdSchema.and(
+  z.object({ flowId: zodBigintAsString().optional().nullable() }),
+)
+
 export const createKanbanBoardRequest = withWorkspaceIdSchema.and(
   z
     .object({
       name: boardName,
+      flowId: zodBigintAsString().optional().nullable(),
       stages: kanbanStagesSchema,
       customFieldId: zodBigintAsString().optional().nullable(),
       newCustomFieldName: z

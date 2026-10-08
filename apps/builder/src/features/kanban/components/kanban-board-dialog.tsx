@@ -32,7 +32,12 @@ import {
   SortableItem,
   SortableItemHandle,
 } from "@chatbotx.io/ui/components/ui/sortable"
+import { cn } from "@chatbotx.io/ui/lib/utils"
 import {
+  BanIcon,
+  CircleCheckIcon,
+  CircleDashedIcon,
+  CircleXIcon,
   GripVerticalIcon,
   Loader2Icon,
   PlusIcon,
@@ -44,11 +49,20 @@ import { toast } from "sonner"
 import { useCustomFieldStore } from "@/features/custom-fields/provider/custom-field-store-context"
 import { client } from "@/lib/orpc/orpc"
 import { createStageId } from "../lib/columns"
+import {
+  buildTemplateStages,
+  type KanbanTemplateId,
+  kanbanTemplateIds,
+} from "../lib/templates"
 import type { KanbanBoardResource } from "../schemas/resource"
 
 type FieldMode = "existing" | "new"
 
-const DEFAULT_STAGE_COLORS = ["#3b82f6", "#f59e0b", "#22c55e"]
+const NEXT_OUTCOME: Record<string, KanbanStage["outcome"]> = {
+  none: "won",
+  won: "lost",
+  lost: null,
+}
 
 type KanbanBoardDialogProps = {
   workspaceId: string
@@ -57,6 +71,10 @@ type KanbanBoardDialogProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
   onSaved: (board: KanbanBoardResource) => void
+  /** New boards are created as this flow's funnel. */
+  flowId?: string | null
+  /** Preset applied when creating a board. */
+  defaultTemplate?: KanbanTemplateId
 }
 
 export function KanbanBoardDialog({
@@ -65,6 +83,8 @@ export function KanbanBoardDialog({
   open,
   onOpenChange,
   onSaved,
+  flowId,
+  defaultTemplate = "simple",
 }: KanbanBoardDialogProps) {
   const t = useTranslations()
   const customFields = useCustomFieldStore((state) => state.customFields)
@@ -81,6 +101,7 @@ export function KanbanBoardDialog({
   const [customFieldId, setCustomFieldId] = useState("")
   const [newFieldName, setNewFieldName] = useState("")
   const [stages, setStages] = useState<KanbanStage[]>([])
+  const [template, setTemplate] = useState<KanbanTemplateId>(defaultTemplate)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Reset the form only when the dialog opens or switches board, not when the
@@ -95,24 +116,31 @@ export function KanbanBoardDialog({
       setFieldMode("existing")
       setCustomFieldId(board.customFieldId)
       setStages(board.stages)
+      setNewFieldName(t("kanban.defaultFieldName"))
     } else {
-      setName(t("kanban.newBoard"))
-      setFieldMode(shortTextFields.length > 0 ? "existing" : "new")
-      setCustomFieldId("")
-      setStages(
-        [
-          t("kanban.defaultStages.new"),
-          t("kanban.defaultStages.inProgress"),
-          t("kanban.defaultStages.done"),
-        ].map((stageName, index) => ({
-          id: createStageId(),
-          name: stageName,
-          color: DEFAULT_STAGE_COLORS[index],
-        })),
-      )
+      applyTemplate(defaultTemplate)
     }
-    setNewFieldName(t("kanban.defaultFieldName"))
   }, [open, board])
+
+  // A funnel template brings its own stages and status field: a new field is
+  // proposed so each funnel keeps its own status values.
+  const applyTemplate = (next: KanbanTemplateId) => {
+    setTemplate(next)
+    setName(t(`kanban.templates.${next}.boardName`))
+    setFieldMode("new")
+    setCustomFieldId("")
+    setNewFieldName(t(`kanban.templates.${next}.fieldName`))
+    setStages(buildTemplateStages(next, (key) => t(key)))
+  }
+
+  const templateOptions = useMemo(
+    () =>
+      kanbanTemplateIds.map((id) => ({
+        label: t(`kanban.templates.${id}.label`),
+        value: id,
+      })),
+    [t],
+  )
 
   const fieldOptions = useMemo(
     () =>
@@ -133,6 +161,16 @@ export function KanbanBoardDialog({
       ...current,
       { id: createStageId(), name: "", color: "#64748b" },
     ])
+  }
+
+  // Only one stage may collect contacts who blocked the bot.
+  const toggleMatchBlocked = (id: string) => {
+    setStages((current) =>
+      current.map((stage) => ({
+        ...stage,
+        matchBlocked: stage.id === id ? !stage.matchBlocked : null,
+      })),
+    )
   }
 
   const removeStage = (id: string) => {
@@ -195,6 +233,7 @@ export function KanbanBoardDialog({
             workspaceId,
             name: name.trim(),
             stages: validStages,
+            flowId: flowId ?? null,
             ...(fieldMode === "existing"
               ? { customFieldId }
               : { newCustomFieldName: newFieldName.trim() }),
@@ -230,6 +269,36 @@ export function KanbanBoardDialog({
         </DialogHeader>
 
         <div className="grid gap-5">
+          {board ? null : (
+            <div className="grid gap-2">
+              <Label>{t("kanban.template")}</Label>
+              <Select
+                items={templateOptions}
+                onValueChange={(value) =>
+                  applyTemplate(String(value) as KanbanTemplateId)
+                }
+                value={template}
+              >
+                <SelectTrigger
+                  aria-label={t("kanban.template")}
+                  className="w-full"
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {templateOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-muted-foreground text-xs">
+                {t("kanban.templateDescription")}
+              </p>
+            </div>
+          )}
+
           <div className="grid gap-2">
             <Label htmlFor="kanban-board-name">{t("fields.name.label")}</Label>
             <Input
@@ -309,6 +378,9 @@ export function KanbanBoardDialog({
             <p className="text-muted-foreground text-xs">
               {t("kanban.stagesDescription")}
             </p>
+            <p className="text-muted-foreground text-xs">
+              {t("kanban.stageMarkersDescription")}
+            </p>
             <Sortable
               getItemValue={(stage: KanbanStage) => stage.id}
               onMove={({ activeIndex, overIndex }) =>
@@ -359,6 +431,44 @@ export function KanbanBoardDialog({
                             value={stage.name}
                           />
                           <Button
+                            aria-label={t(
+                              `kanban.outcome.${stage.outcome ?? "none"}`,
+                            )}
+                            className={cn(
+                              "size-8 shrink-0",
+                              stage.outcome === "won" && "text-green-600",
+                              stage.outcome === "lost" && "text-red-600",
+                            )}
+                            onClick={() =>
+                              updateStage(stage.id, {
+                                outcome: NEXT_OUTCOME[stage.outcome ?? "none"],
+                              })
+                            }
+                            size="icon"
+                            title={t(`kanban.outcome.${stage.outcome ?? "none"}`)}
+                            type="button"
+                            variant="ghost"
+                          >
+                            <OutcomeIcon outcome={stage.outcome} />
+                          </Button>
+                          <Button
+                            aria-label={t("kanban.matchBlocked")}
+                            aria-pressed={Boolean(stage.matchBlocked)}
+                            className={cn(
+                              "size-8 shrink-0",
+                              stage.matchBlocked
+                                ? "text-red-600"
+                                : "text-muted-foreground",
+                            )}
+                            onClick={() => toggleMatchBlocked(stage.id)}
+                            size="icon"
+                            title={t("kanban.matchBlocked")}
+                            type="button"
+                            variant="ghost"
+                          >
+                            <BanIcon className="size-4" />
+                          </Button>
+                          <Button
                             aria-label={t("actions.remove")}
                             className="size-8 shrink-0"
                             disabled={stages.length <= 1}
@@ -405,4 +515,14 @@ export function KanbanBoardDialog({
       </DialogContent>
     </Dialog>
   )
+}
+
+function OutcomeIcon({ outcome }: { outcome: KanbanStage["outcome"] }) {
+  if (outcome === "won") {
+    return <CircleCheckIcon className="size-4" />
+  }
+  if (outcome === "lost") {
+    return <CircleXIcon className="size-4" />
+  }
+  return <CircleDashedIcon className="size-4" />
 }

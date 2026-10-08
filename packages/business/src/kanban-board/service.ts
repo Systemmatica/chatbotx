@@ -11,6 +11,7 @@ import { contactCustomFieldService } from "../contact-custom-field"
 import { customFieldService } from "../custom-field"
 import { ChatbotXException, notFoundException } from "../errors"
 import { currentFlowStepService } from "../flow/current-step"
+import { flowService } from "../flow/service"
 import {
   buildKanbanColumns,
   type KanbanColumn,
@@ -31,6 +32,17 @@ export type CreateKanbanBoardInput = {
   customFieldId?: string | null
   /** ...or the name of a `shortText` field to find or create. */
   newCustomFieldName?: string | null
+  /** The flow whose funnel this board shows. */
+  flowId?: string | null
+}
+
+/** Stage of a contact on the board of the flow they are in (inbox label). */
+export type ContactFlowStage = {
+  boardId: string
+  stageId: string
+  name: string
+  color: string | null
+  outcome: KanbanStage["outcome"]
 }
 
 export type UpdateKanbanBoardInput = {
@@ -59,8 +71,73 @@ export type KanbanBoardCards = {
 }
 
 class KanbanBoardService extends BaseService {
-  async list(input: { workspaceId: string }): Promise<KanbanBoardModel[]> {
+  async list(input: {
+    workspaceId: string
+    flowId?: string | null
+  }): Promise<KanbanBoardModel[]> {
     return await kanbanBoardRepository.listByWorkspace(input)
+  }
+
+  /**
+   * For each `{ contactId, flowId }` ref, the stage the contact holds on the
+   * first board of that flow (`null` when the flow has no board or the value
+   * matches no stage). Two queries for the whole page.
+   */
+  async resolveFlowStages(input: {
+    workspaceId: string
+    refs: { contactId: string; flowId: string | null; blocked?: boolean }[]
+  }): Promise<(ContactFlowStage | null)[]> {
+    const flowIds = [
+      ...new Set(
+        input.refs.flatMap((ref) => (ref.flowId ? [ref.flowId] : [])),
+      ),
+    ]
+    const boards = await kanbanBoardRepository.listByFlowIds({
+      workspaceId: input.workspaceId,
+      flowIds,
+    })
+    const boardByFlow = new Map<string, KanbanBoardModel>()
+    for (const board of boards) {
+      if (board.flowId && !boardByFlow.has(board.flowId)) {
+        boardByFlow.set(board.flowId, board)
+      }
+    }
+    if (boardByFlow.size === 0) {
+      return input.refs.map(() => null)
+    }
+
+    const values = await kanbanBoardRepository.listStatusValues({
+      customFieldIds: [
+        ...new Set([...boardByFlow.values()].map((b) => b.customFieldId)),
+      ],
+      contactIds: [...new Set(input.refs.map((ref) => ref.contactId))],
+    })
+    const valueByKey = new Map(
+      values.map((row) => [`${row.contactId}:${row.customFieldId}`, row.value]),
+    )
+
+    return input.refs.map((ref) => {
+      const board = ref.flowId ? boardByFlow.get(ref.flowId) : undefined
+      if (!board) {
+        return null
+      }
+      const value = valueByKey.get(`${ref.contactId}:${board.customFieldId}`)
+      const stage =
+        (ref.blocked
+          ? board.stages.find((candidate) => candidate.matchBlocked)
+          : undefined) ??
+        board.stages.find((candidate) => candidate.name === value)
+      if (!stage) {
+        return null
+      }
+      return {
+        boardId: board.id,
+        stageId: stage.id,
+        name: stage.name,
+        color: stage.color ?? null,
+        outcome: stage.outcome ?? null,
+      }
+    })
   }
 
   async findOrFail(input: {
@@ -87,6 +164,13 @@ class KanbanBoardService extends BaseService {
       )
     }
 
+    if (input.flowId) {
+      await this.assertFlow({
+        workspaceId: input.workspaceId,
+        flowId: input.flowId,
+      })
+    }
+
     let createdFieldId: string | undefined
     const board = await db.transaction(async (tx) => {
       const customFieldId = existingFieldId
@@ -109,6 +193,7 @@ class KanbanBoardService extends BaseService {
         name: input.name.trim(),
         customFieldId,
         stages,
+        flowId: input.flowId ?? null,
         tx,
       })
     })
@@ -169,6 +254,9 @@ class KanbanBoardService extends BaseService {
       workspaceId: input.workspaceId,
       customFieldId: board.customFieldId,
       stageNames: board.stages.map((stage) => stage.name),
+      blockedStageName:
+        board.stages.find((stage) => stage.matchBlocked)?.name ?? null,
+      flowId: board.flowId,
       tagId: input.tagId,
       search: input.search,
       restrictToAssignedUserId: input.accessScope?.restrictToAssignedUserId,
@@ -261,6 +349,16 @@ class KanbanBoardService extends BaseService {
       return resolveKanbanStageValue(stages, stageId)
     } catch {
       throw notFoundException("Kanban stage not found")
+    }
+  }
+
+  private async assertFlow(input: {
+    workspaceId: string
+    flowId: string
+  }): Promise<void> {
+    const exists = await flowService.exists(input.workspaceId, input.flowId)
+    if (!exists) {
+      throw notFoundException("Flow not found")
     }
   }
 

@@ -18,6 +18,18 @@ export const conversationResource = createSelectSchema(conversationModel, {
 })
 export type ConversationResource = z.infer<typeof conversationResource>
 
+/** Stage of the contact on the funnel board of the flow they are in. */
+export const conversationFlowStageResource = z.object({
+  boardId: z.string(),
+  stageId: z.string(),
+  name: z.string(),
+  color: z.string().nullable(),
+  outcome: z.enum(["won", "lost"]).nullable().optional(),
+})
+export type ConversationFlowStageResource = z.infer<
+  typeof conversationFlowStageResource
+>
+
 export const listConversationsItemResource = conversationResource.and(
   z.object({
     contactInboxes: z.array(contactInboxResource),
@@ -27,6 +39,7 @@ export const listConversationsItemResource = conversationResource.and(
     assignedInboxTeam: inboxTeamResource.nullable(),
     // Optional: realtime/partial conversation payloads do not carry it.
     currentFlowStep: currentFlowStepResource.nullable().optional(),
+    flowStage: conversationFlowStageResource.nullable().optional(),
   }),
 )
 export type ListConversationItemResource = z.infer<

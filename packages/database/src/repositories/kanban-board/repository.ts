@@ -1,6 +1,14 @@
-import { and, type DatabaseClient, db, eq, type SQL, sql } from "../../client"
+import {
+  and,
+  type DatabaseClient,
+  db,
+  eq,
+  inArray,
+  type SQL,
+  sql,
+} from "../../client"
 import type { KanbanStage } from "../../partials/kanban"
-import { kanbanBoardModel } from "../../schema"
+import { contactCustomFieldModel, kanbanBoardModel } from "../../schema"
 import type { KanbanBoardModel } from "../../types"
 import { likeContains } from "../../utils"
 
@@ -13,6 +21,13 @@ export type KanbanCardsFilter = {
   workspaceId: string
   customFieldId: string
   stageNames: string[]
+  /** Stage that collects contacts who blocked the bot, whatever their value. */
+  blockedStageName?: string | null
+  /**
+   * Board of a flow: only contacts who have a status value or are currently
+   * inside that flow, so "no status" is not every contact of the workspace.
+   */
+  flowId?: string | null
   tagId?: string | null
   search?: string | null
   /** Members limited to their assigned conversations only see those contacts. */
@@ -64,15 +79,21 @@ const toDate = (value: Date | string | null): Date | null => {
   return value instanceof Date ? value : new Date(value)
 }
 
-const bucketExpression = (stageNames: string[]): SQL => {
+const bucketExpression = (
+  stageNames: string[],
+  blockedStageName?: string | null,
+): SQL => {
+  const blocked = blockedStageName
+    ? sql`WHEN c."blockedAt" IS NOT NULL THEN ${blockedStageName}::text `
+    : sql``
   if (stageNames.length === 0) {
-    return sql`NULL::text`
+    return blockedStageName ? sql`CASE ${blocked}ELSE NULL END` : sql`NULL::text`
   }
   const names = sql.join(
     stageNames.map((name) => sql`${name}`),
     sql`, `,
   )
-  return sql`CASE WHEN ccf."value" IN (${names}) THEN ccf."value" ELSE NULL END`
+  return sql`CASE ${blocked}WHEN ccf."value" IN (${names}) THEN ccf."value" ELSE NULL END`
 }
 
 const contactConditions = (filter: KanbanCardsFilter): SQL => {
@@ -81,6 +102,12 @@ const contactConditions = (filter: KanbanCardsFilter): SQL => {
   if (filter.tagId) {
     conditions.push(
       sql`EXISTS (SELECT 1 FROM "ContactToTag" ctt WHERE ctt."contactId" = c."id" AND ctt."tagId" = ${filter.tagId})`,
+    )
+  }
+
+  if (filter.flowId) {
+    conditions.push(
+      sql`(NULLIF(ccf."value", '') IS NOT NULL OR EXISTS (SELECT 1 FROM "ContactInbox" fci WHERE fci."contactId" = c."id" AND fci."currentFlowId" = ${filter.flowId}))`,
     )
   }
 
@@ -102,13 +129,31 @@ const contactConditions = (filter: KanbanCardsFilter): SQL => {
 }
 
 class KanbanBoardRepository {
+  /** `flowId` narrows to the boards of one flow. */
   async listByWorkspace(input: {
     workspaceId: string
+    flowId?: string | null
     tx?: DatabaseClient
   }): Promise<KanbanBoardModel[]> {
-    const { workspaceId, tx = db } = input
+    const { workspaceId, flowId, tx = db } = input
     return await tx.query.kanbanBoardModel.findMany({
-      where: { workspaceId },
+      where: flowId ? { workspaceId, flowId } : { workspaceId },
+      orderBy: { id: "asc" },
+    })
+  }
+
+  /** Boards of the given flows, for labelling inbox items with a stage. */
+  async listByFlowIds(input: {
+    workspaceId: string
+    flowIds: string[]
+    tx?: DatabaseClient
+  }): Promise<KanbanBoardModel[]> {
+    const { workspaceId, flowIds, tx = db } = input
+    if (flowIds.length === 0) {
+      return []
+    }
+    return await tx.query.kanbanBoardModel.findMany({
+      where: { workspaceId, flowId: { in: flowIds } },
       orderBy: { id: "asc" },
     })
   }
@@ -129,6 +174,7 @@ class KanbanBoardRepository {
     name: string
     customFieldId: string
     stages: KanbanStage[]
+    flowId?: string | null
     tx?: DatabaseClient
   }): Promise<KanbanBoardModel> {
     const { tx = db, ...values } = input
@@ -188,7 +234,7 @@ class KanbanBoardRepository {
     },
   ): Promise<KanbanCardRow[]> {
     const { limit, offset, onlyBucket, tx = db } = input
-    const bucket = bucketExpression(input.stageNames)
+    const bucket = bucketExpression(input.stageNames, input.blockedStageName)
     const conditions = [contactConditions(input)]
     if (onlyBucket) {
       conditions.push(
@@ -269,12 +315,37 @@ class KanbanBoardRepository {
     }))
   }
 
+  /** Raw status values of the given contacts in the given status fields. */
+  async listStatusValues(input: {
+    customFieldIds: string[]
+    contactIds: string[]
+    tx?: DatabaseClient
+  }): Promise<{ contactId: string; customFieldId: string; value: string }[]> {
+    const { customFieldIds, contactIds, tx = db } = input
+    if (customFieldIds.length === 0 || contactIds.length === 0) {
+      return []
+    }
+    return await tx
+      .select({
+        contactId: contactCustomFieldModel.contactId,
+        customFieldId: contactCustomFieldModel.customFieldId,
+        value: contactCustomFieldModel.value,
+      })
+      .from(contactCustomFieldModel)
+      .where(
+        and(
+          inArray(contactCustomFieldModel.customFieldId, customFieldIds),
+          inArray(contactCustomFieldModel.contactId, contactIds),
+        ),
+      )
+  }
+
   /** Number of contacts per bucket (`null` = the "no status" column). */
   async countCards(
     input: KanbanCardsFilter & { tx?: DatabaseClient },
   ): Promise<KanbanBucketCount[]> {
     const { tx = db } = input
-    const bucket = bucketExpression(input.stageNames)
+    const bucket = bucketExpression(input.stageNames, input.blockedStageName)
 
     const result = await tx.execute<RawCountRow>(sql`
       SELECT ${bucket} AS "bucket", COUNT(*) AS "count"

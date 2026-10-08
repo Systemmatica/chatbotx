@@ -58,6 +58,7 @@ import {
   replaceSourceHandleEdge,
   toRouteRemovals,
 } from "./edge-routing"
+import { FlowMiniMap } from "./components/flow-mini-map"
 import ButtonEdge from "./edges/button-edge"
 import { findNodeAtPoint } from "./node-hit-test"
 import { hasMeaningfulNodeChange } from "./react-flow-node-change"
@@ -601,6 +602,7 @@ export function ReactFlowWrapper({
           />
         )}
         <Background />
+        <FlowMiniMap />
         <Panel className="w-[254px]" position="bottom-center">
           <Controls
             className="overflow-hidden rounded-md shadow-none!"

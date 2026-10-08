@@ -52,6 +52,17 @@ export function KanbanColumn({
         >
           {title}
         </h3>
+        {column.outcome ? (
+          <span
+            className={cn(
+              "shrink-0 text-xs",
+              column.outcome === "won" ? "text-green-600" : "text-red-600",
+            )}
+            title={t(`kanban.outcome.${column.outcome}`)}
+          >
+            {column.outcome === "won" ? "✓" : "✕"}
+          </span>
+        ) : null}
         <Badge variant="secondary">{column.total}</Badge>
       </header>
 

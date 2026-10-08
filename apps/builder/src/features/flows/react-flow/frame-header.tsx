@@ -3,6 +3,7 @@
 import type { Edge, Node } from "@xyflow/react"
 import { useTranslations } from "next-intl"
 import { AppBreadcrumb } from "@/components/app-breadcrumb"
+import { FlowHubTabs } from "../components/flow-hub-tabs"
 import type { FlowResource } from "../schemas/resource"
 import { FlowEditToolbar } from "./flow-edit-toolbar"
 
@@ -34,6 +35,7 @@ export function FrameHeader({
           ]}
         />
       </div>
+      <FlowHubTabs flowId={flow.id} workspaceId={flow.workspaceId} />
       {/* <ThemeSwitcher /> */}
 
       <FlowEditToolbar

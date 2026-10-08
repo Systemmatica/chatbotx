@@ -3,6 +3,7 @@ import { cookies } from "next/headers"
 import { notFound } from "next/navigation"
 import { ChatLayout } from "@/features/chat/chat-layout"
 import { ChatStoreProvider } from "@/features/chat/store/chat-store-provider"
+import { contactFilterCriteriaSchema } from "@/features/contact-filter/schemas"
 import { canViewContactEmailAndPhone } from "@/features/contacts/permissions"
 import { CustomFieldStoreProvider } from "@/features/custom-fields/provider/custom-field-store-context"
 import { FlowStoreProvider } from "@/features/flows/provider/flow-store-context"
@@ -16,9 +17,29 @@ import { getCurrentUserAndTargetWorkspace } from "@/lib/auth/utils"
 
 type InboxPageProps = {
   params: Promise<{ workspaceId: string }>
+  searchParams?: Promise<{ contactFilter?: string | string[] }>
 }
 
-export default async function InboxPage({ params }: InboxPageProps) {
+/**
+ * `?contactFilter=<json>` presets the conversation filter — the flow page's
+ * "Chats" tab links here with "current flow is <flow>".
+ */
+const parseContactFilter = (raw: string | string[] | undefined) => {
+  if (typeof raw !== "string") {
+    return
+  }
+  try {
+    const parsed = contactFilterCriteriaSchema.safeParse(JSON.parse(raw))
+    return parsed.success ? parsed.data : undefined
+  } catch {
+    return
+  }
+}
+
+export default async function InboxPage({
+  params,
+  searchParams,
+}: InboxPageProps) {
   const workspaceId = getIdFromParams(await params, "workspaceId")
   if (!workspaceId) {
     return notFound()
@@ -38,7 +59,13 @@ export default async function InboxPage({ params }: InboxPageProps) {
 
   return (
     <div className="-m-6">
-      <ChatStoreProvider>
+      <ChatStoreProvider
+        initialFilters={{
+          contactFilter: parseContactFilter(
+            (await searchParams)?.contactFilter,
+          ),
+        }}
+      >
         <InboxStoreProvider workspaceId={workspaceId}>
           <UserStoreProvider workspaceId={workspaceId}>
             <CustomFieldStoreProvider workspaceId={workspaceId}>

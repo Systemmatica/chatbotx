@@ -1,4 +1,5 @@
 import type { ReactNode } from "react"
+import { parseHiddenFeatures } from "@/lib/hidden-features"
 import { IntegrationsAccordionShell } from "./integrations-accordion-shell"
 
 type SettingIntegrationLayoutProps = {
@@ -13,5 +14,9 @@ type SettingIntegrationLayoutProps = {
 export default function SettingIntegrationLayout({
   children,
 }: SettingIntegrationLayoutProps) {
-  return <IntegrationsAccordionShell>{children}</IntegrationsAccordionShell>
+  return (
+    <IntegrationsAccordionShell hiddenFeatures={parseHiddenFeatures()}>
+      {children}
+    </IntegrationsAccordionShell>
+  )
 }

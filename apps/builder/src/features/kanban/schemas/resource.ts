@@ -1,4 +1,7 @@
-import { kanbanStageSchema } from "@chatbotx.io/database/partials"
+import {
+  kanbanStageOutcomes,
+  kanbanStageSchema,
+} from "@chatbotx.io/database/partials"
 import { z } from "zod"
 import { currentFlowStepResource } from "@/features/flow-steps/schemas/resource"
 
@@ -6,6 +9,7 @@ export const kanbanBoardResource = z.object({
   id: z.string(),
   name: z.string(),
   customFieldId: z.string(),
+  flowId: z.string().nullable(),
   stages: z.array(kanbanStageSchema),
   createdAt: z.date(),
   updatedAt: z.date(),
@@ -29,6 +33,8 @@ export const kanbanColumnResource = z.object({
   id: z.string(),
   name: z.string().nullable(),
   color: z.string().nullable(),
+  outcome: kanbanStageOutcomes.nullable().optional(),
+  matchBlocked: z.boolean().optional(),
   isNoStatus: z.boolean(),
   total: z.number(),
   cards: z.array(kanbanCardResource),

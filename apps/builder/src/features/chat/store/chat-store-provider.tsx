@@ -2,7 +2,11 @@
 
 import { createContext, type ReactNode, useContext, useRef } from "react"
 import { useStore } from "zustand"
-import { type ChatStore, createChatStore } from "./chat-store"
+import {
+  type ChatStore,
+  type ConversationFilters,
+  createChatStore,
+} from "./chat-store"
 
 export type ChatStoreApi = ReturnType<typeof createChatStore>
 
@@ -12,12 +16,16 @@ export const ChatStoreContext = createContext<ChatStoreApi | undefined>(
 
 export type ChatStoreProviderProps = {
   children: ReactNode
+  initialFilters?: ConversationFilters
 }
 
-export const ChatStoreProvider = ({ children }: ChatStoreProviderProps) => {
+export const ChatStoreProvider = ({
+  children,
+  initialFilters,
+}: ChatStoreProviderProps) => {
   const storeRef = useRef<ChatStoreApi>(null)
   if (!storeRef.current) {
-    storeRef.current = createChatStore()
+    storeRef.current = createChatStore(initialFilters)
   }
 
   return (

@@ -3,6 +3,7 @@
 import {
   conversationService,
   currentFlowStepService,
+  kanbanBoardService,
   pickLatestCurrentFlowNode,
 } from "@chatbotx.io/business"
 import { notFoundException } from "@chatbotx.io/business/errors"
@@ -105,6 +106,16 @@ export const listConversations = async (
     refs: page.map((c) => pickLatestCurrentFlowNode(c.contactInboxes)),
   })
 
+  // Funnel stage on the board of that flow (one batched lookup as well).
+  const flowStages = await kanbanBoardService.resolveFlowStages({
+    workspaceId,
+    refs: page.map((c, index) => ({
+      contactId: c.contactId,
+      flowId: currentSteps[index]?.flowId ?? null,
+      blocked: Boolean(c.contact?.blockedAt),
+    })),
+  })
+
   const lastMessagesByConversationId = new Map(
     page.map((c, index) => [c.id, lastMessagesResults[index]?.[0] ?? null]),
   )
@@ -137,6 +148,7 @@ export const listConversations = async (
         assignedInboxTeam: c.assignedInboxTeam ?? null,
         messages: lastMessage ? [lastMessage] : [],
         currentFlowStep: currentSteps[index] ?? null,
+        flowStage: flowStages[index] ?? null,
       }
     }),
     nextCursor,

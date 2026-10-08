@@ -27,7 +27,7 @@ import { toast } from "sonner"
 import { useUserAvatarUrl } from "@/lib/auth/avatar"
 import { useChatStore } from "../chat/store/chat-store-provider"
 import { useAvatarUrl } from "../contacts/utils"
-import { CurrentStepLine } from "../flow-steps/components/current-step-line"
+import { FlowStageBadges } from "../flow-steps/components/flow-stage-badges"
 import { InboxIcon } from "../inboxes/components/inbox-icon"
 import { readConversationAction } from "./actions/read-conversation.action"
 import { resolveLastMessagePreview } from "./queries/resolve-last-message-preview"
@@ -221,14 +221,15 @@ export default function ConversationItem({
           </div>
           <div
             className={cn(
-              "w-full truncate text-start text-xs",
+              "line-clamp-3 w-full whitespace-normal break-words text-start text-xs",
               isUnread ? "font-semibold" : "text-gray-500",
             )}
           >
             {previewText}
           </div>
-          <CurrentStepLine
-            className="text-start"
+          <FlowStageBadges
+            className="mt-1"
+            stage={conversation.flowStage}
             step={conversation.currentFlowStep}
           />
           <p className="text-end text-neutral-400 text-xs">
