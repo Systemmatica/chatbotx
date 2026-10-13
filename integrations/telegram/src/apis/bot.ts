@@ -160,7 +160,8 @@ export const registerWebhook = ({
     logger.debug(`Registered Telegram webhook: ${webhookUrl}`)
   })
 
-export const getTelegramFileUrl = async (
+/** Internal: the returned URL embeds the bot token — never persist or log it. */
+const getTelegramFileUrl = async (
   auth: TelegramAuthValue,
   fileId: string,
 ): Promise<string | undefined> => {
@@ -181,5 +182,43 @@ export const getTelegramFileUrl = async (
       return
     }
     throw error
+  }
+}
+
+type TelegramDownloadedFile = {
+  bytes: ArrayBuffer
+  mimeType: string | undefined
+}
+
+/**
+ * Downloads a Telegram file's bytes. The download URL embeds the bot token,
+ * so it never leaves this function: callers get the bytes only and must
+ * mirror them to our own storage instead of persisting a Telegram URL.
+ */
+export const downloadTelegramFile = async (
+  auth: TelegramAuthValue,
+  fileId: string,
+): Promise<TelegramDownloadedFile | undefined> => {
+  const fileUrl = await getTelegramFileUrl(auth, fileId)
+  if (!fileUrl) {
+    return
+  }
+  let response: Response
+  try {
+    response = await fetch(fileUrl)
+  } catch {
+    // Never rethrow the raw fetch error: its cause may embed the token URL.
+    throw new TelegramAPIException("Telegram file download failed")
+  }
+  if (!response.ok) {
+    logger.warn(
+      { status: response.status },
+      "Telegram file download failed (non-2xx)",
+    )
+    return
+  }
+  return {
+    bytes: await response.arrayBuffer(),
+    mimeType: response.headers.get("content-type") ?? undefined,
   }
 }

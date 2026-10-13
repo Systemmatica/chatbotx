@@ -10,7 +10,7 @@ import {
   type ReceivedMessageResult,
 } from "@chatbotx.io/sdk"
 import { createId } from "@chatbotx.io/utils"
-import { getTelegramFileUrl } from "../../apis/bot"
+import { downloadTelegramFile } from "../../apis/bot"
 import { TelegramException } from "../../exception"
 import { logger } from "../../lib/logger"
 import type {
@@ -254,17 +254,12 @@ const downloadAndUploadFile = async (
   mimeType: string,
 ): Promise<IncomingAttachment | null> => {
   try {
-    const fileUrl = await getTelegramFileUrl(ctx.auth, fileId)
-    if (!fileUrl) {
+    const file = await downloadTelegramFile(ctx.auth, fileId)
+    if (!file) {
       return null
     }
 
-    const response = await fetch(fileUrl)
-    if (!(response.ok && response.body)) {
-      return null
-    }
-
-    const bytes = await response.arrayBuffer()
+    const { bytes } = file
     const originPath = `${ctx.storagePrefix}/${createId()}`
 
     await ctx.uploader?.putObject(originPath, Buffer.from(bytes), {
