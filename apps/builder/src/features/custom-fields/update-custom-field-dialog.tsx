@@ -19,6 +19,8 @@ import { useTranslations } from "next-intl"
 import { useEffect } from "react"
 import { toast } from "sonner"
 import { updateCustomFieldAction } from "./actions/update-custom-field.action"
+import { CustomFieldIconField } from "./components/custom-field-icon-picker"
+import { isCustomFieldIconName } from "./lib/custom-field-icon-names"
 import { updateCustomFieldRequest } from "./schemas/action"
 import type { CustomFieldResource } from "./schemas/resource"
 
@@ -74,6 +76,10 @@ export function UpdateCustomFieldDialog({
     if (customField) {
       setValue("name", customField.name)
       setValue("description", customField.description ?? "")
+      setValue(
+        "icon",
+        isCustomFieldIconName(customField.icon) ? customField.icon : null,
+      )
     }
   }, [customField, setValue])
 
@@ -100,6 +106,8 @@ export function UpdateCustomFieldDialog({
                 placeholder={t("fields.name.placeholder")}
                 required
               />
+
+              <CustomFieldIconField type={customField?.type ?? "shortText"} />
 
               <TextareaField
                 label={t("fields.description.label")}

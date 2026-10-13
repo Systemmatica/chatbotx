@@ -3918,6 +3918,12 @@
     "title": "الحقول المخصصة",
     "variables": {
       "rawGroup": "الحقول المخصصة الخام"
+    },
+    "icon": {
+      "label": "Icon",
+      "default": "By field type",
+      "search": "Search icons",
+      "reset": "Use the field type icon"
     }
   },
   "keywords": {

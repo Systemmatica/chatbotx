@@ -40,6 +40,8 @@ type CreateCustomFieldData = {
   type: CustomFieldType
   description?: string | null
   folderId?: string | null
+  /** Lucide icon name shown instead of the type icon. */
+  icon?: string | null
 }
 
 type UpdateCustomFieldData = Partial<CreateCustomFieldData>

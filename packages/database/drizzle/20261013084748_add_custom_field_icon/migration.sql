@@ -1,0 +1,1 @@
+ALTER TABLE "CustomField" ADD COLUMN "icon" text;

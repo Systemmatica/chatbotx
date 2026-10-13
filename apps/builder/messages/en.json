@@ -4016,6 +4016,12 @@
     "title": "Custom Fields",
     "variables": {
       "rawGroup": "Raw custom fields"
+    },
+    "icon": {
+      "label": "Icon",
+      "default": "By field type",
+      "search": "Search icons",
+      "reset": "Use the field type icon"
     }
   },
   "keywords": {

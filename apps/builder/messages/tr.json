@@ -3918,6 +3918,12 @@
     "title": "Özel Alanlar",
     "variables": {
       "rawGroup": "Ham özel alanlar"
+    },
+    "icon": {
+      "label": "Icon",
+      "default": "By field type",
+      "search": "Search icons",
+      "reset": "Use the field type icon"
     }
   },
   "keywords": {

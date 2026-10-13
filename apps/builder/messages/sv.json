@@ -1013,6 +1013,12 @@
     "title": "Anpassade fält",
     "variables": {
       "rawGroup": "Rå anpassade fält"
+    },
+    "icon": {
+      "label": "Icon",
+      "default": "By field type",
+      "search": "Search icons",
+      "reset": "Use the field type icon"
     }
   },
   "deepseek": {

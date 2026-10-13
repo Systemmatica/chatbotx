@@ -3918,6 +3918,12 @@
     "title": "Aangepaste velden",
     "variables": {
       "rawGroup": "Onbewerkte aangepaste velden"
+    },
+    "icon": {
+      "label": "Icon",
+      "default": "By field type",
+      "search": "Search icons",
+      "reset": "Use the field type icon"
     }
   },
   "keywords": {

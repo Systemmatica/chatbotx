@@ -3951,6 +3951,12 @@
     "title": "自訂欄位",
     "variables": {
       "rawGroup": "原始自訂欄位"
+    },
+    "icon": {
+      "label": "Icon",
+      "default": "By field type",
+      "search": "Search icons",
+      "reset": "Use the field type icon"
     }
   },
   "keywords": {

@@ -1178,6 +1178,12 @@
     "title": "自订字段",
     "variables": {
       "rawGroup": "原始自订字段"
+    },
+    "icon": {
+      "label": "Icon",
+      "default": "By field type",
+      "search": "Search icons",
+      "reset": "Use the field type icon"
     }
   },
   "deepseek": {

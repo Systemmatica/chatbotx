@@ -3918,6 +3918,12 @@
     "title": "Câmpuri personalizate",
     "variables": {
       "rawGroup": "Câmpuri personalizate brute"
+    },
+    "icon": {
+      "label": "Icon",
+      "default": "By field type",
+      "search": "Search icons",
+      "reset": "Use the field type icon"
     }
   },
   "keywords": {

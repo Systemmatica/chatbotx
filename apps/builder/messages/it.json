@@ -3918,6 +3918,12 @@
     "title": "Campi personalizzati",
     "variables": {
       "rawGroup": "Campi personalizzati non elaborati"
+    },
+    "icon": {
+      "label": "Icon",
+      "default": "By field type",
+      "search": "Search icons",
+      "reset": "Use the field type icon"
     }
   },
   "keywords": {

@@ -2133,6 +2133,12 @@
     "title": "שדות מותאמים אישית",
     "variables": {
       "rawGroup": "שדות מותאמים אישית גולמיים"
+    },
+    "icon": {
+      "label": "Icon",
+      "default": "By field type",
+      "search": "Search icons",
+      "reset": "Use the field type icon"
     }
   },
   "keywords": {

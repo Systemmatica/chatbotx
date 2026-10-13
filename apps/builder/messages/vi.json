@@ -3835,6 +3835,12 @@
     "title": "Trường tùy chỉnh",
     "variables": {
       "rawGroup": "Trường tùy chỉnh thô"
+    },
+    "icon": {
+      "label": "Icon",
+      "default": "By field type",
+      "search": "Search icons",
+      "reset": "Use the field type icon"
     }
   },
   "keywords": {

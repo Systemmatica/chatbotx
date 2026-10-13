@@ -3918,6 +3918,12 @@
     "title": "Mukautetut kentät",
     "variables": {
       "rawGroup": "Raa'at mukautetut kentät"
+    },
+    "icon": {
+      "label": "Icon",
+      "default": "By field type",
+      "search": "Search icons",
+      "reset": "Use the field type icon"
     }
   },
   "keywords": {

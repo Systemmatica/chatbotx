@@ -3897,6 +3897,12 @@
     "title": "カスタムフィールド",
     "variables": {
       "rawGroup": "生のカスタムフィールド"
+    },
+    "icon": {
+      "label": "Icon",
+      "default": "By field type",
+      "search": "Search icons",
+      "reset": "Use the field type icon"
     }
   },
   "keywords": {
