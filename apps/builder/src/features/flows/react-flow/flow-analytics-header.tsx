@@ -8,6 +8,7 @@ import { useTranslations } from "next-intl"
 import { useState } from "react"
 import { AppBreadcrumb } from "@/components/app-breadcrumb"
 import { FlowHubTabs } from "../components/flow-hub-tabs"
+import { PinFlowButton } from "../components/pin-flow-button"
 import type { FlowResource } from "../schemas/resource"
 
 export function FlowAnalyticsHeader({ flow }: { flow: FlowResource }) {
@@ -29,7 +30,7 @@ export function FlowAnalyticsHeader({ flow }: { flow: FlowResource }) {
 
   return (
     <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
-      <div className="flex-1">
+      <div className="flex min-w-0 flex-1 items-center gap-1">
         <AppBreadcrumb
           items={[
             {
@@ -42,6 +43,11 @@ export function FlowAnalyticsHeader({ flow }: { flow: FlowResource }) {
             },
             { label: t("actions.analytics"), href: "" },
           ]}
+        />
+        <PinFlowButton
+          flowId={flow.id}
+          flowName={flow.name}
+          workspaceId={flow.workspaceId}
         />
       </div>
 

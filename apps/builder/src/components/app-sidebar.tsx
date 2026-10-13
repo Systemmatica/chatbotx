@@ -19,6 +19,7 @@ import {
   RadioIcon,
   SlidersHorizontalIcon,
   SquareKanbanIcon,
+  StarIcon,
   UsersIcon,
   WebhookIcon,
   WorkflowIcon,
@@ -35,6 +36,7 @@ import { NavUsage, type QuotaSummary } from "@/components/nav-usage"
 import { NavUser } from "@/components/nav-user"
 import { SidebarToggleButton } from "@/components/sidebar-toggle-button"
 import { WorkspaceSwitcher } from "@/components/workspace-switcher"
+import { usePinnedFlows } from "@/features/flows/hooks/use-pinned-flows"
 import type { WorkspaceResource } from "@/features/workspaces/schema/resource"
 import { authClient } from "@/lib/auth/auth-client"
 import {
@@ -80,6 +82,10 @@ export function AppSidebar({
 }) {
   const t = useTranslations()
   const { data: session } = authClient.useSession()
+  const canSeeFlows =
+    !(scheduledForDeletion || hiddenFeatures.includes("flows")) &&
+    hasWorkspacePermission(permissions, PERMISSION_NAV.flows)
+  const { pinnedFlows } = usePinnedFlows(workspaceId, canSeeFlows)
 
   const data = {
     user: {
@@ -203,6 +209,15 @@ export function AppSidebar({
       disabled:
         scheduledForDeletion &&
         !item.url.endsWith(SETTINGS_GENERAL_URL_SEGMENT),
+      // Pinned flows sit under "Flows" as quick links.
+      items:
+        item.id === "flows" && canSeeFlows
+          ? pinnedFlows.map((flow) => ({
+              title: flow.name,
+              url: `/space/${workspaceId}/flows/${flow.flowId}`,
+              icon: StarIcon,
+            }))
+          : undefined,
     }))
 
   return (

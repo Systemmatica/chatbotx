@@ -5598,5 +5598,13 @@
     "nextStep": "Next step",
     "createBlock": "Create block",
     "createCondition": "Create condition"
+  },
+  "pinnedFlows": {
+    "pin": "Pin to sidebar",
+    "unpin": "Unpin from sidebar",
+    "pinned": "Flow pinned to the sidebar",
+    "unpinned": "Flow unpinned",
+    "limitReached": "You can pin up to {max} flows. Unpin one to add another.",
+    "error": "Could not update the pin. Please try again."
   }
 }
