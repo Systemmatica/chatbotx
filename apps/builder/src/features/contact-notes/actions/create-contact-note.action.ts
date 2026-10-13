@@ -1,10 +1,15 @@
 "use server"
 
-import { type ContactAccessScope, contactService } from "@chatbotx.io/business"
+import {
+  type ContactAccessScope,
+  contactService,
+  staffNotificationService,
+} from "@chatbotx.io/business"
 import { db } from "@chatbotx.io/database/client"
 import { contactNoteModel } from "@chatbotx.io/database/schema"
 import type { UserModel } from "@chatbotx.io/database/types"
 import { createId, zodBigintAsString } from "@chatbotx.io/utils"
+import { extractMentionedUserIds } from "@chatbotx.io/utils/mentions"
 import { requireContactPermissionScope } from "@/features/contacts/permissions"
 import { workspaceActionClient } from "@/lib/safe-action"
 import {
@@ -44,7 +49,7 @@ export const createContactNote = async (
     accessScope: ctx.accessScope,
   })
 
-  return await db
+  const note = await db
     .insert(contactNoteModel)
     .values({
       id: createId(),
@@ -54,4 +59,15 @@ export const createContactNote = async (
     })
     .returning()
     .then((result) => result[0])
+
+  // Best-effort (never throws): @mentioned members get a Telegram message.
+  await staffNotificationService.notifyNoteMention({
+    workspaceId: ctx.workspaceId,
+    contactId: contact.id,
+    authorUserId: ctx.userId,
+    text: parsedInput.text,
+    mentionedUserIds: extractMentionedUserIds(parsedInput.text),
+  })
+
+  return note
 }

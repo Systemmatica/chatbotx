@@ -95,6 +95,16 @@ export type StaffNotificationEvent =
       thresholdHours: number
       groups: { flowId: string; nodeId: string; count: number }[]
     }
+  | {
+      /** Team members were @mentioned in a contact note. */
+      kind: "noteMention"
+      contactId: string
+      authorUserId: string
+      /** Note text as stored (mention markup included). */
+      text: string
+      /** Already excludes the author. */
+      mentionedUserIds: string[]
+    }
 
 export type JobNotifyStaff = {
   type: typeof DefaultJobAction.notifyStaff

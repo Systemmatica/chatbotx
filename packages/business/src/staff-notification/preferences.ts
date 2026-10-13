@@ -64,3 +64,41 @@ export function selectStaffRecipients<T extends StaffRecipientCandidate>(
 ): T[] {
   return members.filter((member) => isStaffRecipient(member, type))
 }
+
+export type MentionRecipientCandidate = Pick<
+  StaffRecipientCandidate,
+  "id" | "telegramChatId" | "notificationChannels"
+> & { userId: string }
+
+/**
+ * Who gets a "you were mentioned" message: members the note mentions, never
+ * the author, with Telegram linked and not switched off. A mention is a
+ * personal message, so it does not depend on the notification types; members
+ * without Telegram are returned as `unreachable` (there is no other staff
+ * channel yet) so the caller can log the skip.
+ */
+export function selectMentionRecipients<T extends MentionRecipientCandidate>(
+  members: readonly T[],
+  props: { mentionedUserIds: readonly string[]; authorUserId: string },
+): { recipients: T[]; unreachable: T[] } {
+  const mentioned = new Set(props.mentionedUserIds)
+  mentioned.delete(props.authorUserId)
+  const recipients: T[] = []
+  const unreachable: T[] = []
+  const seen = new Set<string>()
+  for (const member of members) {
+    if (!mentioned.has(member.userId) || seen.has(member.userId)) {
+      continue
+    }
+    seen.add(member.userId)
+    if (
+      member.telegramChatId &&
+      member.notificationChannels?.telegram !== false
+    ) {
+      recipients.push(member)
+    } else {
+      unreachable.push(member)
+    }
+  }
+  return { recipients, unreachable }
+}
