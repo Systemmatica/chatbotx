@@ -108,6 +108,7 @@ import { metaCatalogRelations } from "./meta-catalog"
 import { minigameRelations } from "./minigame"
 import { minigameContactRelations } from "./minigame-contact"
 import { minigamePlayRelations } from "./minigame-play"
+import { pinnedFlowRelations } from "./pinned-flow"
 import { productRelations } from "./product"
 import { productCategoryRelations } from "./product-category"
 import { questionnaireRelations } from "./questionnaire"
@@ -255,6 +256,7 @@ export const relations = {
   ...analyticsBroadcastEventRelations,
   ...analyticsSequenceEventRelations,
   ...analyticsFlowNodeEventRelations,
+  ...pinnedFlowRelations,
   ...productRelations,
   ...productCategoryRelations,
   ...metaCatalogRelations,

@@ -25,6 +25,7 @@ import { WorkspaceDeletionTabSync } from "@/components/workspace-deletion-tab-sy
 import { isCloud } from "@/env"
 import { CouponTopicStoreProvider } from "@/features/coupons/provider/coupon-topic-store-context"
 import { getTenantSettings } from "@/features/tenant/utils"
+import { WorkspaceCommandPalette } from "@/features/workspace-search/components/command-palette"
 import { hasWorkspacePermission } from "@/lib/auth/permission-routes"
 import { enforcePasswordCurrent } from "@/lib/auth/require-password-current"
 import { getCurrentUser } from "@/lib/auth/utils"
@@ -111,11 +112,13 @@ export default async function WorkspaceLayout({
     targetWorkspaceMember.workspace,
   )
 
+  const hiddenFeatures = parseHiddenFeatures()
+
   return (
     <SidebarProvider defaultOpen={defaultOpen}>
       <AppSidebar
         allWorkspaces={allWorkspaces}
-        hiddenFeatures={parseHiddenFeatures()}
+        hiddenFeatures={hiddenFeatures}
         isPlatformAdmin={platformAdmin}
         isSuperAdmin={isSuperAdmin(user)}
         permissions={targetWorkspaceMember.permissions}
@@ -146,6 +149,13 @@ export default async function WorkspaceLayout({
             {children}
           </CouponTopicStoreProvider>
         </main>
+        {!scheduledForDeletion && (
+          <WorkspaceCommandPalette
+            hiddenFeatures={hiddenFeatures}
+            permissions={targetWorkspaceMember.permissions}
+            workspaceId={workspaceId}
+          />
+        )}
         {/* On mobile the sidebar is a sheet; its own header toggle is hidden. */}
         <SidebarToggleButton className="absolute start-1 top-2 z-10 md:hidden" />
       </SidebarInset>

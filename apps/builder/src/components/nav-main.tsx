@@ -6,6 +6,9 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
 } from "@chatbotx.io/ui/components/ui/sidebar"
 import type { LucideIcon } from "lucide-react"
 import Link from "next/link"
@@ -16,7 +19,8 @@ type NavItem = {
   url: string
   icon?: LucideIcon
   isActive?: boolean
-  items?: { title: string; url: string }[]
+  /** Quick links nested under the item (hidden while the sidebar is collapsed). */
+  items?: { title: string; url: string; icon?: LucideIcon }[]
   crossZone?: boolean
   disabled?: boolean
 }
@@ -103,6 +107,25 @@ export function NavMain({
                   item={item}
                 />
               </SidebarMenuButton>
+              {!isDisabled && item.items && item.items.length > 0 && (
+                <SidebarMenuSub>
+                  {item.items.map((subItem) => (
+                    <SidebarMenuSubItem key={subItem.url}>
+                      <SidebarMenuSubButton
+                        isActive={
+                          pathname === subItem.url ||
+                          pathname.startsWith(`${subItem.url}/`)
+                        }
+                        render={<Link href={subItem.url} />}
+                        title={subItem.title}
+                      >
+                        {subItem.icon && <subItem.icon />}
+                        <span>{subItem.title}</span>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                  ))}
+                </SidebarMenuSub>
+              )}
             </SidebarMenuItem>
           )
         })}

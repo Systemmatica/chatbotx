@@ -31,6 +31,7 @@ import type { useTranslations } from "next-intl"
 import { useAction } from "next-safe-action/hooks"
 import type { Dispatch, SetStateAction } from "react"
 import { updateFlowAction } from "./actions/update-flow-action"
+import { PinFlowMenuItem } from "./components/pin-flow-button"
 import { downloadFlowExport } from "./lib/download-flow-export"
 import type { FlowResource } from "./schemas/resource"
 
@@ -219,7 +220,12 @@ export function getFlowColumns({
               </Button>
             }
           />
-          <DropdownMenuContent align="end" className="w-40">
+          <DropdownMenuContent align="end" className="w-48">
+            <PinFlowMenuItem
+              flowId={row.original.id}
+              flowName={row.original.name}
+              workspaceId={row.original.workspaceId}
+            />
             <DropdownMenuItem
               onClick={() => setRowAction({ row, variant: "rename" })}
             >

@@ -4,6 +4,7 @@ import type { Edge, Node } from "@xyflow/react"
 import { useTranslations } from "next-intl"
 import { AppBreadcrumb } from "@/components/app-breadcrumb"
 import { FlowHubTabs } from "../components/flow-hub-tabs"
+import { PinFlowButton } from "../components/pin-flow-button"
 import type { FlowResource } from "../schemas/resource"
 import { FlowEditToolbar } from "./flow-edit-toolbar"
 
@@ -24,7 +25,7 @@ export function FrameHeader({
 
   return (
     <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
-      <div className="flex-1">
+      <div className="flex min-w-0 flex-1 items-center gap-1">
         <AppBreadcrumb
           items={[
             {
@@ -33,6 +34,11 @@ export function FrameHeader({
             },
             { label: flow.name, href: "" },
           ]}
+        />
+        <PinFlowButton
+          flowId={flow.id}
+          flowName={flow.name}
+          workspaceId={flow.workspaceId}
         />
       </div>
       <FlowHubTabs flowId={flow.id} workspaceId={flow.workspaceId} />

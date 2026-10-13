@@ -14,6 +14,7 @@ import { useState } from "react"
 import { AppBreadcrumb } from "@/components/app-breadcrumb"
 import { DuplicateFlowDialog } from "../duplicate-flow-dialog"
 import { FlowHubTabs } from "./flow-hub-tabs"
+import { PinFlowButton } from "./pin-flow-button"
 
 /** Header of the flow hub pages that have no canvas (board, chats, settings). */
 export function FlowHubHeader({
@@ -34,7 +35,7 @@ export function FlowHubHeader({
 
   return (
     <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
-      <div className="min-w-0 flex-1">
+      <div className="flex min-w-0 flex-1 items-center gap-1">
         <AppBreadcrumb
           items={[
             {
@@ -47,6 +48,11 @@ export function FlowHubHeader({
             },
             { label: t(`flowHub.${section}`), href: "" },
           ]}
+        />
+        <PinFlowButton
+          flowId={flowId}
+          flowName={flowName}
+          workspaceId={workspaceId}
         />
       </div>
       <FlowHubTabs flowId={flowId} workspaceId={workspaceId} />
