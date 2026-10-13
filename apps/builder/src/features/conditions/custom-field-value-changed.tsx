@@ -1,6 +1,7 @@
 import {
   type CustomFieldType,
   customFieldTypes,
+  isSelectCustomFieldType,
   operatorTypes,
 } from "@chatbotx.io/database/partials"
 import { DateTimePicker } from "@chatbotx.io/ui/components/ui/date-picker"
@@ -22,6 +23,7 @@ import {
 } from "@/features/contact-filter/components/contact-filter-config"
 import { getBrowserTimezone } from "@/features/contact-filter/lib/timezone"
 import { mappingConditions } from "@/features/contact-filter/schemas"
+import { SelectValuePicker } from "@/features/custom-fields/components/select-value"
 import { CustomFieldSelect } from "@/features/custom-fields/custom-field-select"
 import { useCustomFieldStore } from "@/features/custom-fields/provider/custom-field-store-context"
 
@@ -37,12 +39,11 @@ export const CustomFieldValueChanged = ({
 
   const customFieldId = form.watch(`${parentName}.sourceId`)
 
-  const customFieldType = useMemo(
-    () =>
-      customFields.find((field) => field.id === customFieldId)
-        ?.type as CustomFieldType,
+  const selectedCustomField = useMemo(
+    () => customFields.find((field) => field.id === customFieldId),
     [customFieldId, customFields],
   )
+  const customFieldType = selectedCustomField?.type as CustomFieldType
 
   const conditionType = useMemo(
     () => convertCustomFieldTypeToConditionType(customFieldType),
@@ -186,6 +187,24 @@ export const CustomFieldValueChanged = ({
               )}
             />
           )}
+
+          {/* One option label; on a multi-select field "is" = has that option. */}
+          {isSelectCustomFieldType(customFieldType) &&
+            (currentOperator === operatorTypes.enum.eq ||
+              currentOperator === operatorTypes.enum.ne) && (
+              <Controller
+                control={form.control}
+                name={`${parentName}.value`}
+                render={({ field }) => (
+                  <SelectValuePicker
+                    onChange={(value) => field.onChange({ text: value })}
+                    options={selectedCustomField?.options ?? []}
+                    type="select"
+                    value={field.value?.text || ""}
+                  />
+                )}
+              />
+            )}
 
           {customFieldType === customFieldTypes.enum.boolean &&
             form.getValues(`${parentName}.operator`) ===
