@@ -42,6 +42,7 @@ import { useState } from "react"
 import type { AttachmentResource } from "@/features/attachments/schema/resource"
 import { useAttachmentUrl } from "@/features/attachments/utils"
 import type { MessageResourceWithRelations } from "../schema/resource"
+import { FormattedMessageText } from "./formatted-message-text"
 import { MessageActions, MessageActionsEditor } from "./message-actions"
 import { MessageBubble } from "./message-bubble"
 
@@ -184,13 +185,11 @@ export const MessageItem = (props: MessageItemProps) => {
                 )}
               >
                 <pre className="wrap-break-word whitespace-pre-line font-sans">
-                  {isDeleted ? (
-                    <span className="text-xs italic">
-                      {t("messageDeleted")}
-                    </span>
-                  ) : (
-                    message.text
-                  )}
+                  <MessageText
+                    deletedLabel={t("messageDeleted")}
+                    isDeleted={isDeleted}
+                    message={message}
+                  />
                 </pre>
               </div>
             )}
@@ -264,6 +263,23 @@ export const MessageItem = (props: MessageItemProps) => {
       </div>
     </MessageBubble>
   )
+}
+
+const MessageText = (props: {
+  deletedLabel: string
+  isDeleted: boolean
+  message: MessageResourceWithRelations
+}) => {
+  const { deletedLabel, isDeleted, message } = props
+  if (isDeleted) {
+    return <span className="text-xs italic">{deletedLabel}</span>
+  }
+  // Bot/agent text may carry the HTML formatting it was sent with; incoming
+  // text is always shown verbatim.
+  if (message.messageType === "outgoing" && message.text) {
+    return <FormattedMessageText text={message.text} />
+  }
+  return message.text
 }
 
 const CommentText = (props: {

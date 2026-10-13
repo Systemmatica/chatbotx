@@ -1,4 +1,5 @@
 import type { useTranslations } from "next-intl"
+import { formattedTextToPlainText } from "@/features/messages/lib/formatted-text"
 import type { MessageResourceWithRelations } from "@/features/messages/schema/resource"
 
 const EMPTY_PREVIEW = " "
@@ -8,7 +9,11 @@ export function resolveLastMessagePreview(
   t: ReturnType<typeof useTranslations>,
 ): string {
   if (message?.text) {
-    return message.text
+    // Outgoing bot text may carry HTML formatting; previews show it as plain
+    // text. Incoming text is shown verbatim.
+    return message.messageType === "outgoing"
+      ? formattedTextToPlainText(message.text) || EMPTY_PREVIEW
+      : message.text
   }
 
   const attachmentCount =
