@@ -1,10 +1,15 @@
 import type { ContactInfoType } from "@chatbotx.io/database/partials"
+import { ActivityEventEmitter } from "./activity/emitter"
 import type { BaseEventEmitter } from "./base-emitter"
 import { logger } from "./logger"
 import { TriggerEventEmitter } from "./trigger/emitter"
 import { WebhookEventEmitter } from "./webhook/emitter"
 
-const EMITTER_REGISTRY = [TriggerEventEmitter, WebhookEventEmitter] as const
+const EMITTER_REGISTRY = [
+  TriggerEventEmitter,
+  WebhookEventEmitter,
+  ActivityEventEmitter,
+] as const
 
 type EmitterEventMethod = {
   [K in keyof BaseEventEmitter]: K extends "emit"

@@ -2,6 +2,7 @@ import {
   isWorkspaceScheduledForDeletion,
   workspaceMemberService,
 } from "@chatbotx.io/business"
+import { runWithActivityActor } from "@chatbotx.io/events/context"
 import { ORPCError } from "@orpc/server"
 import { auth } from "@/lib/auth/auth"
 import { base } from "./context"
@@ -25,19 +26,24 @@ export const authMiddleware = base.middleware(async ({ context, next }) => {
     throw new ORPCError("FORBIDDEN", { message: "Password change required" })
   }
 
-  // Adds session and user to the context
-  return next({
-    context: {
-      session: sessionData.session,
-      user: {
-        ...sessionData.user,
-        image: sessionData.user.image || null,
-        isAnonymous: sessionData.user.isAnonymous ?? false,
-        mustChangePassword: sessionData.user.mustChangePassword ?? false,
-        // stripeCustomerId: sessionData.user.stripeCustomerId || null,
-      },
-    },
-  })
+  // Adds session and user to the context; contact changes made by the
+  // request are attributed to the user in the contact activity log.
+  return runWithActivityActor(
+    { type: "user", userId: sessionData.user.id },
+    () =>
+      next({
+        context: {
+          session: sessionData.session,
+          user: {
+            ...sessionData.user,
+            image: sessionData.user.image || null,
+            isAnonymous: sessionData.user.isAnonymous ?? false,
+            mustChangePassword: sessionData.user.mustChangePassword ?? false,
+            // stripeCustomerId: sessionData.user.stripeCustomerId || null,
+          },
+        },
+      }),
+  )
 })
 
 export const workspaceAuthorizedMidddleware = base.middleware(

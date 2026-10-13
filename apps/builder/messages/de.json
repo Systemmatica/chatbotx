@@ -3918,6 +3918,43 @@
     "openFlow": "Open flow",
     "line": "{flow} › {step} · {time}"
   },
+  "contactActivity": {
+    "title": "History",
+    "empty": "No activity yet",
+    "loading": "Loading…",
+    "loadMore": "Show more",
+    "loadError": "Could not load the history",
+    "refresh": "Refresh",
+    "emptyValue": "empty",
+    "deletedTag": "deleted tag",
+    "deletedFlow": "deleted flow",
+    "assigneeTeam": "Team",
+    "actors": {
+      "bot": "Bot",
+      "api": "API",
+      "teamMember": "Team member"
+    },
+    "events": {
+      "contactCreated": "Contact joined",
+      "channelConnected": "Connected via {channel}",
+      "tagAdded": "Tag added: {tag}",
+      "tagRemoved": "Tag removed: {tag}",
+      "leadMagnetReceived": "Lead magnet received: {name}",
+      "customFieldChanged": "Field \"{field}\" changed",
+      "flowStarted": "Flow started: {flow}",
+      "stepReached": "Reached step: {step}",
+      "noteAdded": "Note added",
+      "assigned": "Assigned to {name}",
+      "unassigned": "Unassigned",
+      "conversationClosed": "Conversation closed"
+    }
+  },
+  "noteMentions": {
+    "placeholder": "Type @ to mention a teammate",
+    "loading": "Loading…",
+    "noMatches": "No matching members",
+    "mentioned": "Mentioned:"
+  },
   "auditLogs": {
     "title": "Audit-Protokolle"
   },

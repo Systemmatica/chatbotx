@@ -63,6 +63,8 @@ const texts = {
     stopped:
       "Notifications are turned off. You can connect again in the settings.",
     stopNothing: "This chat is not connected to any workspace.",
+    teamMember: "A team member",
+    mentionedYou: "mentioned you in a note about",
   },
   ru: {
     unknownContact: "Клиент",
@@ -86,6 +88,8 @@ const texts = {
       "Чтобы получать уведомления, откройте настройки рабочего пространства и нажмите «Подключить Telegram».",
     stopped: "Уведомления отключены. Подключить их снова можно в настройках.",
     stopNothing: "Этот чат не подключён ни к одному рабочему пространству.",
+    teamMember: "Коллега",
+    mentionedYou: "упомянул(а) вас в заметке о",
   },
 } as const
 
@@ -241,5 +245,26 @@ export function renderContactStuckSummary(
     ),
     hidden > 0 ? escapeHtml(t.moreSteps(hidden)) : null,
     footer(ctx, t.openInbox),
+  ])
+}
+
+export const NOTE_TEXT_MAX_CHARS = 500
+
+/**
+ * "<author> mentioned you in a note about <contact>: «text»" — `noteText` is
+ * plain text (mention markup already rendered as `@name`).
+ */
+export function renderNoteMention(
+  ctx: Omit<StaffMessageContext, "step">,
+  props: { authorName: string | null; noteText: string },
+): string {
+  const t = texts[ctx.locale]
+  const author = `<b>${escapeHtml(truncateText(props.authorName?.trim() || t.teamMember, STEP_PART_MAX_CHARS))}</b>`
+  const contact = `<b>${escapeHtml(truncateText(ctx.contactName?.trim() || t.unknownContact, STEP_PART_MAX_CHARS))}</b>`
+  const body = truncateText(props.noteText, NOTE_TEXT_MAX_CHARS)
+  return join([
+    `📝 ${author} ${escapeHtml(t.mentionedYou)} ${contact}:`,
+    body ? `«${escapeHtml(body)}»` : null,
+    footer(ctx, t.openConversation),
   ])
 }

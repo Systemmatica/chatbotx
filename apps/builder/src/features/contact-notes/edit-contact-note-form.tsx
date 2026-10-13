@@ -2,7 +2,6 @@
 
 import type { ContactNoteModel } from "@chatbotx.io/database/types"
 import { InputField } from "@chatbotx.io/ui/components/form/input-field"
-import { TextareaField } from "@chatbotx.io/ui/components/form/textarea-field"
 import { Button } from "@chatbotx.io/ui/components/ui/button"
 import { Form } from "@chatbotx.io/ui/components/ui/form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -10,6 +9,7 @@ import { useHookFormAction } from "@next-safe-action/adapter-react-hook-form/hoo
 import { useTranslations } from "next-intl"
 import { toast } from "sonner"
 import { editContactNoteAction } from "./actions/edit-contact-note.action"
+import { MentionTextareaField } from "./components/mention-textarea-field"
 import { updateContactNoteRequest } from "./schemas/action"
 
 export function EditContactForm({
@@ -66,7 +66,7 @@ export function EditContactForm({
         onSubmit={handleSubmitWithAction}
       >
         <InputField name="contactNoteId" type="hidden" />
-        <TextareaField label="" name="text" placeholder="..." />
+        <MentionTextareaField name="text" workspaceId={workspaceId} />
         <div className="flex justify-end gap-2">
           <Button onClick={onCancel} size="sm" type="button" variant="ghost">
             {t("actions.cancel")}

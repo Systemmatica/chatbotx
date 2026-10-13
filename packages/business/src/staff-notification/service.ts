@@ -3,14 +3,17 @@ import {
   type DatabaseClient,
   db,
   eq,
+  inArray,
   isNotNull,
   sql,
 } from "@chatbotx.io/database/client"
 import {
+  userModel,
   workspaceMemberModel,
   workspaceModel,
 } from "@chatbotx.io/database/schema"
 import { parseEnvBool } from "@chatbotx.io/utils"
+import { mentionsToPlainText } from "@chatbotx.io/utils/mentions"
 import {
   DefaultJobAction,
   defaultQueue,
@@ -45,6 +48,7 @@ import {
   renderContactStuckSummary,
   renderHandoff,
   renderIncomingMessage,
+  renderNoteMention,
   renderStepReached,
   resolveStaffMessageLocale,
   type StaffMessageContext,
@@ -60,6 +64,7 @@ import {
   resolveStaffNotificationTypes,
   type StaffNotificationType,
   type StaffNotificationTypes,
+  selectMentionRecipients,
   selectStaffRecipients,
 } from "./preferences"
 import { redisStaffNotifierStore, type StaffNotifierStore } from "./store"
@@ -480,6 +485,41 @@ class StaffNotificationService extends BaseService {
     })
   }
 
+  /**
+   * Members @mentioned in a contact note get a personal Telegram message.
+   * Never notifies the author; never throws (the note is already saved).
+   */
+  async notifyNoteMention(props: {
+    workspaceId: string
+    contactId: string
+    authorUserId: string
+    text: string
+    mentionedUserIds: readonly string[]
+  }): Promise<void> {
+    const mentionedUserIds = [...new Set(props.mentionedUserIds)].filter(
+      (userId) => userId !== props.authorUserId,
+    )
+    if (mentionedUserIds.length === 0) {
+      return
+    }
+    if (!this.isConfigured()) {
+      logger.info(
+        { workspaceId: props.workspaceId, mentioned: mentionedUserIds.length },
+        "[staff-notifier] note mention not delivered: Telegram notifier is not configured",
+      )
+      return
+    }
+    await this.safely("notifyNoteMention", props, async () => {
+      await this.enqueueEvent(props.workspaceId, {
+        kind: "noteMention",
+        contactId: props.contactId,
+        authorUserId: props.authorUserId,
+        text: props.text,
+        mentionedUserIds,
+      })
+    })
+  }
+
   async enqueueEvent(
     workspaceId: string,
     event: StaffNotificationEvent,
@@ -513,10 +553,13 @@ class StaffNotificationService extends BaseService {
       return { recipients: 0 }
     }
     const { workspaceId, event } = props
-    const recipients = selectStaffRecipients(
-      await this.listLinkedMembers(workspaceId),
-      eventNotificationType(event),
-    )
+    const recipients =
+      event.kind === "noteMention"
+        ? await this.listMentionRecipients(workspaceId, event)
+        : selectStaffRecipients(
+            await this.listLinkedMembers(workspaceId),
+            eventNotificationType(event),
+          )
     if (recipients.length === 0) {
       return { recipients: 0 }
     }
@@ -715,6 +758,44 @@ class StaffNotificationService extends BaseService {
     return member
   }
 
+  /** Mentioned members of this workspace that can receive the message. */
+  private async listMentionRecipients(
+    workspaceId: string,
+    event: Extract<StaffNotificationEvent, { kind: "noteMention" }>,
+  ) {
+    if (event.mentionedUserIds.length === 0) {
+      return []
+    }
+    const members = await db
+      .select({
+        id: workspaceMemberModel.id,
+        userId: workspaceMemberModel.userId,
+        telegramChatId: workspaceMemberModel.telegramChatId,
+        notificationChannels: workspaceMemberModel.notificationChannels,
+      })
+      .from(workspaceMemberModel)
+      .where(
+        and(
+          eq(workspaceMemberModel.workspaceId, workspaceId),
+          inArray(workspaceMemberModel.userId, event.mentionedUserIds),
+        ),
+      )
+    const { recipients, unreachable } = selectMentionRecipients(members, {
+      mentionedUserIds: event.mentionedUserIds,
+      authorUserId: event.authorUserId,
+    })
+    if (unreachable.length > 0) {
+      logger.info(
+        {
+          workspaceId,
+          workspaceMemberIds: unreachable.map((member) => member.id),
+        },
+        "[staff-notifier] mentioned members without Telegram linked; skipped",
+      )
+    }
+    return recipients
+  }
+
   private async listLinkedMembers(workspaceId: string) {
     return await db
       .select({
@@ -861,6 +942,10 @@ class StaffNotificationService extends BaseService {
       )
     }
 
+    if (event.kind === "noteMention") {
+      return await this.renderNoteMentionEvent(workspaceId, base, event)
+    }
+
     const contact = await this.loadContactContext(workspaceId, event)
     if (!contact) {
       return null
@@ -899,13 +984,57 @@ class StaffNotificationService extends BaseService {
     }
   }
 
+  private async renderNoteMentionEvent(
+    workspaceId: string,
+    base: Awaited<ReturnType<StaffNotificationService["messageBase"]>>,
+    event: Extract<StaffNotificationEvent, { kind: "noteMention" }>,
+  ): Promise<string | null> {
+    const [contact, conversation, author] = await Promise.all([
+      db.query.contactModel.findFirst({
+        where: { id: event.contactId, workspaceId },
+        columns: { id: true, fullName: true },
+      }),
+      db.query.conversationModel.findFirst({
+        where: { contactId: event.contactId, workspaceId },
+        columns: { id: true },
+        orderBy: { createdAt: "desc" },
+      }),
+      db
+        .select({ name: userModel.name })
+        .from(userModel)
+        .where(eq(userModel.id, event.authorUserId))
+        .limit(1)
+        .then((rows) => rows[0]),
+    ])
+    if (!contact) {
+      return null
+    }
+    return renderNoteMention(
+      {
+        locale: base.locale,
+        workspaceName: base.workspaceName,
+        contactName: contact.fullName,
+        link: conversation
+          ? `${base.inboxUrl}?conversationId=${conversation.id}`
+          : base.inboxUrl,
+      },
+      {
+        authorName: author?.name ?? null,
+        noteText: mentionsToPlainText(event.text),
+      },
+    )
+  }
+
   /**
    * Contact name, conversation and current step for an event, all scoped to
    * the workspace (an id from another workspace resolves to nothing).
    */
   private async loadContactContext(
     workspaceId: string,
-    event: Exclude<StaffNotificationEvent, { kind: "contactStuckSummary" }>,
+    event: Exclude<
+      StaffNotificationEvent,
+      { kind: "contactStuckSummary" | "noteMention" }
+    >,
   ): Promise<ContactContext | null> {
     let conversationId: string | null = null
     let contactId: string | null = null

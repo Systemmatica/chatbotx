@@ -30,6 +30,7 @@ import { botFieldRelations } from "./bot-field"
 import { broadcastRelations } from "./broadcast"
 import { coexistSyncRunRelations } from "./coexist-sync-run"
 import { contactRelations } from "./contact"
+import { contactActivityRelations } from "./contact-activity"
 import { contactCustomFieldRelations } from "./contact-custom-field"
 import { contactInboxRelations } from "./contact-inbox"
 import { contactNoteRelations } from "./contact-note"
@@ -202,6 +203,7 @@ export const relations = {
   ...whatsappMessageTemplateRelations,
   ...workspaceMemberRelations,
   ...contactNoteRelations,
+  ...contactActivityRelations,
   ...aiEmbeddingRelations,
   ...integrationGoogleCalendarRelations,
   ...integrationGoogleSheetsRelations,

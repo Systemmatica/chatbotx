@@ -8,6 +8,7 @@ import {
 import { formatDate } from "@chatbotx.io/ui/lib/format"
 import { CircleUserRound, PencilIcon, TrashIcon } from "lucide-react"
 import { useLocale } from "next-intl"
+import { NoteText } from "./components/note-text"
 import type { ContactNoteResource } from "./schemas/resource"
 
 export function ContactNoteList({
@@ -63,7 +64,7 @@ export function ContactNoteList({
             </Button>
           </div>
           <div className="mb-4 w-full whitespace-pre-wrap text-gray-500 text-sm">
-            {contactNote.text}
+            <NoteText text={contactNote.text} />
           </div>
         </div>
       ))}

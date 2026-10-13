@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
   enqueueLeadEvent: vi.fn(),
   buildLeadSourceKey: vi.fn(),
   publishContactTagsChanged: vi.fn(),
+  recordTagEvents: vi.fn(),
 }))
 
 vi.mock("@chatbotx.io/database/client", () => ({
@@ -47,6 +48,9 @@ vi.mock("@chatbotx.io/database/schema", () => ({
 }))
 
 vi.mock("@chatbotx.io/business", () => ({
+  contactActivityService: {
+    recordTagEvents: (...args: unknown[]) => mocks.recordTagEvents(...args),
+  },
   contactCustomFieldService: {},
   conversationService: {},
   publishContactTagsChanged: (...args: unknown[]) =>
@@ -135,6 +139,14 @@ describe("ActionExecutor addTag", () => {
       contactId: "contact-1",
       tagIds: ["tag-1"],
     })
+    // Only the newly linked tag lands in the contact history, as a bot change.
+    expect(mocks.recordTagEvents).toHaveBeenCalledWith({
+      workspaceId: "ws-1",
+      contactId: "contact-1",
+      tagIds: ["tag-1"],
+      type: "tagAdded",
+      actor: { type: "bot" },
+    })
   })
 
   test("does not enqueue when no tags were newly linked", async () => {
@@ -150,6 +162,7 @@ describe("ActionExecutor addTag", () => {
 
     expect(mocks.enqueueAttach).not.toHaveBeenCalled()
     expect(mocks.enqueueTagAppliedEvaluations).not.toHaveBeenCalled()
+    expect(mocks.recordTagEvents).not.toHaveBeenCalled()
   })
 
   test("skips entirely when no conversation is found for the contact", async () => {

@@ -11,6 +11,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { client } from "@/lib/orpc/orpc"
 import type { ContactAppointmentResource } from "../appointments/schemas/resource"
 import { useChatStore } from "../chat/store/chat-store-provider"
+import { ContactActivityFeed } from "../contact-activity/components/contact-activity-feed"
 import { ContactNotesManage } from "../contact-notes/contact-notes-manage"
 import type { ContactOnSequenceWithRelations } from "../contact-sequences/schema"
 import UpdateContactSequenceField from "../contact-sequences/update-contact-sequence-field"
@@ -246,6 +247,11 @@ export const ContactInboxPanel = ({
       <ContactLeadMagnets leadMagnets={receivedLeadMagnets} />
 
       <ContactNotesManage contactNotes={contactData?.contactNotes ?? []} />
+
+      <ContactActivityFeed
+        contactId={storeContact.id}
+        workspaceId={workspaceId}
+      />
 
       <Accordion className="w-full">
         {accordionModules.map((module, index) => (

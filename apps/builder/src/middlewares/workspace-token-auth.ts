@@ -2,6 +2,7 @@ import {
   isWorkspaceScheduledForDeletion,
   workspaceService,
 } from "@chatbotx.io/business"
+import { runWithActivityActor } from "@chatbotx.io/events/context"
 import { ORPCError } from "@orpc/server"
 import { base } from "./context"
 
@@ -30,11 +31,14 @@ export const workspaceTokenAuthMidddleware = base.middleware(
       })
     }
 
-    // Adds session and user to the context
-    return await next({
-      context: {
-        workspace,
-      },
-    })
+    // Adds the workspace to the context; contact changes made through the
+    // public API show as "API" in the contact activity log.
+    return await runWithActivityActor({ type: "api" }, () =>
+      next({
+        context: {
+          workspace,
+        },
+      }),
+    )
   },
 )

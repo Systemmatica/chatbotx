@@ -8,6 +8,7 @@ import {
 import { ChatbotXException } from "@chatbotx.io/business/errors"
 import { findOrFail, isDatabaseError } from "@chatbotx.io/database/client"
 import { userModel } from "@chatbotx.io/database/schema"
+import { runWithActivityActor } from "@chatbotx.io/events/context"
 import { SdkException } from "@chatbotx.io/sdk"
 import { zodBigintAsString } from "@chatbotx.io/utils"
 import {
@@ -60,7 +61,11 @@ export const authActionClient = actionClient.use(async ({ next }) => {
     )
   }
 
-  return next({ ctx: { user } })
+  // Attributes contact changes made by this action (tags, fields,
+  // assignment) to the user in the contact activity log.
+  return runWithActivityActor({ type: "user", userId: user.id }, () =>
+    next({ ctx: { user } }),
+  )
 })
 
 export const platformAdminActionClient = authActionClient.use(

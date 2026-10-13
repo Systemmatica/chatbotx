@@ -1,3 +1,4 @@
+import { contactActivityService } from "@chatbotx.io/business"
 import { contactInboxService } from "@chatbotx.io/business/contact-inbox"
 import type {
   ContactInboxModel,
@@ -26,10 +27,12 @@ export async function recordCurrentFlowNode(props: {
     >
   flowId: string
   nodeId: string
+  /** The entered node is the flow's start node. */
+  isStartNode?: boolean
 }): Promise<void> {
   const { conversation, contactInbox, flowId, nodeId } = props
   try {
-    await contactInboxService.recordCurrentFlowNode({
+    const recorded = await contactInboxService.recordCurrentFlowNode({
       contactInboxId: contactInbox.id,
       contactId: conversation.contactId,
       workspaceId: conversation.workspaceId,
@@ -37,6 +40,21 @@ export async function recordCurrentFlowNode(props: {
       nodeId,
       previous: contactInbox,
     })
+    // "Flow started" for the contact history: the start node was entered, or
+    // the contact moved into another flow. Riding on the throttled write
+    // above keeps loop bursts (same node re-entered) from logging repeats.
+    if (
+      recorded &&
+      (props.isStartNode || contactInbox.currentFlowId !== flowId)
+    ) {
+      await contactActivityService.record({
+        workspaceId: conversation.workspaceId,
+        contactId: conversation.contactId,
+        type: "flowStarted",
+        actor: { type: "bot" },
+        payload: { flowId, nodeId },
+      })
+    }
   } catch (error) {
     logger.error(
       {

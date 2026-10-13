@@ -1,7 +1,6 @@
 "use client"
 
 import type { ContactNoteModel } from "@chatbotx.io/database/types"
-import { TextareaField } from "@chatbotx.io/ui/components/form/textarea-field"
 import { Button } from "@chatbotx.io/ui/components/ui/button"
 import { Form } from "@chatbotx.io/ui/components/ui/form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -9,6 +8,7 @@ import { useHookFormAction } from "@next-safe-action/adapter-react-hook-form/hoo
 import { useTranslations } from "next-intl"
 import { toast } from "sonner"
 import { createContactNoteAction } from "./actions/create-contact-note.action"
+import { MentionTextareaField } from "./components/mention-textarea-field"
 import { addContactNoteRequest } from "./schemas/action"
 
 export function AddContactForm({
@@ -61,7 +61,7 @@ export function AddContactForm({
         className="flex w-full flex-col gap-3"
         onSubmit={handleSubmitWithAction}
       >
-        <TextareaField name="text" placeholder="..." required />
+        <MentionTextareaField name="text" required workspaceId={workspaceId} />
 
         <div className="flex justify-end gap-2">
           <Button onClick={onCancel} size="sm" type="button" variant="ghost">
