@@ -5597,6 +5597,12 @@
     "autoLayoutError": "Could not arrange the flow",
     "nextStep": "Next step",
     "createBlock": "Create block",
-    "createCondition": "Create condition"
+    "createCondition": "Create condition",
+    "copy": "Copy",
+    "cut": "Cut",
+    "paste": "Paste",
+    "pasteError": "Could not paste the blocks",
+    "pasteOtherWorkspace": "These blocks were copied from another workspace and cannot be pasted here",
+    "startBlockNotCut": "The start block was copied but stays in place"
   }
 }

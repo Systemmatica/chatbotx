@@ -2,17 +2,28 @@ import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuShortcut,
   ContextMenuTrigger,
 } from "@chatbotx.io/ui/components/ui/context-menu"
 import type { XYPosition } from "@xyflow/react"
-import { CopyIcon, FilterIcon, SquarePlusIcon, TrashIcon } from "lucide-react"
+import {
+  ClipboardPasteIcon,
+  CopyIcon,
+  CopyPlusIcon,
+  FilterIcon,
+  ScissorsIcon,
+  SquarePlusIcon,
+  TrashIcon,
+} from "lucide-react"
 import { useTranslations } from "next-intl"
 import { type ReactNode, useCallback, useRef, useState } from "react"
+import { formatModShortcut } from "./clipboard/flow-clipboard-events"
 
 /** What the user right-clicked. `null` means something without a menu. */
 type FlowContextMenuTarget =
   | { kind: "pane"; position: XYPosition }
-  | { kind: "node"; nodeId: string; canDelete: boolean }
+  | { kind: "node"; nodeId: string; canDelete: boolean; canCut: boolean }
   | null
 
 type FlowContextMenuActions = {
@@ -21,6 +32,10 @@ type FlowContextMenuActions = {
   onCreateCondition: (position: XYPosition) => void
   onDuplicateNode: (nodeId: string) => void
   onDeleteNode: (nodeId: string) => void
+  onCopyNode: (nodeId: string) => void
+  onCutNode: (nodeId: string) => void
+  /** `null` when there is nothing to paste. */
+  onPaste: ((position: XYPosition) => void) | null
 }
 
 /**
@@ -85,16 +100,45 @@ export function FlowContextMenu({
               <FilterIcon />
               {t("flowCanvas.createCondition")}
             </ContextMenuItem>
+            <ContextMenuSeparator />
+            <ContextMenuItem
+              disabled={!actions.onPaste}
+              onClick={() => actions.onPaste?.(target.position)}
+            >
+              <ClipboardPasteIcon />
+              {t("flowCanvas.paste")}
+              <ContextMenuShortcut>
+                {formatModShortcut("v")}
+              </ContextMenuShortcut>
+            </ContextMenuItem>
           </>
         )}
         {target?.kind === "node" && (
           <>
+            <ContextMenuItem onClick={() => actions.onCopyNode(target.nodeId)}>
+              <CopyIcon />
+              {t("flowCanvas.copy")}
+              <ContextMenuShortcut>
+                {formatModShortcut("c")}
+              </ContextMenuShortcut>
+            </ContextMenuItem>
+            <ContextMenuItem
+              disabled={!target.canCut}
+              onClick={() => actions.onCutNode(target.nodeId)}
+            >
+              <ScissorsIcon />
+              {t("flowCanvas.cut")}
+              <ContextMenuShortcut>
+                {formatModShortcut("x")}
+              </ContextMenuShortcut>
+            </ContextMenuItem>
             <ContextMenuItem
               onClick={() => actions.onDuplicateNode(target.nodeId)}
             >
-              <CopyIcon />
+              <CopyPlusIcon />
               {t("actions.duplicate")}
             </ContextMenuItem>
+            {target.canDelete && <ContextMenuSeparator />}
             {target.canDelete && (
               <ContextMenuItem
                 onClick={() => actions.onDeleteNode(target.nodeId)}

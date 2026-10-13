@@ -41,7 +41,7 @@ export type DeleteNodeDeps = {
 }
 
 /**
- * Persist-first node deletion. React Flow owns the delete cascade (removing the node
+ * Persist-first deletion of one node or several (a cut). React Flow owns the delete cascade (removing the node
  * plus its connected edges and clearing dangling button refs), so the node is removed
  * optimistically; we then immediately await a draft save of the settled canvas
  * instead of letting the 1s autosave debounce persist it. This shrinks the
@@ -51,7 +51,11 @@ export type DeleteNodeDeps = {
  * autosave the canvas change scheduled remains as an automatic retry.
  */
 export function createDeleteNode(deps: DeleteNodeDeps) {
-  return async (nodeId: string): Promise<void> => {
+  return async (nodeIds: string | readonly string[]): Promise<void> => {
+    const ids = typeof nodeIds === "string" ? [nodeIds] : nodeIds
+    if (ids.length === 0) {
+      return
+    }
     if (deps.isMutatingRef.current) {
       return
     }
@@ -59,7 +63,7 @@ export function createDeleteNode(deps: DeleteNodeDeps) {
     deps.setIsFlowMutating(true)
     deps.cancelAutosave()
 
-    await deps.deleteElements({ nodes: [{ id: nodeId }] })
+    await deps.deleteElements({ nodes: ids.map((id) => ({ id })) })
 
     let result: DeleteSaveResult
     try {

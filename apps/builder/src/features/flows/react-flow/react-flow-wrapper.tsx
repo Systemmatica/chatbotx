@@ -18,6 +18,7 @@ import {
   type NodeChange,
   Panel,
   ReactFlow,
+  SelectionMode,
   useEdgesState,
   useNodesState,
   useReactFlow,
@@ -36,6 +37,9 @@ import {
 import { toast } from "sonner"
 import { updateDraftFlowVersionAction } from "../actions/update-draft-flow-version-action"
 import type { UpdateDraftFlowVersionSchema } from "../schemas/action"
+import type { PastedElements } from "./clipboard/flow-clipboard"
+import { createPasteElements } from "./clipboard/paste-elements-orchestrator"
+import { useFlowClipboard } from "./clipboard/use-flow-clipboard"
 import {
   createDeleteNode,
   type DeleteSaveResult,
@@ -75,6 +79,7 @@ import ButtonEdge from "./edges/button-edge"
 import { findNodeAtPoint } from "./node-hit-test"
 import { hasMeaningfulNodeChange } from "./react-flow-node-change"
 import { useFlowHistoryStoreApi } from "./stores/flow-history-store-provider"
+import { useStepStore } from "./stores/step-store-provider"
 import { useFlowHistory } from "./stores/use-flow-history"
 
 function getClientPosition(event: MouseEvent | TouchEvent) {
@@ -102,6 +107,15 @@ const viewerNodeTypes = {
 const edgeTypes = {
   buttonedge: ButtonEdge,
 }
+
+/** Shift-click adds to the selection, like design tools; Ctrl/Cmd too. */
+const MULTI_SELECTION_KEYS = ["Shift", "Meta", "Control"]
+
+const toCanvasEdge = (edge: Edge): Edge => ({
+  ...edge,
+  type: "buttonedge",
+  markerEnd: { type: MarkerType.ArrowClosed },
+})
 
 type ReactFlowFrameProps = {
   flowVersion: FlowVersionResource
@@ -204,13 +218,7 @@ export function ReactFlowWrapper({
       setNodes(restoredNodes as unknown as FlowNode[])
 
     const restoreEdges = (restoredEdges: Edge[]) =>
-      setEdges(
-        restoredEdges.map((edge) => ({
-          ...edge,
-          type: "buttonedge",
-          markerEnd: { type: MarkerType.ArrowClosed },
-        })),
-      )
+      setEdges(restoredEdges.map(toCanvasEdge))
 
     historyStore
       .getState()
@@ -320,12 +328,97 @@ export function ReactFlowWrapper({
   )
 
   const deleteNodeWithHistory = useCallback(
-    async (nodeId: string) => {
+    async (nodeIds: string | string[]) => {
       takeSnapshot()
-      await deleteNode(nodeId)
+      await deleteNode(nodeIds)
     },
     [deleteNode, takeSnapshot],
   )
+
+  // The pasted elements become the whole selection. Written through the
+  // controlled state (like undo/redo) so selection resets do not re-enter the
+  // change handlers; the history snapshot is taken explicitly below.
+  const revealPastedElements = useCallback(
+    (elements: PastedElements) => {
+      setNodes((currentNodes) => [
+        ...currentNodes.map((node) =>
+          node.selected ? { ...node, selected: false } : node,
+        ),
+        ...elements.nodes,
+      ])
+      setEdges((currentEdges) => [
+        ...currentEdges.map((edge) =>
+          edge.selected ? { ...edge, selected: false } : edge,
+        ),
+        ...elements.edges.map(toCanvasEdge),
+      ])
+    },
+    [setEdges, setNodes],
+  )
+
+  const pasteElements = useMemo(
+    () =>
+      createPasteElements({
+        isMutatingRef,
+        setIsFlowMutating,
+        cancelAutosave: () => handleChanges.cancel(),
+        getNodes: () => getNodes() as unknown as FlowNode[],
+        getEdges,
+        saveDraft: async (input) =>
+          (await savingDraftAsync({
+            nodes: input.nodes,
+            edges:
+              input.edges as unknown as UpdateDraftFlowVersionSchema["edges"],
+          })) as DuplicateSaveResult,
+        reveal: revealPastedElements,
+        onError: () => toast.error(t("flowCanvas.pasteError")),
+      }),
+    [
+      getNodes,
+      getEdges,
+      handleChanges,
+      revealPastedElements,
+      savingDraftAsync,
+      t,
+    ],
+  )
+
+  const pasteElementsWithHistory = useCallback(
+    (elements: PastedElements) => {
+      if (isMutatingRef.current) {
+        return Promise.resolve(false)
+      }
+      takeSnapshot()
+      return pasteElements(elements)
+    },
+    [pasteElements, takeSnapshot],
+  )
+
+  const openNodeDetailSheet = useStepStore((state) => state.openNodeDetailSheet)
+  const openNodeDetailSheetRef = useRef(openNodeDetailSheet)
+  useEffect(() => {
+    openNodeDetailSheetRef.current = openNodeDetailSheet
+  }, [openNodeDetailSheet])
+
+  const getFlowNodes = useCallback(
+    () => getNodes() as unknown as FlowNode[],
+    [getNodes],
+  )
+  const isClipboardBlocked = useCallback(
+    () => openNodeDetailSheetRef.current || isMutatingRef.current,
+    [],
+  )
+
+  const clipboard = useFlowClipboard({
+    workspaceId: flowVersion.workspaceId,
+    flowId: flowVersion.flowId,
+    getNodes: getFlowNodes,
+    getEdges,
+    screenToFlowPosition,
+    isBlocked: isClipboardBlocked,
+    pasteElements: pasteElementsWithHistory,
+    deleteNodes: deleteNodeWithHistory,
+  })
 
   useEffect(() => {
     const serialized = serializeFlowContent(nodes, edges as Edge[])
@@ -375,9 +468,14 @@ export function ReactFlowWrapper({
     [releaseSnapshotSession],
   )
 
-  const handleNodeClick = useCallback(() => {
-    setOpenNodeDetailSheet(true)
-  }, [setOpenNodeDetailSheet])
+  const handleNodeClick = useCallback(
+    (event: ReactMouseEvent) => {
+      // A modifier click edits the selection instead of opening the editor.
+      const isSelectionClick = event.shiftKey || event.metaKey || event.ctrlKey
+      setOpenNodeDetailSheet(!isSelectionClick)
+    },
+    [setOpenNodeDetailSheet],
+  )
 
   const handlePaneClick = useCallback(() => {
     setOpenNodeDetailSheet(false)
@@ -636,6 +734,15 @@ export function ReactFlowWrapper({
     }
   }, [fitView, getEdges, getNodes, onNodesChange, takeSnapshot, t])
 
+  const {
+    canCutNode,
+    canPaste,
+    copyFromMenu,
+    cutFromMenu,
+    pasteFromMenu,
+    onPointerLeave,
+    onPointerMove,
+  } = clipboard
   const contextMenu = useFlowContextMenu()
   const { setTarget: setContextMenuTarget } = contextMenu
 
@@ -655,9 +762,10 @@ export function ReactFlowWrapper({
         kind: "node",
         nodeId: node.id,
         canDelete: !(node as unknown as FlowNode).data.isStartNode,
+        canCut: canCutNode(node.id),
       })
     },
-    [setContextMenuTarget],
+    [canCutNode, setContextMenuTarget],
   )
 
   const contextMenuActions = useMemo(
@@ -680,10 +788,23 @@ export function ReactFlowWrapper({
       onDeleteNode: (nodeId: string) => {
         deleteNodeWithHistory(nodeId).catch(() => undefined)
       },
+      onCopyNode: copyFromMenu,
+      onCutNode: (nodeId: string) => {
+        cutFromMenu(nodeId).catch(() => undefined)
+      },
+      onPaste: canPaste
+        ? (position: XYPosition) => {
+            pasteFromMenu(position).catch(() => undefined)
+          }
+        : null,
     }),
     [
+      canPaste,
+      copyFromMenu,
       createNodeAt,
+      cutFromMenu,
       deleteNodeWithHistory,
+      pasteFromMenu,
       duplicateNodeWithHistory,
       getNode,
       isFlowMutating,
@@ -716,6 +837,7 @@ export function ReactFlowWrapper({
           elementsSelectable={!isFlowMutating}
           maxZoom={10}
           minZoom={0.1}
+          multiSelectionKeyCode={MULTI_SELECTION_KEYS}
           nodes={nodes}
           nodesConnectable={!isFlowMutating}
           nodesDraggable={!isFlowMutating}
@@ -726,6 +848,8 @@ export function ReactFlowWrapper({
           onEdgeMouseLeave={onEdgeMouseLeave}
           onEdgesChange={handleEdgesChange}
           onEdgesDelete={onEdgesDelete}
+          onMouseLeave={onPointerLeave}
+          onMouseMove={onPointerMove}
           onNodeClick={handleNodeClick}
           onNodeContextMenu={onNodeContextMenu}
           onNodeDragStart={handleNodeDragStart}
@@ -736,6 +860,7 @@ export function ReactFlowWrapper({
           onPaneClick={handlePaneClick}
           onPaneContextMenu={onPaneContextMenu}
           proOptions={{ hideAttribution: true }}
+          selectionMode={SelectionMode.Partial}
         >
           {isFlowMutating && (
             <div
