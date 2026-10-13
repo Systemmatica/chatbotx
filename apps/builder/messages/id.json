@@ -3805,7 +3805,16 @@
     "exportAllNotice": "Semua kontak yang cocok dengan filter saat ini akan diekspor.",
     "exportTakingLong": "Ekspor memerlukan waktu lebih lama dari perkiraan",
     "exportTakingLongDescription": "Ekspor masih diproses. Anda dapat menutup dialog ini dan memeriksanya kembali dalam beberapa menit dari riwayat ekspor.",
-    "tagReceivedAt": "Received"
+    "tagReceivedAt": "Received",
+    "inlineEdit": {
+      "saveFailed": "Could not save the value. The change was undone."
+    },
+    "columns": {
+      "title": "Columns",
+      "base": "Main",
+      "customFields": "Custom fields",
+      "noCustomFields": "No custom fields yet"
+    }
   },
   "kanban": {
     "title": "Kanban",

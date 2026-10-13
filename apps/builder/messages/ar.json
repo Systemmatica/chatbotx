@@ -3805,7 +3805,16 @@
     "exportAllNotice": "سيتم تصدير جميع جهات الاتصال المطابقة لعامل التصفية الحالي.",
     "exportTakingLong": "يستغرق التصدير وقتًا أطول من المتوقع",
     "exportTakingLongDescription": "لا تزال عملية التصدير جارية. يمكنك إغلاق مربع الحوار هذا والتحقق مرة أخرى بعد بضع دقائق من سجل التصدير.",
-    "tagReceivedAt": "Received"
+    "tagReceivedAt": "Received",
+    "inlineEdit": {
+      "saveFailed": "Could not save the value. The change was undone."
+    },
+    "columns": {
+      "title": "Columns",
+      "base": "Main",
+      "customFields": "Custom fields",
+      "noCustomFields": "No custom fields yet"
+    }
   },
   "kanban": {
     "title": "Kanban",

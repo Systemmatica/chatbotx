@@ -3805,7 +3805,16 @@
     "exportAllNotice": "Kaikki nykyistä suodatinta vastaavat yhteystiedot viedään.",
     "exportTakingLong": "Vienti kestää odotettua kauemmin",
     "exportTakingLongDescription": "Vientiä käsitellään edelleen. Voit sulkea tämän valintaikkunan ja tarkistaa tilanteen muutaman minuutin kuluttua vientihistoriasta.",
-    "tagReceivedAt": "Received"
+    "tagReceivedAt": "Received",
+    "inlineEdit": {
+      "saveFailed": "Could not save the value. The change was undone."
+    },
+    "columns": {
+      "title": "Columns",
+      "base": "Main",
+      "customFields": "Custom fields",
+      "noCustomFields": "No custom fields yet"
+    }
   },
   "kanban": {
     "title": "Kanban",

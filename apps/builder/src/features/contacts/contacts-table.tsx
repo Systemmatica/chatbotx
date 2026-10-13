@@ -32,12 +32,28 @@ import {
 } from "@/features/contact-filter"
 import { EMAIL_PHONE_RESTRICTED_FILTER_FIELDS } from "@/features/contact-filter/lib/restricted-fields"
 import { client } from "@/lib/orpc/orpc"
+import { resolveCustomFieldIcon } from "../custom-fields/lib/custom-field-icons"
+import { useCustomFieldStore } from "../custom-fields/provider/custom-field-store-context"
+import type { CustomFieldResource } from "../custom-fields/schemas/resource"
 import { InboxIcon } from "../inboxes/components/inbox-icon"
 import { getUserName } from "../users/schemas/resource"
+import {
+  type ColumnOption,
+  ContactColumnsMenu,
+} from "./components/contact-columns-menu"
 import { ContactPeek } from "./components/contact-peek"
+import { CustomFieldCell } from "./components/custom-field-cell"
 import { CONTACTS_DEFAULT_PER_PAGE } from "./constants"
 import { ContactListAction } from "./contacts-list-action"
 import { useContactPeek } from "./hooks/use-contact-peek"
+import {
+  BASE_HIDEABLE_COLUMNS,
+  buildColumnVisibility,
+  customFieldColumnId,
+  DEFAULT_VISIBLE_COLUMNS,
+  getRowCustomFieldValue,
+  patchRowCustomField,
+} from "./lib/custom-field-columns"
 import {
   CONTACT_PEEK_PARAM,
   isInteractiveClickTarget,
@@ -136,6 +152,16 @@ function NameCell({
         </TooltipContent>
       </Tooltip>
     </div>
+  )
+}
+
+function CustomFieldHeader({ field }: { field: CustomFieldResource }) {
+  const Icon = resolveCustomFieldIcon(field)
+  return (
+    <span className="inline-flex max-w-48 items-center gap-1.5">
+      <Icon className="size-3.5 shrink-0 text-muted-foreground" />
+      <span className="truncate">{field.name}</span>
+    </span>
   )
 }
 
@@ -285,6 +311,17 @@ export function ContactsTable({
     ? t("contacts.countCapped", { count: totalCountDisplay })
     : t("contacts.countExact", { count: totalCountDisplay })
 
+  const customFields = useCustomFieldStore((state) => state.customFields)
+  // Optimistic inline edits (and their rollback) patch the loaded page.
+  const updateRowCustomField = useCallback(
+    (contactId: string, customFieldId: string, value: string | null) => {
+      setTableData((rows) =>
+        patchRowCustomField(rows, contactId, customFieldId, value),
+      )
+    },
+    [],
+  )
+
   const columns = useMemo<ColumnDef<ListContactsResponse["data"][number]>[]>(
     () => [
       {
@@ -362,7 +399,6 @@ export function ContactsTable({
           </div>
         ),
         enableSorting: false,
-        enableHiding: false,
         meta: {
           label: t("fields.source.label"),
         },
@@ -399,7 +435,6 @@ export function ContactsTable({
           label: t("fields.assignee.label"),
         },
         enableSorting: false,
-        enableHiding: false,
       },
       {
         id: "lastReadAt",
@@ -426,7 +461,6 @@ export function ContactsTable({
           label: t("fields.lastRead.label"),
         },
         enableSorting: false,
-        enableHiding: false,
       },
       ...(showTagReceivedAt
         ? [
@@ -464,10 +498,31 @@ export function ContactsTable({
           label: t("fields.createdAt.label"),
         },
         enableSorting: true,
-        enableHiding: false,
       },
+      ...customFields.map(
+        (field) =>
+          ({
+            id: customFieldColumnId(field.id),
+            accessorFn: (row) => getRowCustomFieldValue(row, field.id),
+            header: () => <CustomFieldHeader field={field} />,
+            cell: ({ row }) => (
+              <CustomFieldCell
+                contactId={row.original.id}
+                customFieldId={field.id}
+                onLocalChange={(value) =>
+                  updateRowCustomField(row.original.id, field.id, value)
+                }
+                type={field.type}
+                value={getRowCustomFieldValue(row.original, field.id)}
+                workspaceId={workspaceId}
+              />
+            ),
+            meta: { label: field.name },
+            enableSorting: false,
+          }) satisfies ColumnDef<ListContactsResponse["data"][number]>,
+      ),
     ],
-    [workspaceId, t, showTagReceivedAt],
+    [workspaceId, t, showTagReceivedAt, customFields, updateRowCustomField],
   )
 
   const { table } = useDataTable({
@@ -486,6 +541,38 @@ export function ContactsTable({
     shallow: false,
     clearOnDefault: true,
   })
+
+  const [visibleColumns, setVisibleColumns] = useState<readonly string[]>(
+    DEFAULT_VISIBLE_COLUMNS,
+  )
+  const baseColumnOptions = useMemo<ColumnOption[]>(
+    () => [
+      { id: "source", label: t("fields.source.label") },
+      { id: "assignee", label: t("fields.assignee.label") },
+      { id: "lastReadAt", label: t("fields.lastRead.label") },
+      { id: "createdAt", label: t("fields.createdAt.label") },
+    ],
+    [t],
+  )
+  const customFieldColumnOptions = useMemo<ColumnOption[]>(
+    () =>
+      customFields.map((field) => ({
+        id: customFieldColumnId(field.id),
+        label: field.name,
+      })),
+    [customFields],
+  )
+  useEffect(() => {
+    table.setColumnVisibility(
+      buildColumnVisibility(
+        [
+          ...BASE_HIDEABLE_COLUMNS,
+          ...customFieldColumnOptions.map((column) => column.id),
+        ],
+        visibleColumns,
+      ),
+    )
+  }, [table, visibleColumns, customFieldColumnOptions])
 
   const handleContactFilterChange = useCallback(
     (next: ContactFilterCriteria) => {
@@ -540,6 +627,12 @@ export function ContactsTable({
             filter={optimisticContactFilter}
             onToggle={() => setShowContactFilterPanel((current) => !current)}
             open={showContactFilterPanel}
+          />
+          <ContactColumnsMenu
+            baseColumns={baseColumnOptions}
+            customFieldColumns={customFieldColumnOptions}
+            onVisibleColumnsChange={setVisibleColumns}
+            visibleColumns={visibleColumns}
           />
           <ContactListAction
             filter={exportFilter}

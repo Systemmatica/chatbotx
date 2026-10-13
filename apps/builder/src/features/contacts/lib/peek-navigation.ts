@@ -63,6 +63,11 @@ export function isInteractiveClickTarget(
   if (!(target && typeof (target as Element).closest === "function")) {
     return false
   }
+  // React bubbles clicks from portals (a date picker of an inline editor)
+  // through the row: anything outside the row's DOM is not a row click.
+  if (!container.contains(target as Node)) {
+    return true
+  }
   const interactive = (target as Element).closest(
     'a, button, input, textarea, select, label, [role="checkbox"], [role="button"], [role="combobox"], [data-peek-ignore]',
   )

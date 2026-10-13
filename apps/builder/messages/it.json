@@ -3805,7 +3805,16 @@
     "exportAllNotice": "Verranno esportati tutti i contatti che corrispondono al filtro corrente.",
     "exportTakingLong": "L'esportazione sta richiedendo più tempo del previsto",
     "exportTakingLongDescription": "L'esportazione è ancora in corso. Puoi chiudere questa finestra e ricontrollare tra qualche minuto nella cronologia delle esportazioni.",
-    "tagReceivedAt": "Received"
+    "tagReceivedAt": "Received",
+    "inlineEdit": {
+      "saveFailed": "Could not save the value. The change was undone."
+    },
+    "columns": {
+      "title": "Columns",
+      "base": "Main",
+      "customFields": "Custom fields",
+      "noCustomFields": "No custom fields yet"
+    }
   },
   "kanban": {
     "title": "Kanban",

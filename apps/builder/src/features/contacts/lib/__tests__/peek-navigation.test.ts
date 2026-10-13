@@ -105,6 +105,16 @@ describe("isInteractiveClickTarget", () => {
   })
 })
 
+describe("isInteractiveClickTarget with portals", () => {
+  it("ignores clicks bubbling from a popup rendered outside the row", () => {
+    const row = fakeElement(() => false)
+    const popupItem = fakeElement(() => false)
+    expect(isInteractiveClickTarget(asElement(popupItem), asElement(row))).toBe(
+      true,
+    )
+  })
+})
+
 describe("isTypingTarget", () => {
   it("treats text fields as typing targets and plain nodes as not", () => {
     const input = fakeElement((selector) => selector.includes("input"))

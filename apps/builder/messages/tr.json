@@ -3805,7 +3805,16 @@
     "exportAllNotice": "Geçerli filtreyle eşleşen tüm kişiler dışa aktarılacaktır.",
     "exportTakingLong": "Dışa aktarma beklenenden uzun sürüyor",
     "exportTakingLongDescription": "Dışa aktarma hâlâ işleniyor. Bu iletişim kutusunu kapatıp birkaç dakika sonra dışa aktarma geçmişinden tekrar kontrol edebilirsiniz.",
-    "tagReceivedAt": "Received"
+    "tagReceivedAt": "Received",
+    "inlineEdit": {
+      "saveFailed": "Could not save the value. The change was undone."
+    },
+    "columns": {
+      "title": "Columns",
+      "base": "Main",
+      "customFields": "Custom fields",
+      "noCustomFields": "No custom fields yet"
+    }
   },
   "kanban": {
     "title": "Kanban",

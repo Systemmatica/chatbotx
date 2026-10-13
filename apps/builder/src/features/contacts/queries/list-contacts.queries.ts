@@ -182,6 +182,10 @@ export async function listContactsRSC(
       orderBy,
       extras: tagReceivedAt.extras,
       with: {
+        // Same shape as the client refetch: custom field columns and
+        // grouping read these from the first page too.
+        tags: true,
+        contactCustomFields: true,
         contactInboxes: {
           with: {
             inbox: true,
