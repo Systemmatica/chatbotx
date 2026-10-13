@@ -10,6 +10,8 @@ export type IncomingContact = {
   lastName?: string
   email?: string
   avatar?: string
+  /** Free-form profile bio/about text, when the channel exposes one. */
+  bio?: string
   gender?: string
   locale?: string
   language?: string
