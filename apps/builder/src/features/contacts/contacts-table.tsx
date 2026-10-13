@@ -16,8 +16,13 @@ import {
   TooltipTrigger,
 } from "@chatbotx.io/ui/components/ui/tooltip"
 import { useDataTable } from "@chatbotx.io/ui/hooks/use-data-table"
+import {
+  formatCustomFieldValueInTimeZone,
+  isTemporalCustomFieldType,
+} from "@chatbotx.io/utils/datetime"
 import type { Column, ColumnDef } from "@tanstack/react-table"
 import { format, formatDistanceToNow } from "date-fns"
+import { ChevronDownIcon, ChevronRightIcon } from "lucide-react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { useFormatter, useTranslations } from "next-intl"
@@ -32,8 +37,21 @@ import {
   useContactFilterQueryState,
 } from "@/features/contact-filter"
 import { EMAIL_PHONE_RESTRICTED_FILTER_FIELDS } from "@/features/contact-filter/lib/restricted-fields"
+import { getBrowserTimezone } from "@/features/contact-filter/lib/timezone"
+import { ContactGroupByMenu } from "@/features/contact-views/components/contact-group-by-menu"
 import { ContactViewTabs } from "@/features/contact-views/components/contact-view-tabs"
+import {
+  buildGroupingContext,
+  useCollapsedGroups,
+  useGroupCounts,
+  useGroupingSources,
+} from "@/features/contact-views/hooks/use-contact-grouping"
 import { useContactViews } from "@/features/contact-views/hooks/use-contact-views"
+import {
+  EMPTY_GROUP_KEY,
+  groupRows,
+  visibleRowIds,
+} from "@/features/contact-views/lib/grouping"
 import {
   CONTACT_VIEW_PARAM,
   type ContactTableViewState,
@@ -681,9 +699,132 @@ export function ContactsTable({
     table,
   ])
 
+  // ── Grouping ─────────────────────────────────────────────────────────
+  const [groupMenuOpened, setGroupMenuOpened] = useState(false)
+  const groupingSources = useGroupingSources(
+    workspaceId,
+    groupMenuOpened || groupBy !== null,
+  )
+  const groupingContext = useMemo(
+    () => buildGroupingContext(groupBy, groupingSources),
+    [groupBy, groupingSources],
+  )
+  const groupCounts = useGroupCounts({
+    workspaceId,
+    groupBy,
+    contactFilter: isContactFilterActive ? contactFilter : undefined,
+    keyword,
+  })
+  const { collapsed: collapsedGroups, toggle: toggleGroup } =
+    useCollapsedGroups({
+      workspaceId,
+      viewId: activeView?.id ?? null,
+      groupBy,
+    })
+  const groups = useMemo(
+    () => (groupBy ? groupRows(tableData, groupBy, groupingContext) : null),
+    [groupBy, groupingContext, tableData],
+  )
+  const groupingLabel = useMemo(() => {
+    switch (groupBy?.kind) {
+      case "leadMagnet":
+        return t("contactViews.grouping.leadMagnet")
+      case "stage":
+        return (
+          groupingSources.boards.find((board) => board.id === groupBy.boardId)
+            ?.name ?? t("contactViews.grouping.stage")
+        )
+      case "customField":
+        return (
+          customFields.find((field) => field.id === groupBy.customFieldId)
+            ?.name ?? null
+        )
+      default:
+        return null
+    }
+  }, [groupBy, groupingSources.boards, customFields, t])
+  const groupFieldType =
+    groupBy?.kind === "customField"
+      ? (customFields.find((field) => field.id === groupBy.customFieldId)
+          ?.type ?? "shortText")
+      : null
+
+  const groupTitle = (key: string): string => {
+    if (key === EMPTY_GROUP_KEY) {
+      if (groupBy?.kind === "stage") {
+        return t("kanban.noStatus")
+      }
+      return groupBy?.kind === "leadMagnet"
+        ? t("contactViews.grouping.noLeadMagnet")
+        : t("contactViews.grouping.empty")
+    }
+    if (groupBy?.kind === "leadMagnet") {
+      return (
+        groupingSources.leadMagnets.find((item) => item.id === key)?.name ?? key
+      )
+    }
+    if (groupFieldType === "boolean") {
+      return key === "true"
+        ? t("fields.boolean.true")
+        : t("fields.boolean.false")
+    }
+    if (groupFieldType && isTemporalCustomFieldType(groupFieldType)) {
+      return formatCustomFieldValueInTimeZone(
+        groupFieldType,
+        key,
+        getBrowserTimezone(),
+      )
+    }
+    return key
+  }
+
+  const rowById = new Map(
+    table.getRowModel().rows.map((row) => [row.original.id, row]),
+  )
+  const rowGroups = groups?.map((group) => {
+    const total = groupCounts?.get(group.key)
+    const isCollapsed = collapsedGroups.has(group.key)
+    return {
+      id: group.key,
+      collapsed: isCollapsed,
+      rows: group.rows.flatMap((contact) => {
+        const row = rowById.get(contact.id)
+        return row ? [row] : []
+      }),
+      header: (
+        <button
+          aria-expanded={!isCollapsed}
+          className="flex w-full items-center gap-2 text-start font-medium text-sm"
+          onClick={() => toggleGroup(group.key)}
+          type="button"
+        >
+          {isCollapsed ? (
+            <ChevronRightIcon className="size-4 shrink-0" />
+          ) : (
+            <ChevronDownIcon className="size-4 shrink-0" />
+          )}
+          <span className="truncate">{groupTitle(group.key)}</span>
+          <span className="rounded-full bg-background px-2 text-muted-foreground text-xs">
+            {formatter.number(total ?? group.rows.length)}
+          </span>
+          {total !== undefined && total !== group.rows.length ? (
+            <span className="text-muted-foreground text-xs">
+              {t("contactViews.grouping.onThisPage", {
+                count: group.rows.length,
+              })}
+            </span>
+          ) : null}
+        </button>
+      ),
+    }
+  })
+
   const peekContactIds = useMemo(
-    () => tableData.map((contact) => contact.id),
-    [tableData],
+    () =>
+      groups
+        ? visibleRowIds(groups, collapsedGroups)
+        : tableData.map((contact) => contact.id),
+    [groups, collapsedGroups, tableData],
   )
   const chatHref = useCallback(
     (conversationId: string) =>
@@ -748,6 +889,7 @@ export function ContactsTable({
           }
           openContact(row.original.id)
         }}
+        rowGroups={rowGroups}
         table={table}
       >
         {showContactFilterPanel && (
@@ -766,6 +908,18 @@ export function ContactsTable({
             filter={optimisticContactFilter}
             onToggle={() => setShowContactFilterPanel((current) => !current)}
             open={showContactFilterPanel}
+          />
+          <ContactGroupByMenu
+            boards={groupingSources.boards}
+            customFields={customFields}
+            groupBy={groupBy}
+            label={groupingLabel}
+            onGroupByChange={setGroupBy}
+            onOpenChange={(open) => {
+              if (open) {
+                setGroupMenuOpened(true)
+              }
+            }}
           />
           <ContactColumnsMenu
             baseColumns={baseColumnOptions}

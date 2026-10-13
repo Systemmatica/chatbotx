@@ -5648,6 +5648,16 @@
       "saved": "View \"{name}\" updated",
       "saveFailed": "Could not save the view",
       "deleteFailed": "Could not delete the view"
+    },
+    "grouping": {
+      "title": "Group",
+      "groupedBy": "Grouped by: {name}",
+      "none": "No grouping",
+      "leadMagnet": "Lead magnet",
+      "stage": "Stage",
+      "noLeadMagnet": "No lead magnet",
+      "empty": "Empty",
+      "onThisPage": "{count} on this page"
     }
   }
 }

@@ -3,7 +3,7 @@ import {
   type Row,
   type Table as TanstackTable,
 } from "@tanstack/react-table"
-import type * as React from "react"
+import * as React from "react"
 
 import { DataTablePagination } from "@chatbotx.io/ui/components/data-table/data-table-pagination"
 import type { DataTablePaginationLabels } from "@chatbotx.io/ui/components/data-table/data-table-pagination"
@@ -19,6 +19,15 @@ import { useUiLabels } from "@chatbotx.io/ui/components/ui-labels"
 import { getCommonPinningStyles } from "@chatbotx.io/ui/lib/data-table"
 import { cn } from "@chatbotx.io/ui/lib/utils"
 
+/** A collapsible section of rows (grouping); a row may be in several. */
+export interface DataTableRowGroup<TData> {
+  id: string
+  /** Content of the full-width group header row (label, count, toggle). */
+  header: React.ReactNode
+  rows: Row<TData>[]
+  collapsed?: boolean
+}
+
 interface DataTableProps<TData> extends React.ComponentProps<"div"> {
   table: TanstackTable<TData>
   actionBar?: React.ReactNode
@@ -33,6 +42,8 @@ interface DataTableProps<TData> extends React.ComponentProps<"div"> {
   onRowClick?: (row: Row<TData>, event: React.MouseEvent<HTMLElement>) => void
   /** Highlights a row (e.g. the one open in a side peek). */
   isRowActive?: (row: Row<TData>) => boolean
+  /** Renders the rows in these groups instead of the plain row model. */
+  rowGroups?: DataTableRowGroup<TData>[]
 }
 
 export function DataTable<TData>({
@@ -42,11 +53,46 @@ export function DataTable<TData>({
   scrollable = false,
   onRowClick,
   isRowActive,
+  rowGroups,
   children,
   className,
   ...props
 }: DataTableProps<TData>) {
   const contextLabels = useUiLabels()
+  const columnCount = table.getVisibleLeafColumns().length
+  const renderRow = (row: Row<TData>, key: string) => (
+    <TableRow
+      key={key}
+      data-state={row.getIsSelected() && "selected"}
+      data-active={isRowActive?.(row) ? "true" : undefined}
+      className={cn(
+        onRowClick && "cursor-pointer",
+        "data-[active=true]:bg-muted",
+      )}
+      onClick={
+        onRowClick ? (event) => onRowClick(row, event) : undefined
+      }
+    >
+      {row.getVisibleCells().map((cell) => (
+        <TableCell
+          key={cell.id}
+          style={{
+            ...getCommonPinningStyles({ column: cell.column }),
+            width:
+              cell.column.columnDef.size === undefined
+                ? undefined
+                : cell.column.getSize(),
+          }}
+        >
+          {flexRender(
+            cell.column.columnDef.cell,
+            cell.getContext(),
+          )}
+        </TableCell>
+      ))}
+    </TableRow>
+  )
+
   return (
     <div
       className={cn("flex w-full flex-col gap-2.5 overflow-auto", className)}
@@ -87,37 +133,26 @@ export function DataTable<TData>({
             ))}
           </TableHeader>
           <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                  data-active={isRowActive?.(row) ? "true" : undefined}
-                  className={cn(
-                    onRowClick && "cursor-pointer",
-                    "data-[active=true]:bg-muted",
-                  )}
-                  onClick={onRowClick ? (event) => onRowClick(row, event) : undefined}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell
-                      key={cell.id}
-                      style={{
-                        ...getCommonPinningStyles({ column: cell.column }),
-                        width:
-                          cell.column.columnDef.size === undefined
-                            ? undefined
-                            : cell.column.getSize(),
-                      }}
-                    >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
+            {rowGroups && rowGroups.length > 0 ? (
+              rowGroups.map((group) => (
+                <React.Fragment key={group.id}>
+                  <TableRow
+                    className="bg-muted/40 hover:bg-muted/40"
+                    data-group-header=""
+                  >
+                    <TableCell className="py-1.5" colSpan={columnCount}>
+                      {group.header}
                     </TableCell>
-                  ))}
-                </TableRow>
+                  </TableRow>
+                  {group.collapsed
+                    ? null
+                    : group.rows.map((row) =>
+                        renderRow(row, `${group.id}:${row.id}`),
+                      )}
+                </React.Fragment>
               ))
+            ) : table.getRowModel().rows?.length ? (
+              table.getRowModel().rows.map((row) => renderRow(row, row.id))
             ) : (
               <TableRow>
                 <TableCell
