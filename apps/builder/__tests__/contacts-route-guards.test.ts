@@ -88,6 +88,12 @@ vi.mock("@/features/users/provider/user-store-context", () => ({
   UserStoreProvider: ({ children }: { children: unknown }) => children,
 }))
 
+// The contacts page loads saved views; no database in this test.
+vi.mock("@chatbotx.io/business", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@chatbotx.io/business")>()),
+  contactViewService: { list: vi.fn(async () => []) },
+}))
+
 const { default: ContactsPage } = await import(
   "../src/app/space/[workspaceId]/contacts/page"
 )
