@@ -1,6 +1,9 @@
 "use client"
 
-import type { CustomFieldType } from "@chatbotx.io/database/partials"
+import {
+  type CustomFieldType,
+  isSelectCustomFieldType,
+} from "@chatbotx.io/database/partials"
 import { FieldOperationType } from "@chatbotx.io/flow-config"
 import { DateTimePickerField } from "@chatbotx.io/ui/components/form/date-picker-field"
 import { InputField } from "@chatbotx.io/ui/components/form/input-field"
@@ -26,6 +29,7 @@ import { useTranslations } from "next-intl"
 import { type ReactElement, useMemo, useState } from "react"
 import { useFormContext, useWatch } from "react-hook-form"
 import { toast } from "sonner"
+import { SelectValueField } from "@/features/custom-fields/components/select-value"
 import {
   CustomFieldOperationSelect,
   CustomFieldSelect,
@@ -149,15 +153,14 @@ export const SetCustomField = ({ parentName }: { parentName?: string }) => {
     name: getFieldName("customFieldId"),
   })
 
-  const selectedCustomFieldType = useMemo(() => {
-    if (!watchCustomFieldId) {
-      return null
-    }
-    const selectedCustomField = customFields.find(
-      (field) => field.id === watchCustomFieldId,
-    )
-    return selectedCustomField?.type ?? null
-  }, [watchCustomFieldId, customFields])
+  const selectedCustomField = useMemo(
+    () =>
+      watchCustomFieldId
+        ? customFields.find((field) => field.id === watchCustomFieldId)
+        : undefined,
+    [watchCustomFieldId, customFields],
+  )
+  const selectedCustomFieldType = selectedCustomField?.type ?? null
 
   return (
     <>
@@ -201,6 +204,16 @@ export const SetCustomField = ({ parentName }: { parentName?: string }) => {
             )}
           />
         )}
+
+        {selectedCustomField &&
+          isSelectCustomFieldType(selectedCustomField.type) && (
+            <SelectValueField
+              name={getFieldName("value")}
+              options={selectedCustomField.options ?? []}
+              required
+              type={selectedCustomField.type}
+            />
+          )}
 
         {selectedCustomFieldType === "datetime" && (
           <DateTimePickerField

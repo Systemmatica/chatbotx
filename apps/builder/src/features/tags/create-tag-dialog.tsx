@@ -21,6 +21,7 @@ import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { useCallback, useEffect, useState } from "react"
 import { toast } from "sonner"
+import { LabelColorField } from "@/components/labels/label-color-picker"
 import { createTagAction } from "./actions/create-tag-action"
 import { createTagRequest } from "./schema/action"
 
@@ -62,6 +63,7 @@ export const CreateTagDialog = ({
           defaultValues: {
             name: "",
             folderId: null,
+            color: null,
           },
         },
         errorMapProps: {},
@@ -69,6 +71,7 @@ export const CreateTagDialog = ({
     )
 
   const { setValue } = form
+  const watchName = form.watch("name") ?? ""
 
   useEffect(() => {
     if (folderId && folderId !== rootFolderId) {
@@ -106,6 +109,7 @@ export const CreateTagDialog = ({
         <Form {...form}>
           <form className="space-y-6" onSubmit={handleSubmitWithAction}>
             <InputField label={t("fields.name.label")} name="name" required />
+            <LabelColorField previewName={watchName} />
 
             <DialogFooter>
               <DialogClose

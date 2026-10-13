@@ -1,6 +1,7 @@
 import {
   type FillableContactKey,
   fillableContactKeys,
+  isSelectCustomFieldType,
 } from "@chatbotx.io/database/partials"
 import { SelectField } from "@chatbotx.io/ui/components/form/select-field"
 import { Button } from "@chatbotx.io/ui/components/ui/button"
@@ -27,6 +28,7 @@ import { useEffect } from "react"
 import { toast } from "sonner"
 import { BotFieldValueInput } from "../bot-fields/account-field-value-input"
 import { getBrowserTimezone } from "../contact-filter/lib/timezone"
+import { SelectValueField } from "../custom-fields/components/select-value"
 import { deleteContactCustomFieldAction } from "./actions/delete-contact-custom-field.action"
 import { updateContactFieldAction } from "./actions/update-contact-field.action"
 import { updateContactFieldRequest } from "./schemas/action"
@@ -43,6 +45,41 @@ type EditContactField = {
 }
 
 const contactInboxIdField = "contactInboxId"
+
+/** Value input matching the edited field: option chips, a list, or by type. */
+function ContactFieldValueInput({
+  targetField,
+  placeholder,
+}: {
+  targetField: ContactEditableField | null
+  placeholder: string
+}) {
+  if (targetField && isSelectCustomFieldType(targetField.type)) {
+    return (
+      <SelectValueField
+        name={targetField.key}
+        options={targetField.selectOptions ?? []}
+        type={targetField.type}
+      />
+    )
+  }
+  if (targetField?.options) {
+    return (
+      <SelectField
+        name={targetField.key}
+        options={targetField.options}
+        placeholder={placeholder}
+      />
+    )
+  }
+  return (
+    <BotFieldValueInput
+      name={targetField?.key ?? ""}
+      saveFormat={resolveTemporalCustomFieldSaveFormat(targetField?.type ?? "")}
+      type={targetField?.type ?? "shortText"}
+    />
+  )
+}
 
 export function EditContactField(props: EditContactField) {
   const {
@@ -136,21 +173,10 @@ export function EditContactField(props: EditContactField) {
             className="flex flex-col gap-4"
             onSubmit={handleSubmitWithAction}
           >
-            {targetField?.options ? (
-              <SelectField
-                name={targetField.key}
-                options={targetField.options}
-                placeholder={t("actions.pleaseSelect")}
-              />
-            ) : (
-              <BotFieldValueInput
-                name={targetField?.key ?? ""}
-                saveFormat={resolveTemporalCustomFieldSaveFormat(
-                  targetField?.type ?? "",
-                )}
-                type={targetField?.type ?? "shortText"}
-              />
-            )}
+            <ContactFieldValueInput
+              placeholder={t("actions.pleaseSelect")}
+              targetField={targetField}
+            />
             {targetField?.contactInboxId && (
               <input
                 defaultValue={targetField.contactInboxId}

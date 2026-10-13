@@ -65,6 +65,7 @@ export const updateTag = async ({
     .update(tagModel)
     .set({
       name: parsedInput.name,
+      ...(parsedInput.color ? { color: parsedInput.color } : {}),
     })
     .where(eq(tagModel.id, tag.id))
     .returning()

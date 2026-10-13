@@ -12,6 +12,7 @@ import {
   CameraIcon,
   CarIcon,
   CheckIcon,
+  CircleChevronDownIcon,
   ClipboardListIcon,
   ClockIcon,
   CoffeeIcon,
@@ -32,6 +33,7 @@ import {
   LanguagesIcon,
   LightbulbIcon,
   LinkIcon,
+  ListChecksIcon,
   type LucideIcon,
   MagnetIcon,
   MailIcon,
@@ -77,6 +79,8 @@ export const customFieldIconsMap: Record<CustomFieldType, LucideIcon> = {
   boolean: CheckIcon,
   email: MailIcon,
   phoneNumber: PhoneIcon,
+  select: CircleChevronDownIcon,
+  multiSelect: ListChecksIcon,
 }
 
 /** Components of the icons a custom field can pick. */

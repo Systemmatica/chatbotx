@@ -1,6 +1,7 @@
 "use client"
 import {
   type CustomFieldType,
+  isSelectCustomFieldType,
   rootFolderId,
 } from "@chatbotx.io/database/partials"
 import { InputField } from "@chatbotx.io/ui/components/form/input-field"
@@ -25,7 +26,8 @@ import { type ReactElement, useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
 import { createCustomFieldAction } from "./actions/create-custom-field.action"
 import { CustomFieldIconField } from "./components/custom-field-icon-picker"
-import { createCustomFieldRequest } from "./schemas/action"
+import { CustomFieldOptionsField } from "./components/custom-field-options-editor"
+import { createCustomFieldFormRequest } from "./schemas/action"
 
 type CreateCustomFieldDialogProps = {
   workspaceId: string
@@ -133,6 +135,14 @@ function CreateCustomFieldForm({
         value: "longText",
         label: t("fields.longText.label"),
       },
+      {
+        value: "select",
+        label: t("fields.selectField.label"),
+      },
+      {
+        value: "multiSelect",
+        label: t("fields.multiSelectField.label"),
+      },
     ],
     [t],
   )
@@ -140,7 +150,7 @@ function CreateCustomFieldForm({
   const { form, handleSubmitWithAction, resetFormAndAction } =
     useHookFormAction(
       createCustomFieldAction.bind(null, workspaceId),
-      zodResolver(createCustomFieldRequest),
+      zodResolver(createCustomFieldFormRequest),
       {
         actionProps: {
           onSuccess: () => {
@@ -167,6 +177,7 @@ function CreateCustomFieldForm({
             description: "",
             folderId: null,
             icon: null,
+            options: [],
           },
         },
         errorMapProps: {},
@@ -204,6 +215,10 @@ function CreateCustomFieldForm({
           options={customFieldTypeOptions}
           required
         />
+
+        {isSelectCustomFieldType(selectedType) ? (
+          <CustomFieldOptionsField />
+        ) : null}
 
         <CustomFieldIconField type={selectedType} />
 

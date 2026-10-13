@@ -2055,6 +2055,12 @@
         "description": "Token ini hanya ditampilkan satu kali. Simpan dengan aman — Anda tidak akan bisa melihatnya lagi.",
         "done": "Selesai"
       }
+    },
+    "selectField": {
+      "label": "Select"
+    },
+    "multiSelectField": {
+      "label": "Multi-select"
     }
   },
   "flows": {
@@ -3925,6 +3931,24 @@
       "default": "By field type",
       "search": "Search icons",
       "reset": "Use the field type icon"
+    },
+    "options": {
+      "title": "Options",
+      "label": "Option",
+      "add": "Add",
+      "addPlaceholder": "Type an option and press Enter",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "delete": "Delete option",
+      "empty": "No options yet",
+      "hint": "Renaming an option updates contacts that have it. Contacts keep a deleted option's value; it is shown greyed out.",
+      "missing": "This option no longer exists",
+      "clear": "Clear",
+      "errors": {
+        "required": "Option name is required",
+        "comma": "Option name cannot contain a comma",
+        "duplicate": "An option with this name already exists"
+      }
     }
   },
   "keywords": {
@@ -5561,7 +5585,6 @@
     "urlHint": "What the contact gets: paste a link or upload a file. Optional.",
     "recipients": "Received",
     "showContacts": "Show contacts",
-    "tagLabel": "Tag: {tag}",
     "tagMissing": "Tag was deleted. Save the lead magnet to restore it.",
     "deleteTitle": "Delete \"{name}\"?",
     "deleteDescription": "The lead magnet is removed from this list. The tag \"{tag}\" stays on contacts and in bots.",
@@ -5590,7 +5613,8 @@
       "badge": "{kind} “{name}” · {date}",
       "badgeNoDate": "{kind} “{name}”",
       "unknownDate": "date received unknown"
-    }
+    },
+    "tagPrefix": "Tag:"
   },
   "flowCanvas": {
     "autoLayout": "Auto-arrange",
@@ -5598,5 +5622,20 @@
     "nextStep": "Next step",
     "createBlock": "Create block",
     "createCondition": "Create condition"
+  },
+  "labelColors": {
+    "label": "Color",
+    "pick": "Pick a color",
+    "preview": "Label",
+    "default": "Default",
+    "gray": "Gray",
+    "brown": "Brown",
+    "orange": "Orange",
+    "yellow": "Yellow",
+    "green": "Green",
+    "blue": "Blue",
+    "purple": "Purple",
+    "pink": "Pink",
+    "red": "Red"
   }
 }

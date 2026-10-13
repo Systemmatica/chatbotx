@@ -33,6 +33,7 @@ import Link from "next/link"
 import { useTranslations } from "next-intl"
 import { useCallback, useEffect, useState } from "react"
 import { toast } from "sonner"
+import { LabelChip } from "@/components/labels/label-chip"
 import { client } from "@/lib/orpc/orpc"
 import {
   leadMagnetContactsHref,
@@ -173,10 +174,12 @@ export function LeadMagnetsView({
                   <TableCell className="max-w-xs align-top">
                     <div className="font-medium">{leadMagnet.name}</div>
                     {leadMagnet.tagName ? (
-                      <div className="text-muted-foreground text-xs">
-                        {t("leadMagnets.tagLabel", {
-                          tag: leadMagnet.tagName,
-                        })}
+                      <div className="mt-0.5 flex items-center gap-1 text-muted-foreground text-xs">
+                        {t("leadMagnets.tagPrefix")}
+                        <LabelChip
+                          color={leadMagnet.tagColor}
+                          name={leadMagnet.tagName}
+                        />
                       </div>
                     ) : (
                       <div className="text-destructive text-xs">

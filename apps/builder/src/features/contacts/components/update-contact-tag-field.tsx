@@ -7,7 +7,10 @@ import { useHookFormAction } from "@next-safe-action/adapter-react-hook-form/hoo
 import { useTranslations } from "next-intl"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
-import { useTagOptions } from "@/features/tags/provider/tag-hook"
+import {
+  useTagChipClassName,
+  useTagOptions,
+} from "@/features/tags/provider/tag-hook"
 import type { TagResource } from "@/features/tags/schema/resource"
 import { updateContactTagAction } from "../actions/update-contact-tag.action"
 import { updateContactTagRequest } from "../schemas/contact-tag"
@@ -30,6 +33,8 @@ export default function UpdateContactTagField({
   )
 
   const tagOptions = useTagOptions()
+
+  const tagChipClassName = useTagChipClassName()
 
   const { form, handleSubmitWithAction } = useHookFormAction(
     updateContactTagAction.bind(null, workspaceId),
@@ -67,6 +72,7 @@ export default function UpdateContactTagField({
       <form className="flex flex-1 flex-col gap-2">
         <TagsInputField
           addAnotherPlaceholder={t("actions.addAnother")}
+          getTagClassName={tagChipClassName}
           label=""
           name="tags"
           onSelect={(value: string[]) => {

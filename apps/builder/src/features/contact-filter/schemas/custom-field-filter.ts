@@ -3,6 +3,7 @@ import {
   customFieldTypes,
   type FormFieldType,
   formFieldTypes,
+  isSelectCustomFieldType,
   type OperatorType,
   operatorTypes,
 } from "@chatbotx.io/database/partials"
@@ -54,6 +55,12 @@ const DATE_OPERATORS = [
   ...RANGE_OPERATORS,
 ] as const satisfies readonly OperatorType[]
 
+const SELECT_OPERATORS = [
+  ...BASE_OPERATORS,
+  operatorTypes.enum.in,
+  operatorTypes.enum.notIn,
+] as const satisfies readonly OperatorType[]
+
 const BOOLEAN_OPERATORS = [
   operatorTypes.enum.eq,
   operatorTypes.enum.isNotEmpty,
@@ -66,6 +73,9 @@ const operatorsForCustomField = (
 ): readonly OperatorType[] => {
   if (customFieldType === customFieldTypes.enum.longText) {
     return LONG_TEXT_OPERATORS
+  }
+  if (isSelectCustomFieldType(customFieldType)) {
+    return SELECT_OPERATORS
   }
 
   switch (valueType) {
@@ -82,6 +92,9 @@ const operatorsForCustomField = (
 
 const isValuelessOperator = (operator: OperatorType): boolean =>
   (VALUELESS_OPERATORS as readonly OperatorType[]).includes(operator)
+
+const isListOperator = (operator: OperatorType): boolean =>
+  operator === operatorTypes.enum.in || operator === operatorTypes.enum.notIn
 
 const isIntervalOperator = (operator: OperatorType): boolean =>
   operator === operatorTypes.enum.isBetween ||
@@ -106,6 +119,8 @@ export const customFieldConditionSchema = z
       .union([
         sampleStringSchema,
         z.tuple([sampleStringSchema, sampleStringSchema]),
+        // `in` / `notIn` of select fields: any number of option labels.
+        z.array(sampleStringSchema),
       ])
       .optional(),
   })
@@ -125,6 +140,17 @@ export const customFieldConditionSchema = z
     }
 
     if (isValuelessOperator(condition.operator)) {
+      return
+    }
+
+    if (isListOperator(condition.operator)) {
+      if (!(Array.isArray(condition.value) && condition.value.length > 0)) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Pick at least one value",
+          path: ["value"],
+        })
+      }
       return
     }
 

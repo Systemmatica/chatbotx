@@ -411,19 +411,19 @@ class ContactCustomFieldService extends BaseService {
    * Rewrites stored values after select / multiSelect options were renamed so
    * contacts keep their choice. All renames run as ONE statement through an
    * index lookup (`from[i] -> to[i]`), so swapping two labels cannot cascade.
-   * Event-free like the other bulk writes; affected contacts' caches are
-   * invalidated in one batched call.
+   * Event-free like the other bulk writes. Write-only so it can run inside the
+   * caller's transaction: returns the affected contact ids, which the caller
+   * passes to `invalidateContacts` once committed.
    */
   async renameSelectOptionValues(input: {
-    workspaceId: string
     customFieldId: string
     type: string
     renames: { from: string; to: string }[]
     tx?: DatabaseClient
-  }): Promise<void> {
-    const { workspaceId, customFieldId, type, renames, tx = db } = input
+  }): Promise<string[]> {
+    const { customFieldId, type, renames, tx = db } = input
     if (renames.length === 0 || !isSelectCustomFieldType(type)) {
-      return
+      return []
     }
 
     const toArray = (values: string[]) =>
@@ -454,14 +454,19 @@ class ContactCustomFieldService extends BaseService {
       )
       .returning({ contactId: contactCustomFieldModel.contactId })
 
-    if (updated.length > 0) {
-      await this.invalidateCacheTags(
-        contactCacheTags(
-          workspaceId,
-          updated.map((row) => row.contactId),
-        ),
-      )
+    return updated.map((row) => row.contactId)
+  }
+
+  async invalidateContacts(input: {
+    workspaceId: string
+    contactIds: string[]
+  }): Promise<void> {
+    if (input.contactIds.length === 0) {
+      return
     }
+    await this.invalidateCacheTags(
+      contactCacheTags(input.workspaceId, input.contactIds),
+    )
   }
 
   async insertNormalizedValuesForNewContacts(

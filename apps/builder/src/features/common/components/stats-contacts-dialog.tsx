@@ -31,7 +31,10 @@ import { toast } from "sonner"
 import { z } from "zod"
 import { useAvatarUrl } from "@/features/contacts/utils"
 import { InboxIcon } from "@/features/inboxes/components/inbox-icon"
-import { useTagOptions } from "@/features/tags/provider/tag-hook"
+import {
+  useTagChipClassName,
+  useTagOptions,
+} from "@/features/tags/provider/tag-hook"
 import {
   TagStoreProvider,
   useTagStore,
@@ -334,6 +337,7 @@ const StatsTagDialog = memo(function StatsTagDialog({
   const hasSelectedAll =
     selection.mode === "all" && selection.excludedIds.size === 0
   const tagOptions = useTagOptions()
+  const tagChipClassName = useTagChipClassName()
   const { getAllActiveTags } = useTagStore((state) => state)
   const form = useForm<TagFormValues>({
     resolver: zodResolver(tagFormSchema),
@@ -389,6 +393,7 @@ const StatsTagDialog = memo(function StatsTagDialog({
           <form className="flex flex-1 flex-col space-y-4" onSubmit={onSubmit}>
             <TagsInputField
               addAnotherPlaceholder={t("actions.addAnother")}
+              getTagClassName={tagChipClassName}
               label={t("fields.tag.label")}
               name="tags"
               placeholder={t("actions.enterFieldAndPressEnter", {

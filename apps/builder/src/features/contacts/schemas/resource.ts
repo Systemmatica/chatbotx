@@ -1,4 +1,7 @@
-import type { CustomFieldType } from "@chatbotx.io/database/partials"
+import type {
+  CustomFieldOption,
+  CustomFieldType,
+} from "@chatbotx.io/database/partials"
 import { contactModel, createSelectSchema } from "@chatbotx.io/database/schema"
 import type { SelectOption } from "@chatbotx.io/ui/components/form/select-field"
 import type { LucideIcon } from "lucide-react"
@@ -18,6 +21,8 @@ export type ContactEditableField = {
   formValue?: string | null | undefined
   contactInboxId?: string | null | undefined
   options?: SelectOption[]
+  /** Options of a select / multiSelect custom field (value = labels). */
+  selectOptions?: CustomFieldOption[]
   type: CustomFieldType
   readOnly?: boolean
 }

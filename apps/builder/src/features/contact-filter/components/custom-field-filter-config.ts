@@ -15,6 +15,10 @@ export type CustomFieldValueInputKind =
   | "datetimeInterval"
   /** `[flowId, nodeId]` picked flow-then-node; static `currentFlowNode` only. */
   | "flowNode"
+  /** One option of a select / multiSelect custom field. */
+  | "select"
+  /** Several options (`in` / `notIn`) of a select / multiSelect field. */
+  | "multiSelect"
 
 export type CustomFieldValueInputConfig = {
   kind: CustomFieldValueInputKind
@@ -25,12 +29,16 @@ type CustomFieldTypeRule = {
   singleInput: CustomFieldValueInputKind
   intervalInput?: CustomFieldValueInputKind
   equalityInput?: CustomFieldValueInputKind
+  /** Input for the any-of operators (`in` / `notIn`). */
+  listInput?: CustomFieldValueInputKind
   enabledOperators: readonly OperatorType[]
 }
 
 const CUSTOM_FIELD_OPERATOR_ORDER = [
   operatorTypes.enum.eq,
   operatorTypes.enum.ne,
+  operatorTypes.enum.in,
+  operatorTypes.enum.notIn,
   operatorTypes.enum.isNotEmpty,
   operatorTypes.enum.isEmpty,
   operatorTypes.enum.gt,
@@ -77,7 +85,20 @@ const textRule = {
   enabledOperators: [...BASE_OPERATORS, ...TEXT_SEARCH_OPERATORS],
 } as const satisfies CustomFieldTypeRule
 
+// Select fields compare whole option labels: is / is not / any of / none of.
+const selectRule = {
+  singleInput: "select",
+  listInput: "multiSelect",
+  enabledOperators: [
+    ...BASE_OPERATORS,
+    operatorTypes.enum.in,
+    operatorTypes.enum.notIn,
+  ],
+} as const satisfies CustomFieldTypeRule
+
 const CUSTOM_FIELD_TYPE_RULES: Record<string, CustomFieldTypeRule> = {
+  select: selectRule,
+  multiSelect: selectRule,
   shortText: textRule,
   email: textRule,
   phoneNumber: textRule,
@@ -127,6 +148,9 @@ const isIntervalOperator = (operator?: string): operator is OperatorType =>
   operator === operatorTypes.enum.isBetween ||
   operator === operatorTypes.enum.notBetween
 
+const isListOperator = (operator?: string): operator is OperatorType =>
+  operator === operatorTypes.enum.in || operator === operatorTypes.enum.notIn
+
 const isEqualityOperator = (operator?: string): operator is OperatorType =>
   operator === operatorTypes.enum.eq || operator === operatorTypes.enum.ne
 
@@ -140,6 +164,9 @@ const resolveInputKind = (
 ): CustomFieldValueInputKind => {
   if (isIntervalOperator(operator) && rule.intervalInput) {
     return rule.intervalInput
+  }
+  if (isListOperator(operator) && rule.listInput) {
+    return rule.listInput
   }
   if (isEqualityOperator(operator) && rule.equalityInput) {
     return rule.equalityInput
@@ -157,6 +184,8 @@ const getDefaultValueForInputKind = (
       return ""
     case "datetimeInterval":
       return ["", ""]
+    case "multiSelect":
+      return []
     default:
       return ""
   }
@@ -172,7 +201,11 @@ export const getCustomFieldConditionOptions = (
     conditionOptions.map((option) => [option.value, option]),
   )
 
-  return CUSTOM_FIELD_OPERATOR_ORDER.map((operator) => {
+  // The any-of operators only exist for select fields; listing them disabled
+  // on every other field type would just add noise.
+  return CUSTOM_FIELD_OPERATOR_ORDER.filter(
+    (operator) => !isListOperator(operator) || enabledOperators.has(operator),
+  ).map((operator) => {
     const option = optionByOperator.get(operator)
     return {
       value: operator,
@@ -210,4 +243,4 @@ export const getDefaultCustomFieldValue = (
 
 export const customFieldOperatorRequiresArrayValue = (
   operator: string | undefined,
-): boolean => isIntervalOperator(operator)
+): boolean => isIntervalOperator(operator) || isListOperator(operator)

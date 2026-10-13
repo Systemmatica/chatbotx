@@ -1,5 +1,6 @@
 "use client"
 
+import { isSelectCustomFieldType } from "@chatbotx.io/database/partials"
 import { InputField } from "@chatbotx.io/ui/components/form/input-field"
 import { TextareaField } from "@chatbotx.io/ui/components/form/textarea-field"
 import { Button } from "@chatbotx.io/ui/components/ui/button"
@@ -20,6 +21,7 @@ import { useEffect } from "react"
 import { toast } from "sonner"
 import { updateCustomFieldAction } from "./actions/update-custom-field.action"
 import { CustomFieldIconField } from "./components/custom-field-icon-picker"
+import { CustomFieldOptionsField } from "./components/custom-field-options-editor"
 import { isCustomFieldIconName } from "./lib/custom-field-icon-names"
 import { updateCustomFieldRequest } from "./schemas/action"
 import type { CustomFieldResource } from "./schemas/resource"
@@ -80,6 +82,12 @@ export function UpdateCustomFieldDialog({
         "icon",
         isCustomFieldIconName(customField.icon) ? customField.icon : null,
       )
+      setValue(
+        "options",
+        isSelectCustomFieldType(customField.type)
+          ? (customField.options ?? [])
+          : undefined,
+      )
     }
   }, [customField, setValue])
 
@@ -106,6 +114,10 @@ export function UpdateCustomFieldDialog({
                 placeholder={t("fields.name.placeholder")}
                 required
               />
+
+              {isSelectCustomFieldType(customField?.type) ? (
+                <CustomFieldOptionsField />
+              ) : null}
 
               <CustomFieldIconField type={customField?.type ?? "shortText"} />
 

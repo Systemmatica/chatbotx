@@ -1,5 +1,6 @@
 "use client"
 
+import { resolveLabelColor } from "@chatbotx.io/database/partials"
 import type { TagModel } from "@chatbotx.io/database/types"
 import { Button } from "@chatbotx.io/ui/components/ui/button"
 import {
@@ -25,6 +26,7 @@ import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { useEffect } from "react"
 import { toast } from "sonner"
+import { LabelColorField } from "@/components/labels/label-color-picker"
 import { updateTagAction } from "./actions/update-tag-action"
 import { updateTagSchema } from "./schema/action"
 
@@ -75,9 +77,14 @@ export function UpdateTagDialog({
     },
   )
 
+  const watchName = form.watch("name") ?? ""
+
   useEffect(() => {
     if (tag) {
       setValue("name", tag.name)
+      // Persist the color the user currently sees (a null color is derived
+      // from the old name and would change on rename).
+      setValue("color", resolveLabelColor(tag.color, tag.name))
     }
   }, [tag, setValue])
 
@@ -109,6 +116,8 @@ export function UpdateTagDialog({
                   </FormItem>
                 )}
               />
+
+              <LabelColorField previewName={watchName} />
 
               <div className="flex justify-end gap-4">
                 <Button
