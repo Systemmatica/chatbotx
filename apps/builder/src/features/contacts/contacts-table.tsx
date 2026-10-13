@@ -21,6 +21,7 @@ import { format, formatDistanceToNow } from "date-fns"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { useFormatter, useTranslations } from "next-intl"
+import { parseAsString, useQueryState } from "nuqs"
 import { use, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
   type ContactFilterCriteria,
@@ -31,6 +32,20 @@ import {
   useContactFilterQueryState,
 } from "@/features/contact-filter"
 import { EMAIL_PHONE_RESTRICTED_FILTER_FIELDS } from "@/features/contact-filter/lib/restricted-fields"
+import { ContactViewTabs } from "@/features/contact-views/components/contact-view-tabs"
+import { useContactViews } from "@/features/contact-views/hooks/use-contact-views"
+import {
+  CONTACT_VIEW_PARAM,
+  type ContactTableViewState,
+  isViewStateDirty,
+  toSavedViewConfig,
+  toTableViewState,
+} from "@/features/contact-views/lib/view-state"
+import {
+  type ContactViewGroupBy,
+  resolveContactViewConfig,
+} from "@/features/contact-views/schemas/config"
+import type { ContactViewResource } from "@/features/contact-views/schemas/resource"
 import { client } from "@/lib/orpc/orpc"
 import { resolveCustomFieldIcon } from "../custom-fields/lib/custom-field-icons"
 import { useCustomFieldStore } from "../custom-fields/provider/custom-field-store-context"
@@ -50,7 +65,6 @@ import {
   BASE_HIDEABLE_COLUMNS,
   buildColumnVisibility,
   customFieldColumnId,
-  DEFAULT_VISIBLE_COLUMNS,
   getRowCustomFieldValue,
   patchRowCustomField,
 } from "./lib/custom-field-columns"
@@ -167,24 +181,31 @@ function CustomFieldHeader({ field }: { field: CustomFieldResource }) {
 
 type ContactsTableProps = {
   canViewEmailAndPhone?: boolean
+  /** Members limited to assigned contacts use views but cannot edit them. */
+  canManageViews?: boolean
   initialContactFilter?: ContactFilterCriteria
+  initialViews?: ContactViewResource[]
   workspaceId: string
   promises: Promise<[Awaited<ReturnType<typeof listContacts>>]>
 }
 
 export function ContactsTable({
   canViewEmailAndPhone = true,
+  canManageViews = false,
   initialContactFilter = EMPTY_CONTACT_FILTER,
+  initialViews = [],
   workspaceId,
   promises,
 }: ContactsTableProps) {
   const t = useTranslations()
   const formatter = useFormatter()
   const searchParams = useSearchParams()
-  // The peek param only opens a panel: it must not refetch the list.
+  // The peek and view params only switch UI state (the view's filter and
+  // sort are applied separately): they must not refetch the list.
   const searchParamsKey = useMemo(() => {
     const params = new URLSearchParams(searchParams.toString())
     params.delete(CONTACT_PEEK_PARAM)
+    params.delete(CONTACT_VIEW_PARAM)
     return params.toString()
   }, [searchParams])
   const { contactId: peekContactId, openContact } = useContactPeek()
@@ -542,9 +563,38 @@ export function ContactsTable({
     clearOnDefault: true,
   })
 
-  const [visibleColumns, setVisibleColumns] = useState<readonly string[]>(
-    DEFAULT_VISIBLE_COLUMNS,
+  // ── Saved views ─────────────────────────────────────────────────────
+  const contactViews = useContactViews(workspaceId, initialViews)
+  const [activeViewId, setActiveViewId] = useQueryState(
+    CONTACT_VIEW_PARAM,
+    parseAsString.withOptions({ history: "replace", scroll: false }),
   )
+  const activeView =
+    contactViews.views.find((view) => view.id === activeViewId) ?? null
+  const expectedViewState = useMemo(
+    () =>
+      toTableViewState(
+        activeView ? resolveContactViewConfig(activeView.config) : null,
+      ),
+    [activeView],
+  )
+  const [visibleColumns, setVisibleColumns] = useState<readonly string[]>(
+    expectedViewState.visibleColumns,
+  )
+  const [groupBy, setGroupBy] = useState<ContactViewGroupBy | null>(
+    expectedViewState.groupBy,
+  )
+  const sorting = table.getState().sorting
+  const currentViewState = useMemo<ContactTableViewState>(
+    () => ({
+      filter: optimisticContactFilter,
+      sort: sorting,
+      visibleColumns,
+      groupBy,
+    }),
+    [optimisticContactFilter, sorting, visibleColumns, groupBy],
+  )
+  const viewDirty = isViewStateDirty(expectedViewState, currentViewState)
   const baseColumnOptions = useMemo<ColumnOption[]>(
     () => [
       { id: "source", label: t("fields.source.label") },
@@ -585,6 +635,52 @@ export function ContactsTable({
     [contactFilter, setContactFilter, table],
   )
 
+  const applyViewState = useCallback(
+    (state: ContactTableViewState) => {
+      handleContactFilterChange(state.filter)
+      table.setSorting(state.sort)
+      setVisibleColumns(state.visibleColumns)
+      setGroupBy(state.groupBy)
+    },
+    [handleContactFilterChange, table],
+  )
+
+  const selectView = useCallback(
+    (viewId: string | null) => {
+      const view = contactViews.views.find((item) => item.id === viewId)
+      setActiveViewId(view ? view.id : null)
+      applyViewState(
+        toTableViewState(view ? resolveContactViewConfig(view.config) : null),
+      )
+    },
+    [applyViewState, contactViews.views, setActiveViewId],
+  )
+
+  // Opened from a link: the server applied the view's filter (and first
+  // page sort); bring the sort into the table state once. A link to a view
+  // that no longer exists falls back to "All".
+  const didApplyLinkedViewRef = useRef(false)
+  useEffect(() => {
+    if (didApplyLinkedViewRef.current) {
+      return
+    }
+    didApplyLinkedViewRef.current = true
+    if (activeViewId && !activeView) {
+      setActiveViewId(null)
+      return
+    }
+    if (activeView && !new URLSearchParams(searchParamsKey).has("sort")) {
+      table.setSorting(expectedViewState.sort)
+    }
+  }, [
+    activeView,
+    activeViewId,
+    expectedViewState.sort,
+    searchParamsKey,
+    setActiveViewId,
+    table,
+  ])
+
   const peekContactIds = useMemo(
     () => tableData.map((contact) => contact.id),
     [tableData],
@@ -597,6 +693,49 @@ export function ContactsTable({
 
   return (
     <>
+      <ContactViewTabs
+        activeViewId={activeView?.id ?? null}
+        canManage={canManageViews}
+        dirty={viewDirty}
+        onCreate={async (name) => {
+          const view = await contactViews.create(
+            name,
+            toSavedViewConfig(currentViewState),
+          )
+          if (view) {
+            await setActiveViewId(view.id)
+          }
+        }}
+        onDelete={async (viewId) => {
+          const deleted = await contactViews.remove(viewId)
+          if (deleted && viewId === activeView?.id) {
+            selectView(null)
+          }
+        }}
+        onDiscard={() => applyViewState(expectedViewState)}
+        onDuplicate={async (viewId, name) => {
+          const view = await contactViews.duplicate(viewId, name)
+          if (view) {
+            await setActiveViewId(view.id)
+            applyViewState(
+              toTableViewState(resolveContactViewConfig(view.config)),
+            )
+          }
+        }}
+        onMove={(viewId, direction) => {
+          contactViews.move(viewId, direction)
+        }}
+        onRename={(viewId, name) => contactViews.update(viewId, { name })}
+        onSave={async () => {
+          if (activeView) {
+            await contactViews.update(activeView.id, {
+              config: toSavedViewConfig(currentViewState),
+            })
+          }
+        }}
+        onSelect={selectView}
+        views={contactViews.views}
+      />
       <DataTable
         className="[&_tbody_td]:py-3 [&_tbody_td]:text-[15px] [&_tbody_tr]:h-16"
         isRowActive={(row) => row.original.id === peekContactId}

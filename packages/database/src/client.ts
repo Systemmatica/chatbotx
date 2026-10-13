@@ -111,6 +111,21 @@ export const countWithRelationsFilterCapped = async <
   }
 }
 
+/**
+ * SQL condition of a relational `where` object (the shape `findMany` takes),
+ * for raw queries such as grouped counts over the same filtered rows.
+ * `undefined` when the filter is empty.
+ */
+export const relationsWhereToSQL = <TTable extends PgTable>(props: {
+  client?: DatabaseClient
+  table: TTable
+  tsName: string
+  where: Record<string, unknown> | undefined
+}) => {
+  const { client = db, ...rest } = props
+  return resolveRelationsFilter({ client, ...rest })
+}
+
 const resolveRelationsFilter = <TTable extends PgTable>(props: {
   client: DatabaseClient
   table: TTable

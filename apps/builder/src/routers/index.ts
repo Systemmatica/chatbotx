@@ -84,6 +84,11 @@ export const router = {
   flowsAPI: lazy(() =>
     import("@/features/flows/api").then((m) => ({ default: m.flowsAPI })),
   ),
+  contactViewsAPI: lazy(() =>
+    import("@/features/contact-views/api").then((m) => ({
+      default: m.contactViewsAPI,
+    })),
+  ),
   contactsAPIs: lazy(() =>
     import("@/features/contacts/api").then((m) => ({
       default: m.contactsAPIs,

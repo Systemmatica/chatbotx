@@ -5625,5 +5625,29 @@
     "noMessages": "No messages yet",
     "noConversation": "The contact has no chat yet",
     "attachments": "{count, plural, one {# attachment} other {# attachments}}"
+  },
+  "contactViews": {
+    "title": "Contact views",
+    "all": "All",
+    "menu": "View \"{name}\" options",
+    "rename": "Rename",
+    "duplicate": "Duplicate",
+    "moveLeft": "Move left",
+    "moveRight": "Move right",
+    "unsaved": "Unsaved changes",
+    "discard": "Reset",
+    "save": "Save view",
+    "saveAs": "Save as view",
+    "copyName": "{name} (copy)",
+    "name": "View name",
+    "namePlaceholder": "For example: Hot leads",
+    "nameDescription": "The view keeps the filter, sorting, columns and grouping. Everyone in the workspace sees it.",
+    "deleteDescription": "The view will be deleted for everyone in the workspace. Contacts are not affected.",
+    "messages": {
+      "created": "View \"{name}\" saved",
+      "saved": "View \"{name}\" updated",
+      "saveFailed": "Could not save the view",
+      "deleteFailed": "Could not delete the view"
+    }
   }
 }
