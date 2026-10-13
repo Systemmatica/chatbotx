@@ -155,6 +155,35 @@ const buildScopedIdentityFields = (
   })
 }
 
+/** Rough length past which a bio likely exceeds the 3-line clamp. */
+const BIO_CLAMP_THRESHOLD = 120
+
+/** Channel profile bio: muted, clamped to 3 lines with an expand toggle. */
+const ContactBio = ({ bio }: { bio: string }) => {
+  const t = useTranslations()
+  const [expanded, setExpanded] = useState(false)
+  const collapsible = bio.length > BIO_CLAMP_THRESHOLD || bio.includes("\n")
+
+  return (
+    <div className="-mt-2 mb-4 flex flex-col items-center gap-0.5 px-2">
+      <p
+        className={`whitespace-pre-line break-words text-center text-muted-foreground text-xs ${expanded ? "" : "line-clamp-3"}`}
+      >
+        {bio}
+      </p>
+      {collapsible ? (
+        <button
+          className="text-[11px] text-primary hover:underline"
+          onClick={() => setExpanded((value) => !value)}
+          type="button"
+        >
+          {expanded ? t("actions.collapse") : t("actions.expand")}
+        </button>
+      ) : null}
+    </div>
+  )
+}
+
 export const ContactDetail = ({
   activeConversationId,
   contact,
@@ -399,6 +428,7 @@ export const ContactDetail = ({
           <AvatarFallback>NA</AvatarFallback>
         </Avatar>
       </div>
+      {contact.bio ? <ContactBio bio={contact.bio} key={contact.id} /> : null}
       <div className="flex flex-col gap-1 font-medium text-[12px] text-gray-600">
         {contactFields.map((editable) => {
           const fieldValue =
