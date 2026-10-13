@@ -1,4 +1,7 @@
-import { kanbanStagesSchema } from "@chatbotx.io/database/partials"
+import {
+  kanbanCardPropertiesSchema,
+  kanbanStagesSchema,
+} from "@chatbotx.io/database/partials"
 import { zodBigintAsString } from "@chatbotx.io/utils"
 import { z } from "zod"
 import { withWorkspaceIdSchema } from "@/features/workspaces/schema/resource"
@@ -27,6 +30,8 @@ export const createKanbanBoardRequest = withWorkspaceIdSchema.and(
         .max(255)
         .optional()
         .nullable(),
+      /** What cards show; omitted/`null` = the default card. */
+      cardProperties: kanbanCardPropertiesSchema.optional().nullable(),
     })
     .refine(
       (value) => Boolean(value.customFieldId || value.newCustomFieldName),
@@ -44,6 +49,8 @@ export const updateKanbanBoardRequest = kanbanBoardIdRequest.and(
     name: boardName.optional(),
     stages: kanbanStagesSchema.optional(),
     customFieldId: zodBigintAsString().optional(),
+    /** `null` resets the cards to the default look. */
+    cardProperties: kanbanCardPropertiesSchema.optional().nullable(),
   }),
 )
 

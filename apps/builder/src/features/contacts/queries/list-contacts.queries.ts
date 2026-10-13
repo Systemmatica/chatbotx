@@ -184,7 +184,9 @@ export async function listContactsRSC(
       extras: tagReceivedAt.extras,
       with: {
         // Soft-deleted tags stay linked until cleanup; never show them.
+        // Custom field columns and grouping read fields from the first page too.
         tags: { where: { deletedAt: { isNull: true } } },
+        contactCustomFields: true,
         contactInboxes: {
           with: {
             inbox: true,

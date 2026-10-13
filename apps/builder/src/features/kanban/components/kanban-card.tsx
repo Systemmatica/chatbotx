@@ -1,6 +1,10 @@
 "use client"
 
-import type { ChannelType } from "@chatbotx.io/database/partials"
+import {
+  type ChannelType,
+  DEFAULT_KANBAN_CARD_PROPERTIES,
+  type KanbanCardProperty,
+} from "@chatbotx.io/database/partials"
 import {
   Avatar,
   AvatarFallback,
@@ -9,32 +13,50 @@ import {
 import { cn } from "@chatbotx.io/ui/lib/utils"
 import { getPublicFileUrl } from "@chatbotx.io/utils"
 import { useDraggable } from "@dnd-kit/core"
-import Link from "next/link"
-import { useFormatter, useTranslations } from "next-intl"
-import { CurrentStepLine } from "@/features/flow-steps/components/current-step-line"
-import { flowChatsHref } from "@/features/flows/components/flow-hub-tabs"
+import { useTranslations } from "next-intl"
+import { isInteractiveClickTarget } from "@/features/contacts/lib/peek-navigation"
 import { InboxIcon } from "@/features/inboxes/components/inbox-icon"
 import { useTenantSettings } from "@/features/tenant"
 import type { KanbanCardResource } from "../schemas/resource"
+import {
+  type CardCustomField,
+  KanbanCardPropertyLines,
+} from "./kanban-card-properties"
+
+const NO_CUSTOM_FIELDS = new Map<string, CardCustomField>()
+
+/** What a board's cards show (properties + the custom fields they name). */
+export type KanbanCardDisplay = {
+  properties: readonly KanbanCardProperty[]
+  customFieldsById: Map<string, CardCustomField>
+}
+
+const DEFAULT_DISPLAY: KanbanCardDisplay = {
+  properties: DEFAULT_KANBAN_CARD_PROPERTIES,
+  customFieldsById: NO_CUSTOM_FIELDS,
+}
 
 type KanbanCardProps = {
-  workspaceId: string
   card: KanbanCardResource
-  /** On a flow's board the chat opens in that flow's "Chats" tab. */
-  flowId?: string
-  /** Rendered inside the drag overlay: no drag handlers, no link. */
+  /** Opens the contact in the side peek (a click, not the end of a drag). */
+  onOpen?: (contactId: string) => void
+  /** The card open in the side peek. */
+  active?: boolean
+  /** Rendered inside the drag overlay: no drag handlers, no click. */
   overlay?: boolean
+  display?: KanbanCardDisplay
 }
 
 export function KanbanCardContent({
   card,
   className,
+  display = DEFAULT_DISPLAY,
 }: {
   card: KanbanCardResource
   className?: string
+  display?: KanbanCardDisplay
 }) {
   const t = useTranslations()
-  const format = useFormatter()
   const { storageUrl } = useTenantSettings()
   const avatarUrl = card.avatar
     ? getPublicFileUrl(card.avatar, storageUrl)
@@ -72,22 +94,24 @@ export function KanbanCardContent({
       </div>
       <div className="min-w-0 flex-1">
         <p className="truncate font-medium text-sm">{displayName}</p>
-        <p className="truncate text-muted-foreground text-xs">
-          {card.lastMessageAt
-            ? format.relativeTime(card.lastMessageAt)
-            : t("kanban.noLastMessage")}
-        </p>
-        <CurrentStepLine step={card.currentFlowStep} />
+        <div className="flex min-w-0 flex-col gap-1">
+          <KanbanCardPropertyLines
+            card={card}
+            customFieldsById={display.customFieldsById}
+            properties={display.properties}
+          />
+        </div>
       </div>
     </div>
   )
 }
 
 export function KanbanCard({
-  workspaceId,
   card,
-  flowId,
+  onOpen,
+  active,
   overlay,
+  display,
 }: KanbanCardProps) {
   const t = useTranslations()
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
@@ -96,37 +120,54 @@ export function KanbanCard({
   })
 
   if (overlay) {
-    return <KanbanCardContent card={card} className="rotate-2 shadow-lg" />
+    return (
+      <KanbanCardContent
+        card={card}
+        className="rotate-2 shadow-lg"
+        display={display}
+      />
+    )
   }
 
-  const content = (
-    <KanbanCardContent
-      card={card}
-      className={cn(
-        "cursor-grab transition-colors hover:bg-accent active:cursor-grabbing",
-        isDragging && "opacity-40",
-      )}
-    />
-  )
-
+  // dnd-kit only starts a drag after the pointer moves 6px, so a plain click
+  // reaches onClick; the view also ignores clicks right after a drop.
   return (
-    <div ref={setNodeRef} {...attributes} {...listeners}>
-      {card.conversationId ? (
-        <Link
-          aria-label={t("kanban.openChat")}
-          className="block"
-          draggable={false}
-          href={
-            flowId
-              ? flowChatsHref(workspaceId, flowId, card.conversationId)
-              : `/space/${workspaceId}/inbox?conversationId=${card.conversationId}`
-          }
-        >
-          {content}
-        </Link>
-      ) : (
-        <div title={t("kanban.noConversation")}>{content}</div>
-      )}
+    // biome-ignore lint/a11y/useSemanticElements: a draggable card with block content; dnd-kit sets the same role
+    <div
+      ref={setNodeRef}
+      {...attributes}
+      {...listeners}
+      onClick={(event) => {
+        if (!isInteractiveClickTarget(event.target, event.currentTarget)) {
+          onOpen?.(card.contactId)
+        }
+      }}
+      onKeyDown={(event) => {
+        // Space starts a keyboard drag (see the view's sensors); Enter opens.
+        if (
+          event.key === "Enter" &&
+          !isDragging &&
+          event.target === event.currentTarget
+        ) {
+          event.preventDefault()
+          onOpen?.(card.contactId)
+          return
+        }
+        listeners?.onKeyDown?.(event)
+      }}
+      role="button"
+      tabIndex={0}
+      title={t("kanban.openContact")}
+    >
+      <KanbanCardContent
+        card={card}
+        className={cn(
+          "cursor-grab transition-colors hover:bg-accent active:cursor-grabbing",
+          active && "border-primary ring-1 ring-primary",
+          isDragging && "opacity-40",
+        )}
+        display={display}
+      />
     </div>
   )
 }

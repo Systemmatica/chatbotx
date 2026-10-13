@@ -1,8 +1,12 @@
 "use client"
 
 import {
+  DEFAULT_KANBAN_CARD_PROPERTIES,
+  type KanbanCardProperty,
   type KanbanStage,
+  kanbanCardPropertyKey,
   kanbanStagesSchema,
+  resolveKanbanCardProperties,
 } from "@chatbotx.io/database/partials"
 import { Button } from "@chatbotx.io/ui/components/ui/button"
 import {
@@ -55,6 +59,7 @@ import {
   kanbanTemplateIds,
 } from "../lib/templates"
 import type { KanbanBoardResource } from "../schemas/resource"
+import { KanbanCardPropertiesEditor } from "./kanban-card-properties"
 
 type FieldMode = "existing" | "new"
 
@@ -102,6 +107,9 @@ export function KanbanBoardDialog({
   const [newFieldName, setNewFieldName] = useState("")
   const [stages, setStages] = useState<KanbanStage[]>([])
   const [template, setTemplate] = useState<KanbanTemplateId>(defaultTemplate)
+  const [cardProperties, setCardProperties] = useState<KanbanCardProperty[]>([
+    ...DEFAULT_KANBAN_CARD_PROPERTIES,
+  ])
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Reset the form only when the dialog opens or switches board, not when the
@@ -117,8 +125,10 @@ export function KanbanBoardDialog({
       setCustomFieldId(board.customFieldId)
       setStages(board.stages)
       setNewFieldName(t("kanban.defaultFieldName"))
+      setCardProperties([...resolveKanbanCardProperties(board.cardProperties)])
     } else {
       applyTemplate(defaultTemplate)
+      setCardProperties([...DEFAULT_KANBAN_CARD_PROPERTIES])
     }
   }, [open, board])
 
@@ -219,6 +229,12 @@ export function KanbanBoardDialog({
     if (!validStages) {
       return
     }
+    // The default list is stored as "default", so cards follow future
+    // improvements of the default look.
+    const isDefaultCard =
+      cardProperties.map(kanbanCardPropertyKey).join() ===
+      DEFAULT_KANBAN_CARD_PROPERTIES.map(kanbanCardPropertyKey).join()
+    const cardPropertiesInput = isDefaultCard ? null : cardProperties
     setIsSubmitting(true)
     try {
       const saved = board
@@ -228,12 +244,14 @@ export function KanbanBoardDialog({
             name: name.trim(),
             stages: validStages,
             customFieldId,
+            cardProperties: cardPropertiesInput,
           })
         : await client.kanbanAPI.createKanbanBoardAPI({
             workspaceId,
             name: name.trim(),
             stages: validStages,
             flowId: flowId ?? null,
+            cardProperties: cardPropertiesInput,
             ...(fieldMode === "existing"
               ? { customFieldId }
               : { newCustomFieldName: newFieldName.trim() }),
@@ -498,6 +516,18 @@ export function KanbanBoardDialog({
               <PlusIcon />
               {t("kanban.addStage")}
             </Button>
+          </div>
+
+          <div className="grid gap-2">
+            <Label>{t("kanban.cardProperties.title")}</Label>
+            <p className="text-muted-foreground text-xs">
+              {t("kanban.cardProperties.description")}
+            </p>
+            <KanbanCardPropertiesEditor
+              customFields={customFields}
+              onChange={setCardProperties}
+              value={cardProperties}
+            />
           </div>
         </div>
 

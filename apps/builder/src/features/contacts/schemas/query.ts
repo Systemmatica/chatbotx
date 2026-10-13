@@ -152,6 +152,10 @@ export const getContactResponse = contactResource.and(
     contactNotes: z.array(contactNoteResource),
     contactsOnSequences: z.array(contactOnSequenceWithRelations),
     currentFlowStep: currentFlowStepResource.nullable().optional(),
+    /** Channel rows, most recently active first. */
+    contactInboxes: z.array(contactInboxResource).optional(),
+    /** The contact's chat, for "open chat" links (side peek). */
+    conversationId: z.string().nullish(),
   }),
 )
 export type GetContactResponse = z.infer<typeof getContactResponse>

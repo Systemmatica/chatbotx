@@ -39,6 +39,7 @@ import { contactsOnSequenceRelations } from "./contact-on-sequence"
 import { contactOnSmartDelayRelations } from "./contact-on-smart-delay"
 import { contactsToTagsRelations } from "./contact-to-tag"
 import { contactToTagChannelRelations } from "./contact-to-tag-channel"
+import { contactViewRelations } from "./contact-view"
 import { conversationRelations } from "./conversation"
 import { conversationParticipantRelations } from "./conversation-participant"
 import { couponRelations } from "./coupon"
@@ -271,5 +272,6 @@ export const relations = {
   ...minigameContactRelations,
   ...minigamePlayRelations,
   ...kanbanBoardRelations,
+  ...contactViewRelations,
   ...leadMagnetRelations,
 }

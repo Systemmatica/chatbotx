@@ -4,6 +4,24 @@ import {
 } from "@chatbotx.io/database/partials"
 import type { CurrentFlowStep } from "../flow/current-step"
 
+/** Data behind a board's card properties (only the configured ones). */
+export type KanbanCardPropertyData = {
+  /** Values of the shown custom fields, by custom field id. */
+  customFields?: Record<string, string>
+  tags?: { id: string; name: string }[]
+  leadMagnets?: { id: string; name: string }[]
+  /** `null` when unknown or hidden from the viewer. */
+  phone?: string | null
+  lastMessage?: {
+    text: string | null
+    messageType: string
+    attachmentCount: number
+    createdAt: Date
+  } | null
+  /** When the contact entered its current stage (status last written). */
+  stageSince?: Date | null
+}
+
 export type KanbanCardInput = {
   contactId: string
   fullName: string | null
@@ -15,6 +33,7 @@ export type KanbanCardInput = {
   conversationId: string | null
   /** Flow step the contact is on, resolved for display (optional). */
   currentFlowStep?: CurrentFlowStep | null
+  properties?: KanbanCardPropertyData
 }
 
 export type KanbanCard = Omit<KanbanCardInput, "bucket">

@@ -1,3 +1,4 @@
+import { contactViewService } from "@chatbotx.io/business"
 import { buttonVariants } from "@chatbotx.io/ui/components/ui/button"
 import { getIdFromParams } from "@chatbotx.io/utils"
 import { CloudUploadIcon } from "lucide-react"
@@ -7,6 +8,8 @@ import { getTranslations } from "next-intl/server"
 import type { SearchParams } from "nuqs/server"
 import { Suspense } from "react"
 import { EMPTY_CONTACT_FILTER } from "@/features/contact-filter"
+import { CONTACT_VIEW_PARAM } from "@/features/contact-views/lib/view-state"
+import { resolveContactViewConfig } from "@/features/contact-views/schemas/config"
 import { ContactsTable } from "@/features/contacts/contacts-table"
 import { CreateContactDialog } from "@/features/contacts/create-contact-dialog"
 import { requireContactPermissionScope } from "@/features/contacts/permissions"
@@ -37,11 +40,28 @@ export default async function ContactsPage(props: {
   const { data: search } = listContactsRequest
     .omit({ workspaceId: true })
     .safeParse(searchParams)
-  const initialContactFilter = search?.contactFilter ?? EMPTY_CONTACT_FILTER
+  // A shared link may carry only `?view=<id>`: the view's filter and sort
+  // then drive the first page (explicit URL params still win).
+  const views = await contactViewService.list({ workspaceId })
+  const viewParam = searchParams[CONTACT_VIEW_PARAM]
+  const activeView =
+    typeof viewParam === "string"
+      ? views.find((view) => view.id === viewParam)
+      : undefined
+  const activeViewConfig = activeView
+    ? resolveContactViewConfig(activeView.config)
+    : null
+  const initialContactFilter =
+    search?.contactFilter ?? activeViewConfig?.filter ?? EMPTY_CONTACT_FILTER
 
   const promises = Promise.all([
     listContactsRSC({
       ...search,
+      contactFilter:
+        search?.contactFilter ?? activeViewConfig?.filter ?? undefined,
+      sort:
+        search?.sort ??
+        (activeViewConfig?.sort.length ? activeViewConfig.sort : undefined),
       workspaceId,
     }),
   ])
@@ -70,10 +90,14 @@ export default async function ContactsPage(props: {
                 <InboxStoreProvider workspaceId={workspaceId}>
                   <SequenceStoreProvider workspaceId={workspaceId}>
                     <ContactsTable
+                      canManageViews={
+                        !contactPermissionScope.restrictToAssignedUserId
+                      }
                       canViewEmailAndPhone={
                         contactPermissionScope.canViewEmailAndPhone
                       }
                       initialContactFilter={initialContactFilter}
+                      initialViews={views}
                       promises={promises}
                       workspaceId={workspaceId}
                     />

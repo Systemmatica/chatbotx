@@ -89,6 +89,11 @@ export const router = {
       default: m.contactActivityAPI,
     })),
   ),
+  contactViewsAPI: lazy(() =>
+    import("@/features/contact-views/api").then((m) => ({
+      default: m.contactViewsAPI,
+    })),
+  ),
   contactsAPIs: lazy(() =>
     import("@/features/contacts/api").then((m) => ({
       default: m.contactsAPIs,

@@ -1,5 +1,6 @@
 "use client"
 
+import { resolveKanbanCardProperties } from "@chatbotx.io/database/partials"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -44,6 +45,11 @@ import {
 import { useTranslations } from "next-intl"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { toast } from "sonner"
+import { ContactPeek } from "@/features/contacts/components/contact-peek"
+import { useContactPeek } from "@/features/contacts/hooks/use-contact-peek"
+import { uniqueInOrder } from "@/features/contacts/lib/peek-navigation"
+import { useCustomFieldStore } from "@/features/custom-fields/provider/custom-field-store-context"
+import { flowChatsHref } from "@/features/flows/components/flow-hub-tabs"
 import { useTagSelectOptions } from "@/features/tags/provider/tag-hook"
 import { client } from "@/lib/orpc/orpc"
 import {
@@ -59,10 +65,12 @@ import type {
   KanbanColumnResource,
 } from "../schemas/resource"
 import { KanbanBoardDialog } from "./kanban-board-dialog"
-import { KanbanCard } from "./kanban-card"
+import { KanbanCard, type KanbanCardDisplay } from "./kanban-card"
 import { KanbanColumn } from "./kanban-column"
 
 const CARDS_PER_COLUMN = 50
+/** A click this soon after a drop is the tail of the drag, not an "open". */
+const CLICK_AFTER_DRAG_MS = 250
 const ALL_TAGS = ""
 /**
  * A board request that has not answered by then is given up on: the view
@@ -117,10 +125,25 @@ export function KanbanView({
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [activeCard, setActiveCard] = useState<KanbanCardResource | null>(null)
   const requestIdRef = useRef(0)
+  const lastDragEndAtRef = useRef(0)
+  const { contactId: peekContactId, openContact } = useContactPeek()
 
   const selectedBoard = useMemo(
     () => boards.find((board) => board.id === selectedBoardId) ?? null,
     [boards, selectedBoardId],
+  )
+  const customFields = useCustomFieldStore((state) => state.customFields)
+  const cardDisplay = useMemo<KanbanCardDisplay>(
+    () => ({
+      properties: resolveKanbanCardProperties(selectedBoard?.cardProperties),
+      customFieldsById: new Map(
+        customFields.map((field) => [
+          field.id,
+          { id: field.id, name: field.name, type: field.type },
+        ]),
+      ),
+    }),
+    [selectedBoard?.cardProperties, customFields],
   )
 
   const applySearch = useDebouncedCallback((value: string) => {
@@ -236,7 +259,14 @@ export function KanbanView({
     useSensor(TouchSensor, {
       activationConstraint: { delay: 200, tolerance: 6 },
     }),
-    useSensor(KeyboardSensor),
+    // Enter is kept for opening the card in the side peek.
+    useSensor(KeyboardSensor, {
+      keyboardCodes: {
+        start: ["Space"],
+        cancel: ["Escape"],
+        end: ["Space", "Enter"],
+      },
+    }),
   )
 
   const handleDragStart = ({ active }: DragStartEvent) => {
@@ -248,6 +278,7 @@ export function KanbanView({
 
   const handleDragEnd = async ({ active, over }: DragEndEvent) => {
     setActiveCard(null)
+    lastDragEndAtRef.current = Date.now()
     if (!(over && selectedBoardId)) {
       return
     }
@@ -280,6 +311,32 @@ export function KanbanView({
       toast.error(`${t("kanban.moveFailed")} ${errorMessage(error, "")}`.trim())
     }
   }
+
+  const handleOpenCard = useCallback(
+    (contactId: string) => {
+      if (Date.now() - lastDragEndAtRef.current < CLICK_AFTER_DRAG_MS) {
+        return
+      }
+      openContact(contactId)
+    },
+    [openContact],
+  )
+
+  // Peek ↑/↓ walks the board column by column, top to bottom.
+  const peekContactIds = useMemo(
+    () =>
+      uniqueInOrder(
+        columns.flatMap((column) => column.cards.map((card) => card.contactId)),
+      ),
+    [columns],
+  )
+  const chatHref = useCallback(
+    (conversationId: string) =>
+      flowId
+        ? flowChatsHref(workspaceId, flowId, conversationId)
+        : `/space/${workspaceId}/inbox?conversationId=${conversationId}`,
+    [flowId, workspaceId],
+  )
 
   const handleSaved = (board: KanbanBoardResource) => {
     setBoards((current) =>
@@ -486,7 +543,10 @@ export function KanbanView({
           </div>
 
           <DndContext
-            onDragCancel={() => setActiveCard(null)}
+            onDragCancel={() => {
+              setActiveCard(null)
+              lastDragEndAtRef.current = Date.now()
+            }}
             onDragEnd={handleDragEnd}
             onDragStart={handleDragStart}
             sensors={sensors}
@@ -494,22 +554,19 @@ export function KanbanView({
             <div className="flex min-h-0 flex-1 gap-3 overflow-x-auto pb-2">
               {columns.map((column) => (
                 <KanbanColumn
+                  activeContactId={peekContactId}
                   column={column}
-                  flowId={flowId}
+                  display={cardDisplay}
                   key={column.id}
                   loadingMore={loadingMoreColumnId === column.id}
                   onLoadMore={handleLoadMore}
-                  workspaceId={workspaceId}
+                  onOpenCard={handleOpenCard}
                 />
               ))}
             </div>
             <DragOverlay>
               {activeCard ? (
-                <KanbanCard
-                  card={activeCard}
-                  overlay
-                  workspaceId={workspaceId}
-                />
+                <KanbanCard card={activeCard} display={cardDisplay} overlay />
               ) : null}
             </DragOverlay>
           </DndContext>
@@ -533,6 +590,12 @@ export function KanbanView({
           ) : null}
         </div>
       )}
+
+      <ContactPeek
+        chatHref={chatHref}
+        contactIds={peekContactIds}
+        workspaceId={workspaceId}
+      />
 
       <KanbanBoardDialog
         board={editingBoard}

@@ -35,6 +35,9 @@ export async function getContact(
         },
       },
       conversation: true,
+      contactInboxes: {
+        with: { inbox: { columns: { name: true } } },
+      },
     },
   })
 
@@ -51,7 +54,8 @@ export async function getContact(
 
   const {
     contactCustomFields,
-    conversation: _conversation,
+    conversation,
+    contactInboxes,
     ...contactFields
   } = contact
   const visibleContactFields = scope.canViewEmailAndPhone
@@ -66,6 +70,11 @@ export async function getContact(
   return {
     ...visibleContactFields,
     currentFlowStep,
+    contactInboxes: contactInboxes.toSorted(
+      (a, b) =>
+        (b.lastMessageAt?.getTime() ?? 0) - (a.lastMessageAt?.getTime() ?? 0),
+    ),
+    conversationId: conversation?.id ?? null,
     customFields: contactCustomFields.map((ccf) => ({
       ...ccf.customField,
       type: ccf.customField.type as CustomFieldType,

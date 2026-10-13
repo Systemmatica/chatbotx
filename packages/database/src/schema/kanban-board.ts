@@ -1,5 +1,5 @@
 import { index, jsonb, pgTable, text } from "drizzle-orm/pg-core"
-import type { KanbanStage } from "../partials/kanban"
+import type { KanbanCardProperty, KanbanStage } from "../partials/kanban"
 import { bigintAsString, sharedColumns } from "../partials/shared"
 import { customFieldModel } from "./custom-field"
 import { flowModel } from "./flow"
@@ -15,6 +15,8 @@ export const kanbanBoardModel = pgTable(
     ...sharedColumns,
     name: text().notNull(),
     stages: jsonb().$type<KanbanStage[]>().default([]).notNull(),
+    /** What cards show, in order; `null` = the default card. */
+    cardProperties: jsonb().$type<KanbanCardProperty[]>(),
     customFieldId: bigintAsString()
       .notNull()
       .references(() => customFieldModel.id, {

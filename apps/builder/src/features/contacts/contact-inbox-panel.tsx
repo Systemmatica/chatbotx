@@ -12,6 +12,7 @@ import { client } from "@/lib/orpc/orpc"
 import type { ContactAppointmentResource } from "../appointments/schemas/resource"
 import { useChatStore } from "../chat/store/chat-store-provider"
 import { ContactActivityFeed } from "../contact-activity/components/contact-activity-feed"
+import type { ContactInboxResource } from "../contact-inboxes/schema/resource"
 import { ContactNotesManage } from "../contact-notes/contact-notes-manage"
 import type { ContactOnSequenceWithRelations } from "../contact-sequences/schema"
 import UpdateContactSequenceField from "../contact-sequences/update-contact-sequence-field"
@@ -24,28 +25,38 @@ import { ContactAppointmentsList } from "./components/contact-appointments-list"
 import UpdateContactTagField from "./components/update-contact-tag-field"
 import { ContactDetail } from "./contact-detail"
 import type { GetContactResponse } from "./schemas/query"
+import type { ContactResource } from "./schemas/resource"
 
 type AccordionModule = {
   readonly keyName: string
   readonly content: React.ReactNode
 }
 
-export const ContactInboxPanel = ({
+type ContactTagsChange = { seq: number; contactId: string }
+
+/**
+ * The contact card: fields, tags, lead magnets, notes, sequences... Shown next
+ * to a chat in the inbox and in the contacts/kanban side peek.
+ */
+export const ContactPanel = ({
   workspaceId,
-  activeConversationId,
+  contactId,
+  baseContact,
+  contactInbox,
+  contactTagsChange,
+  onContactLoaded,
 }: {
   workspaceId: string
-  activeConversationId: string | null
+  contactId: string | null
+  /** Live contact row (the inbox's chat store copy). */
+  baseContact?: ContactResource | null
+  /** Channel row shown first (the inbox's active chat). */
+  contactInbox?: ContactInboxResource | null
+  /** Signal that the bot changed the tags of `contactId`. */
+  contactTagsChange?: ContactTagsChange | null
+  onContactLoaded?: (contact: GetContactResponse | null) => void
 }) => {
   const t = useTranslations()
-
-  const { conversations, contactTagsChange } = useChatStore((state) => state)
-
-  const storeContact = useMemo(
-    () =>
-      conversations.find((c) => c.id === activeConversationId)?.contact ?? null,
-    [conversations, activeConversationId],
-  )
 
   const [contactData, setContactData] = useState<GetContactResponse | null>(
     null,
@@ -79,18 +90,10 @@ export const ContactInboxPanel = ({
     [workspaceId],
   )
 
+  const onContactLoadedRef = useRef(onContactLoaded)
+  onContactLoadedRef.current = onContactLoaded
+
   useEffect(() => {
-    const contactId = storeContact?.id
-
-    if (!activeConversationId) {
-      setContactData(null)
-      setCoupons([])
-      setAppointments([])
-      leadMagnetsContactIdRef.current = null
-      setReceivedLeadMagnets([])
-      return
-    }
-
     if (!contactId) {
       setContactData(null)
       setCoupons([])
@@ -100,27 +103,40 @@ export const ContactInboxPanel = ({
       return
     }
 
+    // Responses for a contact no longer shown (fast peek navigation) are
+    // dropped.
+    let ignore = false
+    setContactData(null)
     client.contactsAPIs
       .getContactAuthenticatedAPI({ workspaceId, contactId })
       .then((data) => {
-        setContactData(data)
+        if (!ignore) {
+          setContactData(data)
+          onContactLoadedRef.current?.(data)
+        }
       })
       .catch(() => {
-        setContactData(null)
+        if (!ignore) {
+          setContactData(null)
+          onContactLoadedRef.current?.(null)
+        }
       })
 
     client.couponsAPI
       .listContactCouponsAPI({ workspaceId, contactId })
-      .then(setCoupons)
-      .catch(() => setCoupons([]))
+      .then((data) => !ignore && setCoupons(data))
+      .catch(() => !ignore && setCoupons([]))
 
     client.appointmentsAPI
       .listContactAppointmentsAPI({ workspaceId, contactId })
-      .then(setAppointments)
-      .catch(() => setAppointments([]))
+      .then((data) => !ignore && setAppointments(data))
+      .catch(() => !ignore && setAppointments([]))
 
     loadLeadMagnets(contactId)
-  }, [activeConversationId, storeContact?.id, workspaceId, loadLeadMagnets])
+    return () => {
+      ignore = true
+    }
+  }, [contactId, workspaceId, loadLeadMagnets])
 
   // The bot (flow step, trigger, API) changed this contact's tags: refresh
   // the tag list and received lead magnets without reopening the chat.
@@ -135,7 +151,6 @@ export const ContactInboxPanel = ({
       return
     }
     handledTagsChangeSeqRef.current = contactTagsChange.seq
-    const contactId = storeContact?.id
     if (!contactId || contactTagsChange.contactId !== contactId) {
       return
     }
@@ -150,7 +165,7 @@ export const ContactInboxPanel = ({
       .catch(() => {
         // Keep the current tags; the next open refetches them.
       })
-  }, [contactTagsChange, storeContact?.id, workspaceId, loadLeadMagnets])
+  }, [contactTagsChange, contactId, workspaceId, loadLeadMagnets])
 
   const accordionModules: AccordionModule[] = useMemo(() => {
     if (!contactData) {
@@ -226,15 +241,16 @@ export const ContactInboxPanel = ({
     ]
   }, [contactData, workspaceId, t, coupons, appointments, loadLeadMagnets])
 
-  if (!storeContact) {
+  if (!contactId) {
     return null
   }
 
   return (
     <div className="flex w-full flex-col gap-2">
       <ContactDetail
-        activeConversationId={activeConversationId}
+        baseContact={baseContact}
         contact={contactData}
+        contactInbox={contactInbox}
       />
 
       {contactData ? (
@@ -246,12 +262,12 @@ export const ContactInboxPanel = ({
 
       <ContactLeadMagnets leadMagnets={receivedLeadMagnets} />
 
-      <ContactNotesManage contactNotes={contactData?.contactNotes ?? []} />
-
-      <ContactActivityFeed
-        contactId={storeContact.id}
-        workspaceId={workspaceId}
+      <ContactNotesManage
+        contactId={contactData?.id ?? null}
+        contactNotes={contactData?.contactNotes ?? []}
       />
+
+      <ContactActivityFeed contactId={contactId} workspaceId={workspaceId} />
 
       <Accordion className="w-full">
         {accordionModules.map((module, index) => (
@@ -270,5 +286,33 @@ export const ContactInboxPanel = ({
         ))}
       </Accordion>
     </div>
+  )
+}
+
+/** The contact card of the inbox's active chat. */
+export const ContactInboxPanel = ({
+  workspaceId,
+  activeConversationId,
+}: {
+  workspaceId: string
+  activeConversationId: string | null
+}) => {
+  const { conversations, contactTagsChange } = useChatStore((state) => state)
+  const conversation = useMemo(
+    () =>
+      activeConversationId
+        ? (conversations.find((c) => c.id === activeConversationId) ?? null)
+        : null,
+    [conversations, activeConversationId],
+  )
+
+  return (
+    <ContactPanel
+      baseContact={conversation?.contact ?? null}
+      contactId={conversation?.contact?.id ?? null}
+      contactInbox={conversation?.contactInboxes[0] ?? null}
+      contactTagsChange={contactTagsChange}
+      workspaceId={workspaceId}
+    />
   )
 }

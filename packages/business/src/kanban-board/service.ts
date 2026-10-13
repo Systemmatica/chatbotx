@@ -1,9 +1,18 @@
 import { type DatabaseClient, db } from "@chatbotx.io/database/client"
 import {
+  type KanbanCardProperty,
   type KanbanStage,
+  kanbanCardDataNeeds,
+  kanbanCardPropertiesSchema,
   kanbanStagesSchema,
+  resolveKanbanCardProperties,
 } from "@chatbotx.io/database/partials"
-import { kanbanBoardRepository } from "@chatbotx.io/database/repositories"
+import {
+  createMessageRepository,
+  getSafeSinceTime,
+  type KanbanCardRow,
+  kanbanBoardRepository,
+} from "@chatbotx.io/database/repositories"
 import type { KanbanBoardModel } from "@chatbotx.io/database/types"
 import { BaseService } from "../base.service"
 import { type ContactAccessScope, contactService } from "../contact"
@@ -14,6 +23,7 @@ import { currentFlowStepService } from "../flow/current-step"
 import { flowService } from "../flow/service"
 import {
   buildKanbanColumns,
+  type KanbanCardPropertyData,
   type KanbanColumn,
   resolveKanbanStageValue,
 } from "./grouping"
@@ -34,6 +44,8 @@ export type CreateKanbanBoardInput = {
   newCustomFieldName?: string | null
   /** The flow whose funnel this board shows. */
   flowId?: string | null
+  /** What cards show; `null`/omitted = the default card. */
+  cardProperties?: KanbanCardProperty[] | null
 }
 
 /** Stage of a contact on the board of the flow they are in (inbox label). */
@@ -51,6 +63,8 @@ export type UpdateKanbanBoardInput = {
   name?: string
   stages?: KanbanStage[]
   customFieldId?: string
+  /** `null` resets the cards to the default look. */
+  cardProperties?: KanbanCardProperty[] | null
 }
 
 export type GetKanbanBoardCardsInput = {
@@ -63,6 +77,8 @@ export type GetKanbanBoardCardsInput = {
   stageId?: string | null
   offset?: number | null
   accessScope?: ContactAccessScope
+  /** Whether the viewer may see phone numbers (the "phone" property). */
+  canViewPhone?: boolean
 }
 
 export type KanbanBoardCards = {
@@ -192,6 +208,7 @@ class KanbanBoardService extends BaseService {
         customFieldId,
         stages,
         flowId: input.flowId ?? null,
+        cardProperties: parseCardProperties(input.cardProperties),
         tx,
       })
     })
@@ -210,8 +227,14 @@ class KanbanBoardService extends BaseService {
     await this.findOrFail({ workspaceId, id })
 
     const data: Partial<
-      Pick<KanbanBoardModel, "name" | "customFieldId" | "stages">
+      Pick<
+        KanbanBoardModel,
+        "name" | "customFieldId" | "stages" | "cardProperties"
+      >
     > = {}
+    if (input.cardProperties !== undefined) {
+      data.cardProperties = parseCardProperties(input.cardProperties)
+    }
     if (input.name !== undefined) {
       data.name = input.name.trim()
     }
@@ -274,15 +297,40 @@ class KanbanBoardService extends BaseService {
       kanbanBoardRepository.countCards(filter),
     ])
 
-    // One batched lookup for the whole page (no per-card queries).
-    const steps = await currentFlowStepService.resolveMany({
-      workspaceId: input.workspaceId,
-      refs: cards,
-    })
+    const needs = kanbanCardDataNeeds(
+      resolveKanbanCardProperties(board.cardProperties),
+    )
+    // Batched lookups for the whole page; only what the cards show.
+    const [steps, properties] = await Promise.all([
+      needs.currentStep
+        ? currentFlowStepService.resolveMany({
+            workspaceId: input.workspaceId,
+            refs: cards,
+          })
+        : [],
+      this.loadCardProperties({
+        workspaceId: input.workspaceId,
+        cards,
+        needs,
+        canViewPhone: input.canViewPhone ?? true,
+      }),
+    ])
     const cardsWithSteps = cards.map(
-      ({ currentFlowId, currentNodeId, currentNodeAt, ...card }, index) => ({
+      (
+        {
+          currentFlowId,
+          currentNodeId,
+          currentNodeAt,
+          conversationLastActivityAt,
+          phoneNumber,
+          statusUpdatedAt,
+          ...card
+        },
+        index,
+      ) => ({
         ...card,
         currentFlowStep: steps[index] ?? null,
+        properties: properties[index],
       }),
     )
 
@@ -337,6 +385,124 @@ class KanbanBoardService extends BaseService {
       contactId,
       fields: [{ customFieldId: board.customFieldId, value }],
     })
+  }
+
+  /**
+   * Data for the configured card properties, one entry per card. Custom
+   * fields, tags and lead magnets are one query each for the page; the last
+   * message is one lookup per card with a chat (messages are sharded by
+   * time, like the inbox list), only when that property is shown.
+   */
+  private async loadCardProperties(input: {
+    workspaceId: string
+    cards: KanbanCardRow[]
+    needs: ReturnType<typeof kanbanCardDataNeeds>
+    canViewPhone: boolean
+  }): Promise<KanbanCardPropertyData[]> {
+    const { workspaceId, cards, needs, canViewPhone } = input
+    const contactIds = cards.map((card) => card.contactId)
+
+    const [fieldValues, tags, leadMagnets, lastMessages] = await Promise.all([
+      needs.customFieldIds.length > 0
+        ? kanbanBoardRepository.listStatusValues({
+            customFieldIds: needs.customFieldIds,
+            contactIds,
+          })
+        : [],
+      needs.tags
+        ? kanbanBoardRepository.listCardTags({ workspaceId, contactIds })
+        : [],
+      needs.leadMagnets
+        ? kanbanBoardRepository.listCardLeadMagnets({ workspaceId, contactIds })
+        : [],
+      needs.lastMessage
+        ? this.loadLastMessages({ workspaceId, cards })
+        : cards.map(() => null),
+    ])
+
+    const groupByContact = <T extends { contactId: string }>(rows: T[]) => {
+      const map = new Map<string, T[]>()
+      for (const row of rows) {
+        map.set(row.contactId, [...(map.get(row.contactId) ?? []), row])
+      }
+      return map
+    }
+    const valuesByContact = groupByContact(fieldValues)
+    const tagsByContact = groupByContact(tags)
+    const leadMagnetsByContact = groupByContact(leadMagnets)
+
+    return cards.map((card, index) => {
+      const data: KanbanCardPropertyData = {}
+      if (needs.customFieldIds.length > 0) {
+        data.customFields = Object.fromEntries(
+          (valuesByContact.get(card.contactId) ?? []).map((row) => [
+            row.customFieldId,
+            row.value,
+          ]),
+        )
+      }
+      if (needs.tags) {
+        data.tags = (tagsByContact.get(card.contactId) ?? []).map(
+          ({ id, name }) => ({ id, name }),
+        )
+      }
+      if (needs.leadMagnets) {
+        data.leadMagnets = (leadMagnetsByContact.get(card.contactId) ?? []).map(
+          ({ id, name }) => ({ id, name }),
+        )
+      }
+      if (needs.phone) {
+        data.phone = canViewPhone ? card.phoneNumber : null
+      }
+      if (needs.lastMessage) {
+        data.lastMessage = lastMessages[index] ?? null
+      }
+      if (needs.timeInStage) {
+        // Only a real stage has a "since"; "no status" has none.
+        data.stageSince = card.bucket ? card.statusUpdatedAt : null
+      }
+      return data
+    })
+  }
+
+  private async loadLastMessages(input: {
+    workspaceId: string
+    cards: KanbanCardRow[]
+  }): Promise<KanbanCardPropertyData["lastMessage"][]> {
+    const repository = await createMessageRepository()
+    return await Promise.all(
+      input.cards.map(async (card) => {
+        if (!card.conversationId) {
+          return null
+        }
+        try {
+          const [message] = await repository.findLastByConversation(
+            card.conversationId,
+            {
+              attachmentCountOnly: true,
+              limit: 1,
+              messageTypes: ["incoming", "outgoing"],
+              sinceTime:
+                getSafeSinceTime(card.conversationLastActivityAt) ??
+                new Date(0),
+              workspaceId: input.workspaceId,
+            },
+          )
+          return message
+            ? {
+                text: message.text,
+                messageType: message.messageType,
+                attachmentCount:
+                  message.attachmentCount ?? message.attachments.length,
+                createdAt: message.createdAt,
+              }
+            : null
+        } catch {
+          // A preview is optional: the card still renders without it.
+          return null
+        }
+      }),
+    )
   }
 
   private resolveStageValueOrFail(
@@ -402,6 +568,13 @@ class KanbanBoardService extends BaseService {
     }
     return { id, created: createdIds.includes(id) }
   }
+}
+
+/** Validated card properties; `null` keeps (or resets to) the default. */
+function parseCardProperties(
+  value: KanbanCardProperty[] | null | undefined,
+): KanbanCardProperty[] | null {
+  return value ? kanbanCardPropertiesSchema.parse(value) : null
 }
 
 export const kanbanBoardService = new KanbanBoardService()
