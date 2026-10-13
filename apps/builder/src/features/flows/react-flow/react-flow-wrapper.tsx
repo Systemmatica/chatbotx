@@ -2,6 +2,7 @@ import {
   applyRouteUpdatesInNodes,
   type FlowNode,
   type FlowRouteUpdate,
+  type NodeType,
   nodeTypeSchema,
   sendMessageNodeDefaultFn,
 } from "@chatbotx.io/flow-config"
@@ -20,6 +21,7 @@ import {
   useEdgesState,
   useNodesState,
   useReactFlow,
+  type XYPosition,
 } from "@xyflow/react"
 import { useTranslations } from "next-intl"
 import { useOptimisticAction } from "next-safe-action/hooks"
@@ -42,9 +44,19 @@ import {
   createDuplicateNode,
   type DuplicateSaveResult,
 } from "./duplicate-node-orchestrator"
-import { FlowMutationProvider } from "./flow-mutation-context"
+import { FlowContextMenu, useFlowContextMenu } from "./flow-context-menu"
+import {
+  type FlowMutationContextValue,
+  FlowMutationProvider,
+} from "./flow-mutation-context"
+import {
+  AUTO_LAYOUT_HORIZONTAL_GAP,
+  computeAutoLayout,
+} from "./layout/auto-layout"
+import { NODE_CARD_WIDTH_PX } from "./nodes/node-dimensions"
 import { NodeViewer } from "./nodes/viewer"
-import AddNodeButton from "./panel-buttons/add-node-button"
+import AddNodeButton, { addNewNode } from "./panel-buttons/add-node-button"
+import AutoLayoutButton from "./panel-buttons/auto-layout-button"
 import FocusButton from "./panel-buttons/focus-button"
 import ZoomInButton from "./panel-buttons/zoom-in-button"
 import ZoomOutButton from "./panel-buttons/zoom-out-button"
@@ -120,6 +132,8 @@ export function ReactFlowWrapper({
     getEdges,
     deleteElements,
     screenToFlowPosition,
+    fitView,
+    getNode,
   } = reactFlow
 
   const [nodes, setNodes, onNodesChange] = useNodesState(
@@ -313,15 +327,6 @@ export function ReactFlowWrapper({
     [deleteNode, takeSnapshot],
   )
 
-  const flowMutationValue = useMemo(
-    () => ({
-      deleteNode: deleteNodeWithHistory,
-      duplicateNode: duplicateNodeWithHistory,
-      isFlowMutating,
-    }),
-    [isFlowMutating, duplicateNodeWithHistory, deleteNodeWithHistory],
-  )
-
   useEffect(() => {
     const serialized = serializeFlowContent(nodes, edges as Edge[])
     if (serialized === lastSavedSerializedRef.current) {
@@ -429,6 +434,63 @@ export function ReactFlowWrapper({
     [applyButtonRoutes, setEdges, takeCoalescedSnapshot],
   )
 
+  /** Wires `fromHandleId` on `fromNodeId` to `targetNodeId` (one edge per handle). */
+  const connectHandleToNode = useCallback(
+    (fromNodeId: string, fromHandleId: string, targetNodeId: string) => {
+      setEdges((currentEdges) =>
+        replaceSourceHandleEdge(currentEdges, {
+          id: createId(),
+          source: fromNodeId,
+          target: targetNodeId,
+          sourceHandle: fromHandleId,
+          targetHandle: targetNodeId,
+          type: "buttonedge",
+        }),
+      )
+
+      const routableHandleId = getRoutableHandleId(fromNodeId, fromHandleId)
+      if (routableHandleId) {
+        applyButtonRoutes([
+          {
+            sourceNodeId: fromNodeId,
+            handleId: routableHandleId,
+            route: { targetNodeId },
+          },
+        ])
+      }
+    },
+    [applyButtonRoutes, setEdges],
+  )
+
+  const createNodeAt = useCallback(
+    (nodeType: NodeType, position: XYPosition) => {
+      takeCoalescedSnapshot()
+      return addNewNode(reactFlow, nodeType, t, { position })
+    },
+    [reactFlow, t, takeCoalescedSnapshot],
+  )
+
+  const addNextNode = useCallback<FlowMutationContextValue["addNextNode"]>(
+    ({ sourceNodeId, sourceHandleId, nodeType }) => {
+      const sourceNode = getNode(sourceNodeId)
+      if (!sourceNode || isMutatingRef.current) {
+        return
+      }
+
+      const newNode = createNodeAt(nodeType, {
+        x:
+          sourceNode.position.x +
+          (sourceNode.measured?.width ?? NODE_CARD_WIDTH_PX) +
+          AUTO_LAYOUT_HORIZONTAL_GAP,
+        y: sourceNode.position.y,
+      })
+      if (newNode) {
+        connectHandleToNode(sourceNodeId, sourceHandleId, newNode.id)
+      }
+    },
+    [connectHandleToNode, createNodeAt, getNode],
+  )
+
   const onConnectEnd = useCallback(
     (
       event: MouseEvent | TouchEvent,
@@ -459,27 +521,7 @@ export function ReactFlowWrapper({
 
       if (droppedOnNode) {
         takeCoalescedSnapshot()
-        setEdges((currentEdges) =>
-          replaceSourceHandleEdge(currentEdges, {
-            id: createId(),
-            source: fromNode.id,
-            target: droppedOnNode.id,
-            sourceHandle: fromHandleId,
-            targetHandle: droppedOnNode.id,
-            type: "buttonedge",
-          }),
-        )
-
-        const routableHandleId = getRoutableHandleId(fromNode.id, fromHandleId)
-        if (routableHandleId) {
-          applyButtonRoutes([
-            {
-              sourceNodeId: fromNode.id,
-              handleId: routableHandleId,
-              route: { targetNodeId: droppedOnNode.id },
-            },
-          ])
-        }
+        connectHandleToNode(fromNode.id, fromHandleId, droppedOnNode.id)
         return
       }
 
@@ -495,34 +537,13 @@ export function ReactFlowWrapper({
 
       takeCoalescedSnapshot()
       addNodes([newNode])
-      setEdges((currentEdges) =>
-        replaceSourceHandleEdge(currentEdges, {
-          id: createId(),
-          source: fromNode.id,
-          target: newNode.id,
-          sourceHandle: fromHandleId,
-          targetHandle: newNode.id,
-          type: "buttonedge",
-        }),
-      )
-
-      const handleId = getRoutableHandleId(fromNode.id, fromHandleId)
-      if (handleId) {
-        applyButtonRoutes([
-          {
-            sourceNodeId: fromNode.id,
-            handleId,
-            route: { targetNodeId: newNode.id },
-          },
-        ])
-      }
+      connectHandleToNode(fromNode.id, fromHandleId, newNode.id)
     },
     [
       addNodes,
       getNodes,
       getIntersectingNodes,
-      setEdges,
-      applyButtonRoutes,
+      connectHandleToNode,
       screenToFlowPosition,
       takeCoalescedSnapshot,
       t,
@@ -551,6 +572,124 @@ export function ReactFlowWrapper({
     [updateEdge],
   )
 
+  const flowMutationValue = useMemo<FlowMutationContextValue>(
+    () => ({
+      addNextNode,
+      deleteNode: deleteNodeWithHistory,
+      duplicateNode: duplicateNodeWithHistory,
+      isFlowMutating,
+    }),
+    [
+      addNextNode,
+      isFlowMutating,
+      duplicateNodeWithHistory,
+      deleteNodeWithHistory,
+    ],
+  )
+
+  const [isAutoLayoutRunning, setIsAutoLayoutRunning] = useState(false)
+
+  // Rearranges every node left-to-right. Positions go through onNodesChange,
+  // the same path a manual drag takes, so the result lands in undo history,
+  // flips the draft to "unsaved" and is picked up by the autosave.
+  const handleAutoLayout = useCallback(async () => {
+    if (isMutatingRef.current) {
+      return
+    }
+    const currentNodes = getNodes() as unknown as FlowNode[]
+    setIsAutoLayoutRunning(true)
+    try {
+      const positions = await computeAutoLayout(
+        currentNodes.map((node) => ({
+          id: node.id,
+          position: node.position,
+          width: node.measured?.width,
+          height: node.measured?.height,
+          isStartNode: Boolean(node.data.isStartNode),
+        })),
+        getEdges(),
+      )
+
+      const changes: NodeChange<FlowNode>[] = []
+      for (const node of currentNodes) {
+        const next = positions[node.id]
+        if (
+          next &&
+          (next.x !== node.position.x || next.y !== node.position.y)
+        ) {
+          changes.push({ type: "position", id: node.id, position: next })
+        }
+      }
+
+      if (changes.length > 0) {
+        takeSnapshot()
+        onNodesChange(changes)
+      }
+      // Let React Flow commit the new positions before framing them.
+      requestAnimationFrame(() => {
+        fitView({ duration: 300 }).catch(() => undefined)
+      })
+    } catch {
+      toast.error(t("flowCanvas.autoLayoutError"))
+    } finally {
+      setIsAutoLayoutRunning(false)
+    }
+  }, [fitView, getEdges, getNodes, onNodesChange, takeSnapshot, t])
+
+  const contextMenu = useFlowContextMenu()
+  const { setTarget: setContextMenuTarget } = contextMenu
+
+  const onPaneContextMenu = useCallback(
+    (event: ReactMouseEvent | MouseEvent) => {
+      setContextMenuTarget({
+        kind: "pane",
+        position: screenToFlowPosition({ x: event.clientX, y: event.clientY }),
+      })
+    },
+    [screenToFlowPosition, setContextMenuTarget],
+  )
+
+  const onNodeContextMenu = useCallback(
+    (_event: ReactMouseEvent, node: Node) => {
+      setContextMenuTarget({
+        kind: "node",
+        nodeId: node.id,
+        canDelete: !(node as unknown as FlowNode).data.isStartNode,
+      })
+    },
+    [setContextMenuTarget],
+  )
+
+  const contextMenuActions = useMemo(
+    () => ({
+      disabled: isFlowMutating,
+      onCreateBlock: (position: XYPosition) => {
+        createNodeAt(nodeTypeSchema.enum.sendMessage, position)
+      },
+      onCreateCondition: (position: XYPosition) => {
+        createNodeAt(nodeTypeSchema.enum.condition, position)
+      },
+      onDuplicateNode: (nodeId: string) => {
+        const sourceNode = getNode(nodeId)
+        if (sourceNode) {
+          duplicateNodeWithHistory(sourceNode as unknown as FlowNode).catch(
+            () => undefined,
+          )
+        }
+      },
+      onDeleteNode: (nodeId: string) => {
+        deleteNodeWithHistory(nodeId).catch(() => undefined)
+      },
+    }),
+    [
+      createNodeAt,
+      deleteNodeWithHistory,
+      duplicateNodeWithHistory,
+      getNode,
+      isFlowMutating,
+    ],
+  )
+
   const onEdgesDelete = useCallback(
     (edges: Edge[]) => {
       takeCoalescedSnapshot()
@@ -561,63 +700,74 @@ export function ReactFlowWrapper({
 
   return (
     <FlowMutationProvider value={flowMutationValue}>
-      <ReactFlow
-        defaultEdgeOptions={{
-          markerEnd: {
-            type: MarkerType.ArrowClosed,
-          },
-          style: {
-            strokeWidth: 2,
-          },
-        }}
-        deleteKeyCode={isFlowMutating ? null : undefined}
-        edges={edges}
-        edgeTypes={edgeTypes}
-        elementsSelectable={!isFlowMutating}
-        maxZoom={10}
-        minZoom={0.1}
-        nodes={nodes}
-        nodesConnectable={!isFlowMutating}
-        nodesDraggable={!isFlowMutating}
-        nodeTypes={viewerNodeTypes}
-        onConnect={onConnect}
-        onConnectEnd={onConnectEnd}
-        onEdgeMouseEnter={onEdgeMouseEnter}
-        onEdgeMouseLeave={onEdgeMouseLeave}
-        onEdgesChange={handleEdgesChange}
-        onEdgesDelete={onEdgesDelete}
-        onNodeClick={handleNodeClick}
-        onNodeDragStart={handleNodeDragStart}
-        onNodeDragStop={handleNodeDragStop}
-        onNodeMouseEnter={onNodeMouseEnter}
-        onNodeMouseLeave={onNodeMouseLeave}
-        onNodesChange={handleNodesChange}
-        onPaneClick={handlePaneClick}
-        proOptions={{ hideAttribution: true }}
-      >
-        {isFlowMutating && (
-          <div
-            className="absolute inset-0 z-50 cursor-wait bg-white/40 dark:bg-black/40"
-            data-testid="flow-mutation-overlay"
-          />
-        )}
-        <Background />
-        <FlowMiniMap />
-        <Panel className="w-[254px]" position="bottom-center">
-          <Controls
-            className="overflow-hidden rounded-md shadow-none!"
-            orientation="horizontal"
-            showFitView={false}
-            showInteractive={false}
-            showZoom={false}
-          >
-            <FocusButton />
-            <ZoomInButton />
-            <ZoomOutButton />
-            <AddNodeButton />
-          </Controls>
-        </Panel>
-      </ReactFlow>
+      <FlowContextMenu actions={contextMenuActions} menu={contextMenu}>
+        <ReactFlow
+          defaultEdgeOptions={{
+            markerEnd: {
+              type: MarkerType.ArrowClosed,
+            },
+            style: {
+              strokeWidth: 2,
+            },
+          }}
+          deleteKeyCode={isFlowMutating ? null : undefined}
+          edges={edges}
+          edgeTypes={edgeTypes}
+          elementsSelectable={!isFlowMutating}
+          maxZoom={10}
+          minZoom={0.1}
+          nodes={nodes}
+          nodesConnectable={!isFlowMutating}
+          nodesDraggable={!isFlowMutating}
+          nodeTypes={viewerNodeTypes}
+          onConnect={onConnect}
+          onConnectEnd={onConnectEnd}
+          onEdgeMouseEnter={onEdgeMouseEnter}
+          onEdgeMouseLeave={onEdgeMouseLeave}
+          onEdgesChange={handleEdgesChange}
+          onEdgesDelete={onEdgesDelete}
+          onNodeClick={handleNodeClick}
+          onNodeContextMenu={onNodeContextMenu}
+          onNodeDragStart={handleNodeDragStart}
+          onNodeDragStop={handleNodeDragStop}
+          onNodeMouseEnter={onNodeMouseEnter}
+          onNodeMouseLeave={onNodeMouseLeave}
+          onNodesChange={handleNodesChange}
+          onPaneClick={handlePaneClick}
+          onPaneContextMenu={onPaneContextMenu}
+          proOptions={{ hideAttribution: true }}
+        >
+          {isFlowMutating && (
+            <div
+              className="absolute inset-0 z-50 cursor-wait bg-white/40 dark:bg-black/40"
+              data-testid="flow-mutation-overlay"
+            />
+          )}
+          <Background />
+          <FlowMiniMap />
+          <Panel className="w-[310px]" position="bottom-center">
+            <Controls
+              className="overflow-hidden rounded-md shadow-none!"
+              orientation="horizontal"
+              showFitView={false}
+              showInteractive={false}
+              showZoom={false}
+            >
+              <FocusButton />
+              <ZoomInButton />
+              <ZoomOutButton />
+              <AddNodeButton />
+              <AutoLayoutButton
+                disabled={isFlowMutating}
+                isRunning={isAutoLayoutRunning}
+                onClick={() => {
+                  handleAutoLayout().catch(() => undefined)
+                }}
+              />
+            </Controls>
+          </Panel>
+        </ReactFlow>
+      </FlowContextMenu>
     </FlowMutationProvider>
   )
 }

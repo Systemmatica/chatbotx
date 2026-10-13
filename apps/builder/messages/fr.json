@@ -5578,5 +5578,12 @@
       "tagNameTaken": "Another tag already has this lead magnet's name",
       "forbidden": "You don't have permission to manage lead magnets"
     }
+  },
+  "flowCanvas": {
+    "autoLayout": "Auto-arrange",
+    "autoLayoutError": "Could not arrange the flow",
+    "nextStep": "Next step",
+    "createBlock": "Create block",
+    "createCondition": "Create condition"
   }
 }

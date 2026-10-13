@@ -91,7 +91,10 @@ export const NodeDetailSheetContent = memo(
 
     return (
       <Sheet onOpenChange={onOpenChange} open={open}>
-        <SheetContent className="flex flex-col gap-0" side="left">
+        <SheetContent
+          className="wrap-break-word flex flex-col gap-0 sm:max-w-[420px]"
+          side="left"
+        >
           <SheetTitle>
             <NodeNameEditor activeNode={activeNode} />
           </SheetTitle>

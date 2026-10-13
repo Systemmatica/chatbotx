@@ -15,6 +15,7 @@ import {
 } from "@chatbotx.io/flow-config"
 import { describe, expect, test } from "vitest"
 import { updateFlowVersionSchema } from "../../../schemas/action"
+import { NODE_CARD_WIDTH_PX } from "../../nodes/node-dimensions"
 import {
   duplicateFlowNode,
   duplicateFlowNodeData,
@@ -106,7 +107,10 @@ describe("duplicateFlowNodeData", () => {
       edges: [],
     })
 
-    expect(duplicatedNode.measured).toEqual({ width: 288, height: 100 })
+    expect(duplicatedNode.measured).toEqual({
+      width: NODE_CARD_WIDTH_PX,
+      height: 100,
+    })
     expect(result.success, result.error?.message).toBe(true)
   })
 

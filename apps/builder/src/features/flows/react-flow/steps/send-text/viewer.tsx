@@ -35,7 +35,7 @@ const SendTextStepViewer = (props: SendTextStepViewerProps) => {
     <Card className="overflow-hidden p-0">
       <CardContent className="p-0">
         <p
-          className="whitespace-pre-line bg-gray-200 px-4 py-2 dark:bg-neutral-600"
+          className="wrap-break-word whitespace-pre-line bg-gray-200 px-4 py-2 text-[15px] leading-snug dark:bg-neutral-600"
           // biome-ignore lint/security/noDangerouslySetInnerHtml: previewHtml is always either escapeHtmlText output or richTextToTelegramHtml output, which only ever emits the closed b/i/s/code/a subset with escaped text nodes.
           dangerouslySetInnerHTML={{ __html: previewHtml }}
         />

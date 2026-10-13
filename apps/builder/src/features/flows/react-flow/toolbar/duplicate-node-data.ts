@@ -1,10 +1,11 @@
 import type { FlowNode } from "@chatbotx.io/flow-config"
 import { createId } from "@chatbotx.io/utils"
 import { clone } from "remeda"
+import { NODE_CARD_WIDTH_PX } from "../nodes/node-dimensions"
 
 type MutableRecord = Record<string, unknown>
 
-const DEFAULT_NODE_MEASURED = { width: 288, height: 100 }
+const DEFAULT_NODE_MEASURED = { width: NODE_CARD_WIDTH_PX, height: 100 }
 
 const isRecord = (value: unknown): value is MutableRecord =>
   typeof value === "object" && value !== null

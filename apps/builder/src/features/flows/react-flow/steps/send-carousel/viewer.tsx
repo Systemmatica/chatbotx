@@ -4,10 +4,11 @@ import type { SendCarouselStepSchema } from "@chatbotx.io/flow-config"
 import { cn } from "@chatbotx.io/ui/lib/utils"
 import { useUpdateNodeInternals } from "@xyflow/react"
 import { useEffect } from "react"
+import { NODE_CARD_CONTENT_WIDTH_CLASS } from "@/features/flows/react-flow/nodes/node-dimensions"
 import SendCardStepViewer from "@/features/flows/react-flow/steps/send-card/viewer"
 
-/** 256px — the node card is `w-72` with `p-4` padding, so one card fills it. */
-const CAROUSEL_CARD_WIDTH = "w-64"
+/** The node card's inner width (card minus its `p-4`), so one card fills it. */
+const CAROUSEL_CARD_WIDTH = NODE_CARD_CONTENT_WIDTH_CLASS
 
 /** 12px — the gutter seen between two cards. */
 const CAROUSEL_CARD_GAP = "gap-3"

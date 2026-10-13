@@ -9,6 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@chatbotx.io/ui/components/ui/card"
+import { cn } from "@chatbotx.io/ui/lib/utils"
 import { NodeToolbar, Position } from "@xyflow/react"
 import { PlayCircleIcon } from "lucide-react"
 import { useTranslations } from "next-intl"
@@ -17,7 +18,9 @@ import { BaseHandle } from "@/components/base-handle"
 import { DynamicStepViewer } from "../steps"
 import { ButtonStepViewer } from "../steps/button/viewer"
 import { FlowNodeToolbar } from "../toolbar/node-toolbar"
+import { NextStepHandle } from "./next-step-handle"
 import { allNodesConfig } from "./node-config"
+import { NODE_CARD_WIDTH_CLASS } from "./node-dimensions"
 
 type NodeViewerProps = {
   id: string
@@ -46,7 +49,7 @@ export const NodeViewer = memo((props: NodeViewerProps) => {
         <FlowNodeToolbar isStartNode={data.isStartNode} nodeId={id} />
       </NodeToolbar>
 
-      <Card className="w-72 gap-0 p-0">
+      <Card className={cn(NODE_CARD_WIDTH_CLASS, "gap-0 p-0")}>
         <CardHeader className="relative p-4">
           <BaseHandle
             id={id}
@@ -81,11 +84,7 @@ export const NodeViewer = memo((props: NodeViewerProps) => {
             ))}
 
           {shouldShowDefaultContinue(type, data) && (
-            <div className="relative w-full text-right">
-              {/* React Flow keeps this connector on physical Position.Right. */}
-              <span className="mr-4">{t("actions.continue")}</span>
-              <BaseHandle id={id} position={Position.Right} type="source" />
-            </div>
+            <NextStepHandle nodeId={id} />
           )}
         </CardContent>
       </Card>
