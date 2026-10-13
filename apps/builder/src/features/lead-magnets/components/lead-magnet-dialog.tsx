@@ -27,12 +27,17 @@ import {
   SelectValue,
 } from "@chatbotx.io/ui/components/ui/select"
 import { Textarea } from "@chatbotx.io/ui/components/ui/textarea"
+import { DirectUploadButton } from "@chatbotx.io/ui/components/uploader/direct-upload-button"
 import { Loader2Icon } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
 import { client } from "@/lib/orpc/orpc"
 import { leadMagnetErrorMessage } from "../lib/lead-magnets"
+
+/** Lead magnet files are handed out to contacts, so allow books and videos. */
+const LEAD_MAGNET_FILE_MAX_SIZE = 52_428_800 // 50MB
+
 import type { LeadMagnetResource } from "../schemas/resource"
 
 type LeadMagnetDialogProps = {
@@ -169,13 +174,32 @@ export function LeadMagnetDialog({
 
           <div className="grid gap-2">
             <Label htmlFor="lead-magnet-url">{t("leadMagnets.url")}</Label>
-            <Input
-              id="lead-magnet-url"
-              maxLength={LEAD_MAGNET_URL_MAX_LENGTH}
-              onChange={(event) => setUrl(event.target.value)}
-              placeholder="https://"
-              value={url}
-            />
+            <div className="flex items-center gap-2">
+              <Input
+                className="flex-1"
+                id="lead-magnet-url"
+                maxLength={LEAD_MAGNET_URL_MAX_LENGTH}
+                onChange={(event) => setUrl(event.target.value)}
+                placeholder="https://"
+                value={url}
+              />
+              <DirectUploadButton
+                label={t("actions.uploadFile")}
+                maxSize={LEAD_MAGNET_FILE_MAX_SIZE}
+                multiple={false}
+                onUploadError={(error, file) => {
+                  toast.error(
+                    t("leadMagnets.uploadFailed", { file: file.name }),
+                    { description: error.message },
+                  )
+                }}
+                onUploadSuccess={(_path, _file, publicUrl) => {
+                  setUrl(publicUrl)
+                }}
+                uploadPath={`public/space/${workspaceId}/lead-magnets`}
+                workspaceId={workspaceId}
+              />
+            </div>
             <p className="text-muted-foreground text-xs">
               {t("leadMagnets.urlHint")}
             </p>

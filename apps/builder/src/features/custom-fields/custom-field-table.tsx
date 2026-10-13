@@ -40,6 +40,7 @@ import CustomFieldTypeLabel from "./components/custom-field-label"
 import { CreateCustomFieldDialog } from "./create-custom-field"
 import { CustomFieldsTableToolbarActions } from "./custom-field-table-toolbar-actions"
 import { DeleteFieldsDialog } from "./delete-fields-dialog"
+import { resolveCustomFieldIcon } from "./lib/custom-field-icons"
 import type { listCustomFieldsRSC } from "./queries"
 import type { CustomFieldResource } from "./schemas/resource"
 import { UpdateCustomFieldDialog } from "./update-custom-field-dialog"
@@ -106,7 +107,8 @@ export function CustomFieldsTable({
           />
         ),
         cell: ({ row }) => (
-          <div>
+          <div className="flex items-center gap-2">
+            <CustomFieldIcon field={row.original} />
             <Tooltip>
               <TooltipTrigger
                 render={
@@ -301,4 +303,13 @@ export function CustomFieldsTable({
       </CardContent>
     </Card>
   )
+}
+
+function CustomFieldIcon({
+  field,
+}: {
+  field: { icon: string | null; type: string }
+}) {
+  const Icon = resolveCustomFieldIcon(field)
+  return <Icon className="size-4 shrink-0 text-muted-foreground" />
 }

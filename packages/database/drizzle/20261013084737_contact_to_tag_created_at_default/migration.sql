@@ -1,0 +1,1 @@
+ALTER TABLE "ContactToTag" ALTER COLUMN "createdAt" SET DEFAULT now();

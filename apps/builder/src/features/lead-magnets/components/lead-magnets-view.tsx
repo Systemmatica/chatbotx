@@ -37,6 +37,7 @@ import { client } from "@/lib/orpc/orpc"
 import {
   leadMagnetContactsHref,
   leadMagnetErrorMessage,
+  leadMagnetHref,
 } from "../lib/lead-magnets"
 import type { LeadMagnetWithStatsResource } from "../schemas/resource"
 import { LeadMagnetDialog } from "./lead-magnet-dialog"
@@ -194,20 +195,7 @@ export function LeadMagnetsView({
                     </Badge>
                   </TableCell>
                   <TableCell className="max-w-[16rem] align-top">
-                    {leadMagnet.url ? (
-                      <a
-                        className="inline-flex max-w-full items-center gap-1 text-primary text-sm hover:underline"
-                        href={leadMagnet.url}
-                        rel="noopener noreferrer"
-                        target="_blank"
-                        title={leadMagnet.url}
-                      >
-                        <span className="truncate">{leadMagnet.url}</span>
-                        <ExternalLinkIcon className="size-3 shrink-0" />
-                      </a>
-                    ) : (
-                      <span className="text-muted-foreground">—</span>
-                    )}
+                    <LeadMagnetLink url={leadMagnet.url} />
                   </TableCell>
                   <TableCell className="text-right align-top font-medium tabular-nums">
                     {leadMagnet.recipients}
@@ -301,5 +289,31 @@ export function LeadMagnetsView({
         </AlertDialogContent>
       </AlertDialog>
     </div>
+  )
+}
+
+function LeadMagnetLink({ url }: { url: string | null }) {
+  const href = leadMagnetHref(url)
+  if (href) {
+    return (
+      <a
+        className="inline-flex max-w-full items-center gap-1 text-primary text-sm hover:underline"
+        href={href}
+        rel="noopener noreferrer"
+        target="_blank"
+        title={href}
+      >
+        <span className="truncate">{url}</span>
+        <ExternalLinkIcon className="size-3 shrink-0" />
+      </a>
+    )
+  }
+  // A value that is not an http(s) link is shown as text, never as an href.
+  return url ? (
+    <span className="block truncate text-sm" title={url}>
+      {url}
+    </span>
+  ) : (
+    <span className="text-muted-foreground">—</span>
   )
 }

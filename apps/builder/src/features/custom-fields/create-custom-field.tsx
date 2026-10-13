@@ -24,6 +24,7 @@ import { useTranslations } from "next-intl"
 import { type ReactElement, useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
 import { createCustomFieldAction } from "./actions/create-custom-field.action"
+import { CustomFieldIconField } from "./components/custom-field-icon-picker"
 import { createCustomFieldRequest } from "./schemas/action"
 
 type CreateCustomFieldDialogProps = {
@@ -165,6 +166,7 @@ function CreateCustomFieldForm({
             type: defaultType,
             description: "",
             folderId: null,
+            icon: null,
           },
         },
         errorMapProps: {},
@@ -172,6 +174,7 @@ function CreateCustomFieldForm({
     )
 
   const { setValue } = form
+  const selectedType = form.watch("type")
 
   useEffect(() => {
     if (folderId && folderId !== rootFolderId) {
@@ -201,6 +204,8 @@ function CreateCustomFieldForm({
           options={customFieldTypeOptions}
           required
         />
+
+        <CustomFieldIconField type={selectedType} />
 
         <TextareaField
           label={t("fields.description.label")}

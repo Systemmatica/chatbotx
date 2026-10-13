@@ -40,7 +40,7 @@ import { useChatStore } from "../chat/store/chat-store-provider"
 import { getBrowserTimezone } from "../contact-filter/lib/timezone"
 import type { ContactInboxResource } from "../contact-inboxes/schema/resource"
 import { ContactCustomFieldManage } from "../custom-fields/contact-custom-field-manage"
-import { customFieldIconsMap } from "../custom-fields/provider/custom-field-hook"
+import { resolveCustomFieldIcon } from "../custom-fields/lib/custom-field-icons"
 import { useCustomFieldStore } from "../custom-fields/provider/custom-field-store-context"
 import { EditContactField } from "./edit-contact-field"
 import type { GetContactResponse } from "./schemas/query"
@@ -272,7 +272,7 @@ export const ContactDetail = ({
       ...previous,
       {
         key: customFieldId,
-        icon: customFieldIconsMap[targetCustomField.type],
+        icon: resolveCustomFieldIcon(targetCustomField),
         label: targetCustomField.name,
         value: "",
         type: targetCustomField.type,
@@ -281,7 +281,10 @@ export const ContactDetail = ({
   }
 
   const customFieldMap = useMemo(() => {
-    const map = new Map<string, { name: string; type: CustomFieldType }>()
+    const map = new Map<
+      string,
+      { name: string; type: CustomFieldType; icon: string | null }
+    >()
     for (const field of customFields) {
       const parsedType = customFieldTypes.safeParse(field.type)
       if (!parsedType.success) {
@@ -290,6 +293,7 @@ export const ContactDetail = ({
       map.set(field.id.toString(), {
         name: field.name,
         type: parsedType.data,
+        icon: field.icon,
       })
     }
     return map
@@ -379,7 +383,7 @@ export const ContactDetail = ({
           if (targetCustomField) {
             tmpContactFields.push({
               key: contactCustomField.id,
-              icon: customFieldIconsMap[targetCustomField.type],
+              icon: resolveCustomFieldIcon(targetCustomField),
               label: targetCustomField.name,
               value: formatCustomFieldValueInTimeZone(
                 targetCustomField.type,

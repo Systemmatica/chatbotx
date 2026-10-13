@@ -6,11 +6,13 @@ import { authorizedAPI } from "@/orpc"
 import {
   createLeadMagnetRequest,
   leadMagnetIdRequest,
+  listContactLeadMagnetsRequest,
   listLeadMagnetsRequest,
   updateLeadMagnetRequest,
 } from "../schemas/request"
 import {
   leadMagnetResource,
+  listContactLeadMagnetsResponse,
   listLeadMagnetsResponse,
 } from "../schemas/resource"
 
@@ -47,6 +49,24 @@ export const leadMagnetsAuthenticatedAPI = {
       const data = await leadMagnetService.list({
         workspaceId: input.workspaceId,
         accessScope,
+      })
+      return { data }
+    }),
+
+  listContactLeadMagnetsAPI: authorizedAPI
+    .route({
+      method: "GET",
+      path: "/workspaces/{workspaceId}/contacts/{contactId}/lead-magnets",
+      summary: "List lead magnets a contact received",
+      tags,
+    })
+    .input(listContactLeadMagnetsRequest)
+    .use(workspaceAuthorizedMidddleware, (input) => input.workspaceId)
+    .output(listContactLeadMagnetsResponse)
+    .handler(async ({ input }) => {
+      const data = await leadMagnetService.listReceivedByContact({
+        workspaceId: input.workspaceId,
+        contactId: input.contactId,
       })
       return { data }
     }),

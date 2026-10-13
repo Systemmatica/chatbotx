@@ -5,30 +5,10 @@ import {
   systemFieldTypes,
 } from "@chatbotx.io/database/partials"
 import type { SelectOption } from "@chatbotx.io/ui/components/form/select-field"
-import {
-  CalendarClockIcon,
-  CalendarDaysIcon,
-  CheckIcon,
-  HashIcon,
-  type LucideIcon,
-  MailIcon,
-  PhoneIcon,
-  TextIcon,
-} from "lucide-react"
 import { useTranslations } from "next-intl"
 import { useMemo } from "react"
+import { resolveCustomFieldIcon } from "../lib/custom-field-icons"
 import { useCustomFieldStore } from "./custom-field-store-context"
-
-export const customFieldIconsMap: Record<CustomFieldType, LucideIcon> = {
-  shortText: TextIcon,
-  longText: TextIcon,
-  number: HashIcon,
-  date: CalendarDaysIcon,
-  datetime: CalendarClockIcon,
-  boolean: CheckIcon,
-  email: MailIcon,
-  phoneNumber: PhoneIcon,
-}
 
 export const reservedCustomFieldIds: {
   type: CustomFieldType
@@ -211,12 +191,17 @@ export const useCustomFieldSelectOptions = (
       !customFieldTypes || customFieldTypes.includes(type as CustomFieldType)
 
     const toOption = (
-      field: { id: string | number; name: string; type: string },
+      field: {
+        id: string | number
+        name: string
+        type: string
+        icon?: string | null
+      },
       value: string,
     ): SelectOption => ({
       label: field.name,
       value: prefix ? `${prefix}:${value}` : value,
-      icon: customFieldIconsMap[field.type as CustomFieldType],
+      icon: resolveCustomFieldIcon(field),
     })
 
     const reservedOptions = includeReserved

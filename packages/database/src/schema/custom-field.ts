@@ -22,6 +22,8 @@ export const customFieldModel = pgTable(
     name: text().notNull(),
     type: customFieldType().$type<CustomFieldType>().notNull(),
     description: text(),
+    /** Lucide icon name picked in the UI; `null` falls back to the type icon. */
+    icon: text(),
     folderId: bigintAsString().references(() => folderModel.id, {
       onDelete: "set null",
       onUpdate: "cascade",

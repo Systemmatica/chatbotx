@@ -3918,6 +3918,12 @@
     "title": "Brugerdefineret Felter",
     "variables": {
       "rawGroup": "Rå brugerdefinerede felter"
+    },
+    "icon": {
+      "label": "Icon",
+      "default": "By field type",
+      "search": "Search icons",
+      "reset": "Use the field type icon"
     }
   },
   "keywords": {
@@ -5551,7 +5557,7 @@
     "tagHint": "Tag: {tag}. Add it with the \"Add tag\" step where the bot gives out the lead magnet.",
     "kind": "Type",
     "url": "Link",
-    "urlHint": "Link or file the contact gets. Optional.",
+    "urlHint": "What the contact gets: paste a link or upload a file. Optional.",
     "recipients": "Received",
     "showContacts": "Show contacts",
     "tagLabel": "Tag: {tag}",
@@ -5577,6 +5583,12 @@
       "nameTaken": "A lead magnet with this name already exists",
       "tagNameTaken": "Another tag already has this lead magnet's name",
       "forbidden": "You don't have permission to manage lead magnets"
+    },
+    "uploadFailed": "Failed to upload \"{file}\"",
+    "received": {
+      "badge": "{kind} “{name}” · {date}",
+      "badgeNoDate": "{kind} “{name}”",
+      "unknownDate": "date received unknown"
     }
   }
 }

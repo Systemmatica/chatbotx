@@ -9,7 +9,12 @@ import {
   sql,
 } from "../../client"
 import type { LeadMagnetKind } from "../../partials/lead-magnet"
-import { folderModel, leadMagnetModel, tagModel } from "../../schema"
+import {
+  contactsToTagsModel,
+  folderModel,
+  leadMagnetModel,
+  tagModel,
+} from "../../schema"
 import type { LeadMagnetModel } from "../../types"
 
 export type LeadMagnetWithStats = LeadMagnetModel & {
@@ -17,6 +22,15 @@ export type LeadMagnetWithStats = LeadMagnetModel & {
   tagName: string | null
   /** Contacts that hold the lead magnet's tag. */
   recipients: number
+}
+
+/** A lead magnet a contact holds the tag of. */
+export type ReceivedLeadMagnet = Pick<
+  LeadMagnetModel,
+  "id" | "name" | "kind" | "url"
+> & {
+  /** When the tag was attached; `null` for links older than that column. */
+  receivedAt: Date | null
 }
 
 type LeadMagnetValues = {
@@ -67,6 +81,40 @@ class LeadMagnetRepository {
       )
       .where(eq(leadMagnetModel.workspaceId, workspaceId))
       .orderBy(desc(leadMagnetModel.createdAt), desc(leadMagnetModel.id))
+  }
+
+  /** Lead magnets whose live tag the contact holds, newest first. */
+  async listReceivedByContact(input: {
+    workspaceId: string
+    contactId: string
+    tx?: DatabaseClient
+  }): Promise<ReceivedLeadMagnet[]> {
+    const { workspaceId, contactId, tx = db } = input
+    return await tx
+      .select({
+        id: leadMagnetModel.id,
+        name: leadMagnetModel.name,
+        kind: leadMagnetModel.kind,
+        url: leadMagnetModel.url,
+        receivedAt: contactsToTagsModel.createdAt,
+      })
+      .from(leadMagnetModel)
+      .innerJoin(
+        tagModel,
+        and(eq(tagModel.id, leadMagnetModel.tagId), isNull(tagModel.deletedAt)),
+      )
+      .innerJoin(
+        contactsToTagsModel,
+        and(
+          eq(contactsToTagsModel.tagId, leadMagnetModel.tagId),
+          eq(contactsToTagsModel.contactId, contactId),
+        ),
+      )
+      .where(eq(leadMagnetModel.workspaceId, workspaceId))
+      .orderBy(
+        sql`${contactsToTagsModel.createdAt} DESC NULLS LAST`,
+        desc(leadMagnetModel.createdAt),
+      )
   }
 
   async findById(input: {
