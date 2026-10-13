@@ -10,7 +10,6 @@ import {
 import {
   SidebarInset,
   SidebarProvider,
-  SidebarTrigger,
 } from "@chatbotx.io/ui/components/ui/sidebar"
 import { getIdFromParams } from "@chatbotx.io/utils"
 import { cookies } from "next/headers"
@@ -20,6 +19,7 @@ import { ExpiredBanner } from "@/components/expired-banner"
 import type { QuotaSummary } from "@/components/nav-usage"
 import { RefreshOnNavigation } from "@/components/refresh-on-navigation"
 import { ScheduledDeletionBanner } from "@/components/scheduled-deletion-banner"
+import { SidebarToggleButton } from "@/components/sidebar-toggle-button"
 import { TokenRefreshErrorDialog } from "@/components/token-refresh-error-dialog"
 import { WorkspaceDeletionTabSync } from "@/components/workspace-deletion-tab-sync"
 import { isCloud } from "@/env"
@@ -146,7 +146,8 @@ export default async function WorkspaceLayout({
             {children}
           </CouponTopicStoreProvider>
         </main>
-        <SidebarTrigger className="absolute -inset-s-2 top-3 z-10 border" />
+        {/* On mobile the sidebar is a sheet; its own header toggle is hidden. */}
+        <SidebarToggleButton className="absolute start-1 top-2 z-10 md:hidden" />
       </SidebarInset>
     </SidebarProvider>
   )

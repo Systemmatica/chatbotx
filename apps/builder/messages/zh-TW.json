@@ -1576,6 +1576,7 @@
     "collapse": "隱藏子類別"
   },
   "actions": {
+    "toggleSidebar": "Toggle menu",
     "copy": "複製",
     "copyUrl": "複製 URL",
     "actions": "操作",

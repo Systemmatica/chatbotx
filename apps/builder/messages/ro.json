@@ -762,6 +762,7 @@
     "title": "Editează profilul"
   },
   "actions": {
+    "toggleSidebar": "Toggle menu",
     "copy": "Copiază",
     "copyUrl": "Copiază adresa URL",
     "actions": "Acțiuni",

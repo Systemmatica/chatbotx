@@ -35,7 +35,10 @@ function NavItemContent({
   const label = (
     <>
       {item.icon && <item.icon className="size-5 shrink-0" />}
-      <span>{item.title}</span>
+      {/* Collapsed sidebar shows icons only; the label lives in the tooltip. */}
+      <span className="truncate group-data-[collapsible=icon]:hidden">
+        {item.title}
+      </span>
     </>
   )
 

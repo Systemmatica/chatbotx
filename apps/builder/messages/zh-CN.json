@@ -4,6 +4,7 @@
     "title": "QR Code"
   },
   "actions": {
+    "toggleSidebar": "Toggle menu",
     "actions": "操作",
     "activate": "激活",
     "add": "添加",

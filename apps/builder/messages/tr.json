@@ -1,5 +1,6 @@
 {
   "actions": {
+    "toggleSidebar": "Toggle menu",
     "copy": "Kopyala",
     "copyUrl": "URL'yi Kopyala",
     "actions": "Eylemler",

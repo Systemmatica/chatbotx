@@ -1419,6 +1419,7 @@
     }
   },
   "actions": {
+    "toggleSidebar": "Toggle menu",
     "copy": "Copia",
     "copyUrl": "Copia URL",
     "actions": "Azioni",

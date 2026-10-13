@@ -1,5 +1,6 @@
 {
   "actions": {
+    "toggleSidebar": "Toggle menu",
     "copy": "コピー",
     "copyUrl": "URLをコピー",
     "actions": "操作",

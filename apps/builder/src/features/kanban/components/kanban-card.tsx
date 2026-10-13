@@ -12,6 +12,7 @@ import { useDraggable } from "@dnd-kit/core"
 import Link from "next/link"
 import { useFormatter, useTranslations } from "next-intl"
 import { CurrentStepLine } from "@/features/flow-steps/components/current-step-line"
+import { flowChatsHref } from "@/features/flows/components/flow-hub-tabs"
 import { InboxIcon } from "@/features/inboxes/components/inbox-icon"
 import { useTenantSettings } from "@/features/tenant"
 import type { KanbanCardResource } from "../schemas/resource"
@@ -19,6 +20,8 @@ import type { KanbanCardResource } from "../schemas/resource"
 type KanbanCardProps = {
   workspaceId: string
   card: KanbanCardResource
+  /** On a flow's board the chat opens in that flow's "Chats" tab. */
+  flowId?: string
   /** Rendered inside the drag overlay: no drag handlers, no link. */
   overlay?: boolean
 }
@@ -80,7 +83,12 @@ export function KanbanCardContent({
   )
 }
 
-export function KanbanCard({ workspaceId, card, overlay }: KanbanCardProps) {
+export function KanbanCard({
+  workspaceId,
+  card,
+  flowId,
+  overlay,
+}: KanbanCardProps) {
   const t = useTranslations()
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: card.contactId,
@@ -108,7 +116,11 @@ export function KanbanCard({ workspaceId, card, overlay }: KanbanCardProps) {
           aria-label={t("kanban.openChat")}
           className="block"
           draggable={false}
-          href={`/space/${workspaceId}/inbox?conversationId=${card.conversationId}`}
+          href={
+            flowId
+              ? flowChatsHref(workspaceId, flowId, card.conversationId)
+              : `/space/${workspaceId}/inbox?conversationId=${card.conversationId}`
+          }
         >
           {content}
         </Link>

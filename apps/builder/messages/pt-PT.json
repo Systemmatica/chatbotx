@@ -1,5 +1,6 @@
 {
   "actions": {
+    "toggleSidebar": "Toggle menu",
     "copy": "Copiar",
     "copyUrl": "Copiar URL",
     "actions": "Ações",

@@ -33,6 +33,7 @@ import { NavHelp } from "@/components/nav-help"
 import { NavMain } from "@/components/nav-main"
 import { NavUsage, type QuotaSummary } from "@/components/nav-usage"
 import { NavUser } from "@/components/nav-user"
+import { SidebarToggleButton } from "@/components/sidebar-toggle-button"
 import { WorkspaceSwitcher } from "@/components/workspace-switcher"
 import type { WorkspaceResource } from "@/features/workspaces/schema/resource"
 import { authClient } from "@/lib/auth/auth-client"
@@ -207,12 +208,15 @@ export function AppSidebar({
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader className="gap-0 px-0 py-0">
-        <Link
-          className="flex h-12 items-center justify-center border-b"
-          href="/"
-        >
-          <BrandIcon alt="Brand" />
-        </Link>
+        <div className="flex h-12 items-center gap-1 border-b px-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
+          <Link
+            className="flex min-w-0 flex-1 items-center group-data-[collapsible=icon]:hidden"
+            href="/"
+          >
+            <BrandIcon alt="Brand" />
+          </Link>
+          <SidebarToggleButton />
+        </div>
         <div className="border-b px-1">
           <WorkspaceSwitcher workspaces={allWorkspaces} />
         </div>
