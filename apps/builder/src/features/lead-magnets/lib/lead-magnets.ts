@@ -1,6 +1,9 @@
+import { TAG_RECEIVED_AT_COLUMN_ID } from "@/features/contacts/lib/tag-received-at"
+
 /**
  * Contacts page pre-filtered to the holders of a lead magnet's tag, using the
- * `?contactFilter=<json>` round-trip the contacts table already reads.
+ * `?contactFilter=<json>` round-trip the contacts table already reads, sorted
+ * by when the contact received it (newest first).
  */
 export function leadMagnetContactsHref(
   workspaceId: string,
@@ -10,9 +13,11 @@ export function leadMagnetContactsHref(
     operator: "and",
     conditions: [{ field: "tags", operator: "in", value: [tagId] }],
   }
-  return `/space/${workspaceId}/contacts?contactFilter=${encodeURIComponent(
-    JSON.stringify(filter),
-  )}`
+  const params = new URLSearchParams({
+    contactFilter: JSON.stringify(filter),
+    sort: JSON.stringify([{ id: TAG_RECEIVED_AT_COLUMN_ID, desc: true }]),
+  })
+  return `/space/${workspaceId}/contacts?${params.toString()}`
 }
 
 const SCHEME_PATTERN = /^[a-z][a-z\d+.-]*:/i

@@ -36,6 +36,10 @@ import { InboxIcon } from "../inboxes/components/inbox-icon"
 import { getUserName } from "../users/schemas/resource"
 import { CONTACTS_DEFAULT_PER_PAGE } from "./constants"
 import { ContactListAction } from "./contacts-list-action"
+import {
+  getSingleTagFilterId,
+  TAG_RECEIVED_AT_COLUMN_ID,
+} from "./lib/tag-received-at"
 import type { listContacts } from "./queries/list-contacts.queries"
 import type { ExportContactsFilter } from "./schemas/action"
 import type { ListContactsResponse } from "./schemas/query"
@@ -267,6 +271,11 @@ export function ContactsTable({
     }),
     [keyword, isOptimisticContactFilterActive, optimisticContactFilter],
   )
+  // Filtered by exactly one tag (e.g. a lead magnet's "show contacts"): the
+  // server then returns when each contact got that tag.
+  const showTagReceivedAt =
+    isContactFilterActive && getSingleTagFilterId(contactFilter) !== null
+
   const totalCountDisplay = formatter.number(tableTotalCount)
   const totalCountLabel = tableTotalCountCapped
     ? t("contacts.countCapped", { count: totalCountDisplay })
@@ -415,6 +424,29 @@ export function ContactsTable({
         enableSorting: false,
         enableHiding: false,
       },
+      ...(showTagReceivedAt
+        ? [
+            {
+              id: TAG_RECEIVED_AT_COLUMN_ID,
+              accessorFn: (row) => row.tagReceivedAt ?? null,
+              header: ({ column }) => (
+                <DataTableColumnHeader
+                  column={column}
+                  title={t("contacts.tagReceivedAt")}
+                />
+              ),
+              cell: ({ row }) =>
+                row.original.tagReceivedAt
+                  ? format(row.original.tagReceivedAt, "yyyy/MM/dd HH:mm")
+                  : null,
+              meta: {
+                label: t("contacts.tagReceivedAt"),
+              },
+              enableSorting: true,
+              enableHiding: false,
+            } satisfies ColumnDef<ListContactsResponse["data"][number]>,
+          ]
+        : []),
       {
         accessorKey: "createdAt",
         header: ({ column }) => (
@@ -431,7 +463,7 @@ export function ContactsTable({
         enableHiding: false,
       },
     ],
-    [workspaceId, t],
+    [workspaceId, t, showTagReceivedAt],
   )
 
   const { table } = useDataTable({

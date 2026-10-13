@@ -28,14 +28,22 @@ describe("leadMagnetHref", () => {
 describe("leadMagnetContactsHref", () => {
   it("builds a tag-filtered contacts URL", () => {
     const href = leadMagnetContactsHref("1", "42")
-    expect(href.startsWith("/space/1/contacts?contactFilter=")).toBe(true)
-    const filter = JSON.parse(
-      decodeURIComponent(href.split("contactFilter=")[1] ?? ""),
-    )
+    expect(href.startsWith("/space/1/contacts?")).toBe(true)
+    const params = new URLSearchParams(href.split("?")[1])
+    const filter = JSON.parse(params.get("contactFilter") ?? "")
     expect(filter.conditions[0]).toEqual({
       field: "tags",
       operator: "in",
       value: ["42"],
     })
+  })
+
+  it("sorts by the received date, newest first", () => {
+    const params = new URLSearchParams(
+      leadMagnetContactsHref("1", "42").split("?")[1],
+    )
+    expect(JSON.parse(params.get("sort") ?? "")).toEqual([
+      { id: "tagReceivedAt", desc: true },
+    ])
   })
 })

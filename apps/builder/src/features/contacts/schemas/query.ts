@@ -104,6 +104,11 @@ export const contactResponse = contactResource.and(
       )
       .nullable()
       .optional(),
+    /**
+     * When the list is filtered by exactly one tag: when the contact got it
+     * (`null` for links older than the date column). Absent otherwise.
+     */
+    tagReceivedAt: z.coerce.date().nullish(),
   }),
 )
 export type ContactResponse = z.infer<typeof contactResponse>

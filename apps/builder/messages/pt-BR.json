@@ -3697,7 +3697,8 @@
     "countCapped": "{count}+ contatos",
     "exportAllNotice": "Todos os contatos que correspondem ao filtro atual serão exportados.",
     "exportTakingLong": "A exportação está demorando mais do que o esperado",
-    "exportTakingLongDescription": "A exportação ainda está sendo processada. Você pode fechar esta caixa de diálogo e verificar novamente em alguns minutos no histórico de exportações."
+    "exportTakingLongDescription": "A exportação ainda está sendo processada. Você pode fechar esta caixa de diálogo e verificar novamente em alguns minutos no histórico de exportações.",
+    "tagReceivedAt": "Received"
   },
   "kanban": {
     "title": "Kanban",

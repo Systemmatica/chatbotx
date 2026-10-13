@@ -838,7 +838,8 @@
     "exportTakingLong": "Exporten tar längre tid än väntat",
     "exportTakingLongDescription": "Exporten bearbetas fortfarande. Du kan stänga den här dialogrutan och kontrollera exporthistoriken igen om några minuter.",
     "linkCopied": "Länken har kopierats till urklipp",
-    "title": "Kontakter"
+    "title": "Kontakter",
+    "tagReceivedAt": "Received"
   },
   "kanban": {
     "title": "Kanban",

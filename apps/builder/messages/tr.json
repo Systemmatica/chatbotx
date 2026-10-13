@@ -3804,7 +3804,8 @@
     "countCapped": "{count}+ kişi",
     "exportAllNotice": "Geçerli filtreyle eşleşen tüm kişiler dışa aktarılacaktır.",
     "exportTakingLong": "Dışa aktarma beklenenden uzun sürüyor",
-    "exportTakingLongDescription": "Dışa aktarma hâlâ işleniyor. Bu iletişim kutusunu kapatıp birkaç dakika sonra dışa aktarma geçmişinden tekrar kontrol edebilirsiniz."
+    "exportTakingLongDescription": "Dışa aktarma hâlâ işleniyor. Bu iletişim kutusunu kapatıp birkaç dakika sonra dışa aktarma geçmişinden tekrar kontrol edebilirsiniz.",
+    "tagReceivedAt": "Received"
   },
   "kanban": {
     "title": "Kanban",

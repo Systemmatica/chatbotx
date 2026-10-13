@@ -2019,7 +2019,8 @@
     "countCapped": "{count}+ אנשי קשר",
     "exportAllNotice": "כל אנשי הקשר שתואמים למסנן הנוכחי ייוצאו.",
     "exportTakingLong": "הייצוא נמשך זמן רב מהצפוי",
-    "exportTakingLongDescription": "הייצוא עדיין בעיבוד. ניתן לסגור חלון זה ולבדוק שוב בעוד מספר דקות בהיסטוריית הייצוא."
+    "exportTakingLongDescription": "הייצוא עדיין בעיבוד. ניתן לסגור חלון זה ולבדוק שוב בעוד מספר דקות בהיסטוריית הייצוא.",
+    "tagReceivedAt": "Received"
   },
   "kanban": {
     "title": "Kanban",
