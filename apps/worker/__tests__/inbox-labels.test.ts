@@ -88,6 +88,7 @@ vi.mock("@chatbotx.io/database/schema", () => ({
 
 vi.mock("@chatbotx.io/database/partials", () => ({
   channelTypes: { enum: { messenger: "messenger", zalo: "zalo" } },
+  labelColorForName: () => "blue",
 }))
 
 const enqueueDelete = vi.fn(async () => undefined)

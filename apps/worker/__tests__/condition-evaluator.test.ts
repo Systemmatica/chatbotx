@@ -314,6 +314,42 @@ describe("ConditionEvaluator customFieldValueChanged operator vocabulary", () =>
     ).resolves.toBe(true)
   })
 
+  test("eq on a select field matches the exact option label", async () => {
+    await expect(
+      evaluator.evaluate(
+        buildCustomFieldContext("eq", { text: "Hot" }, "select", "Hot"),
+      ),
+    ).resolves.toBe(true)
+  })
+
+  test("eq / ne on a multi-select field test option membership", async () => {
+    await expect(
+      evaluator.evaluate(
+        buildCustomFieldContext(
+          "eq",
+          { text: "Hot" },
+          "multiSelect",
+          "Cold, Hot",
+        ),
+      ),
+    ).resolves.toBe(true)
+    await expect(
+      evaluator.evaluate(
+        buildCustomFieldContext(
+          "ne",
+          { text: "Hot" },
+          "multiSelect",
+          "Cold, Hot",
+        ),
+      ),
+    ).resolves.toBe(false)
+    await expect(
+      evaluator.evaluate(
+        buildCustomFieldContext("ne", { text: "Hot" }, "multiSelect", "Cold"),
+      ),
+    ).resolves.toBe(true)
+  })
+
   test("eq still matches a date custom field on the same instant", async () => {
     await expect(
       evaluator.evaluate(

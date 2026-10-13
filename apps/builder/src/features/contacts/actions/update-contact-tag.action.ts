@@ -7,6 +7,7 @@ import {
   tagSyncService,
 } from "@chatbotx.io/business"
 import { and, db, eq, isNull, notInArray } from "@chatbotx.io/database/client"
+import { labelColorForName } from "@chatbotx.io/database/partials"
 import { contactsToTagsModel, tagModel } from "@chatbotx.io/database/schema"
 import { emitTagApplied, emitTagRemoved } from "@chatbotx.io/events"
 import { invalidateCacheByTags } from "@chatbotx.io/redis"
@@ -75,6 +76,7 @@ export const updateContactTags = async ({
             parsedInput.tags.map((name) => ({
               id: createId(),
               name,
+              color: labelColorForName(name),
               workspaceId,
             })),
           )

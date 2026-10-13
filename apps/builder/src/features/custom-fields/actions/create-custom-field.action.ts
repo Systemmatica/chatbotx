@@ -1,24 +1,24 @@
 "use server"
 
+import { customFieldService } from "@chatbotx.io/business"
 import { ChatbotXException } from "@chatbotx.io/business/errors"
-import { db, isDatabaseError } from "@chatbotx.io/database/client"
-import { customFieldModel } from "@chatbotx.io/database/schema"
+import { isDatabaseError } from "@chatbotx.io/database/client"
 import { returnValidationErrors } from "next-safe-action"
 import {
   type WorkspaceIdRequestParams,
   workspaceIdrequestParams,
 } from "@/features/common/schemas"
-import { ensureFolderIsExists } from "@/features/folders/actions/utils"
 import { workspaceActionClient } from "@/lib/safe-action"
 import {
   type CreateCustomFieldRequest,
+  createCustomFieldFormRequest,
   createCustomFieldRequest,
 } from "../schemas/action"
 import type { CustomFieldResource } from "../schemas/resource"
 
 export const createCustomFieldAction = workspaceActionClient
   .bindArgsSchemas(workspaceIdrequestParams)
-  .inputSchema(createCustomFieldRequest)
+  .inputSchema(createCustomFieldFormRequest)
   .action(
     async ({
       bindArgsParsedInputs: [workspaceId],
@@ -35,24 +35,16 @@ export const createCustomField = async (
   workspaceId: string,
   parsedInput: CreateCustomFieldRequest,
 ): Promise<CustomFieldResource> => {
-  if (parsedInput.folderId) {
-    await ensureFolderIsExists(parsedInput.folderId, workspaceId, "customField")
-  }
-
   try {
-    const newField = await db
-      .insert(customFieldModel)
-      .values({
-        workspaceId,
-        showInInbox: true,
-        ...parsedInput,
-      })
-      .returning()
-      .then((result) => result[0])
-
-    return newField
+    // The service checks the folder, stores options only for select types
+    // and invalidates the workspace custom-field cache.
+    return await customFieldService.create({ workspaceId, data: parsedInput })
   } catch (error) {
-    if (isDatabaseError(error) && error.cause.code === "23505") {
+    // Folder / validation errors from the service keep their own message.
+    if (!isDatabaseError(error)) {
+      throw error
+    }
+    if (error.cause.code === "23505") {
       return returnValidationErrors(createCustomFieldRequest, {
         _errors: ["Validation Exception"],
         name: { _errors: ["Name is already taken"] },

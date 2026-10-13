@@ -1,11 +1,16 @@
 import {
   boolean,
+  jsonb,
   pgEnum,
   pgTable,
   text,
   uniqueIndex,
 } from "drizzle-orm/pg-core"
-import { type CustomFieldType, customFieldTypes } from "../partials"
+import {
+  type CustomFieldOption,
+  type CustomFieldType,
+  customFieldTypes,
+} from "../partials"
 import { bigintAsString, sharedColumns } from "../partials/shared"
 import { folderModel } from "./folder"
 import { workspaceModel } from "./workspace"
@@ -24,6 +29,11 @@ export const customFieldModel = pgTable(
     description: text(),
     /** Lucide icon name picked in the UI; `null` falls back to the type icon. */
     icon: text(),
+    /**
+     * Choices of a `select` / `multiSelect` field (label + palette color),
+     * in display order. `null` for every other field type.
+     */
+    options: jsonb().$type<CustomFieldOption[]>(),
     folderId: bigintAsString().references(() => folderModel.id, {
       onDelete: "set null",
       onUpdate: "cascade",

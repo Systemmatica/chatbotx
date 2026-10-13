@@ -8,7 +8,10 @@ import {
   relationsFilterToSQL,
 } from "@chatbotx.io/database/client"
 import {
+  type CustomFieldOption,
   type CustomFieldType,
+  diffCustomFieldOptionRenames,
+  isSelectCustomFieldType,
   rootFolderId,
 } from "@chatbotx.io/database/partials"
 import { customFieldModel } from "@chatbotx.io/database/schema"
@@ -22,6 +25,7 @@ import { withCache } from "@chatbotx.io/redis"
 import { createId, isNumericId } from "@chatbotx.io/utils"
 import { customFieldResolutionKey } from "@chatbotx.io/utils/custom-field"
 import { BaseService } from "../base.service"
+import { contactCustomFieldService } from "../contact-custom-field/service"
 import { notFoundException } from "../errors"
 import { folderService } from "../folder/service"
 import type { PaginatedResult } from "../types"
@@ -42,9 +46,18 @@ type CreateCustomFieldData = {
   folderId?: string | null
   /** Lucide icon name shown instead of the type icon. */
   icon?: string | null
+  /** Choices of a select / multiSelect field; ignored for other types. */
+  options?: CustomFieldOption[] | null
 }
 
-type UpdateCustomFieldData = Partial<CreateCustomFieldData>
+type UpdateCustomFieldData = Partial<Omit<CreateCustomFieldData, "type">>
+
+/** Options are only meaningful on select types; always `null` otherwise. */
+const optionsForType = (
+  type: CustomFieldType,
+  options: CustomFieldOption[] | null | undefined,
+): CustomFieldOption[] | null =>
+  isSelectCustomFieldType(type) ? (options ?? []) : null
 
 class CustomFieldService extends BaseService {
   async list(
@@ -316,7 +329,13 @@ class CustomFieldService extends BaseService {
 
     const [field] = await tx
       .insert(customFieldModel)
-      .values({ id: createId(), workspaceId, showInInbox: true, ...data })
+      .values({
+        id: createId(),
+        workspaceId,
+        showInInbox: true,
+        ...data,
+        options: optionsForType(data.type, data.options),
+      })
       .returning()
 
     await this.invalidate({ workspaceId })
@@ -342,13 +361,44 @@ class CustomFieldService extends BaseService {
       })
     }
 
-    const [updated] = await tx
-      .update(customFieldModel)
-      .set(data)
-      .where(eq(customFieldModel.id, existing.id))
-      .returning()
+    const { options, ...rest } = data
+    let renamedContactIds: string[] = []
+    const write = async (client: DatabaseClient) => {
+      const [row] = await client
+        .update(customFieldModel)
+        .set({
+          ...rest,
+          ...(options === undefined
+            ? {}
+            : { options: optionsForType(existing.type, options) }),
+        })
+        .where(eq(customFieldModel.id, existing.id))
+        .returning()
+
+      // Renamed options keep their contacts: rewrite the stored labels in the
+      // same transaction as the option change.
+      if (options !== undefined) {
+        renamedContactIds =
+          await contactCustomFieldService.renameSelectOptionValues({
+            customFieldId: existing.id,
+            type: existing.type,
+            renames: diffCustomFieldOptionRenames(existing.options, options),
+            tx: client,
+          })
+      }
+      return row
+    }
+
+    const updated =
+      tx === db
+        ? await db.transaction((innerTx) => write(innerTx))
+        : await write(tx)
 
     await this.invalidate({ workspaceId: ctx.workspaceId, ids: [existing.id] })
+    await contactCustomFieldService.invalidateContacts({
+      workspaceId: ctx.workspaceId,
+      contactIds: renamedContactIds,
+    })
     return updated
   }
 

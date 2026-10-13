@@ -19,7 +19,10 @@ import { Loader2Icon } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { type ReactElement, useState } from "react"
 import { toast } from "sonner"
-import { useTagOptions } from "@/features/tags/provider/tag-hook"
+import {
+  useTagChipClassName,
+  useTagOptions,
+} from "@/features/tags/provider/tag-hook"
 import { useTagStore } from "@/features/tags/provider/tag-store-context"
 import { useWorkspaceId } from "@/hooks/routing"
 import { addContactTagAction } from "../actions/add-contact-tag.action"
@@ -39,6 +42,8 @@ export default function AddContactTagDialog({
   const workspaceId = useWorkspaceId()
 
   const tagOptions = useTagOptions()
+
+  const tagChipClassName = useTagChipClassName()
   const { getAllActiveTags } = useTagStore((state) => state)
 
   const { form, handleSubmitWithAction, resetFormAndAction } =
@@ -93,6 +98,7 @@ export default function AddContactTagDialog({
           >
             <TagsInputField
               addAnotherPlaceholder={t("actions.addAnother")}
+              getTagClassName={tagChipClassName}
               label={t("fields.tag.label")}
               name="tags"
               placeholder={t("actions.enterFieldAndPressEnter", {

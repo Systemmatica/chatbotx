@@ -2,6 +2,7 @@ import {
   contactCustomFieldService,
   contactInboxService,
   conversationService,
+  customFieldService,
   normalizeLanguage,
   resolveTenantSettings,
   workspaceService,
@@ -12,7 +13,11 @@ import {
 } from "@chatbotx.io/business/get-user-data"
 import { getPublicFileUrl } from "@chatbotx.io/business/utils"
 import { isMessageStorageError } from "@chatbotx.io/database/errors"
-import type { ConversationAttributes } from "@chatbotx.io/database/partials"
+import {
+  type ConversationAttributes,
+  isSelectCustomFieldType,
+  normalizeSelectFieldValue,
+} from "@chatbotx.io/database/partials"
 import {
   createMessageRepository,
   getSafeSinceTime,
@@ -264,7 +269,10 @@ async function handleSkipOrError(
     return { result: undefined, status: "wait" }
   }
 
-  const validUserData = validateUserData(props, lastUserMessage)
+  const validUserData = await matchSelectOutputField(
+    props,
+    validateUserData(props, lastUserMessage),
+  )
 
   if (!ctx?.variables.conversation.challengeAttempts) {
     throw new IntegrationException(
@@ -411,6 +419,45 @@ function validateUserData(
   }
 
   return validateReplyInput(props.step.replyFormat, lastUserMessage)
+}
+
+/**
+ * A select / multiSelect output field only accepts its option labels. A typed
+ * answer that matches an option (case-insensitively) is stored as the
+ * option's canonical label; anything else is treated as invalid input, so the
+ * step retries (and eventually auto-skips) exactly like a failed format check
+ * instead of reporting success while the write is silently rejected.
+ */
+async function matchSelectOutputField(
+  props: ExecuteStepProps<GetUserDataStepSchema>,
+  result: ReplyValidationResult,
+): Promise<ReplyValidationResult> {
+  const { step, conversation } = props
+  if (!(result.ok && step.outputFieldId) || result.kind === "attachment") {
+    return result
+  }
+
+  const field = await customFieldService.findByKey({
+    workspaceId: conversation.workspaceId,
+    key: step.outputFieldId,
+  })
+  if (!(field && isSelectCustomFieldType(field.type))) {
+    return result
+  }
+
+  const normalized = normalizeSelectFieldValue({
+    type: field.type,
+    options: field.options,
+    value: result.userInput,
+  })
+  if (!normalized) {
+    return {
+      ok: false,
+      errorMessage:
+        "getUserData: reply does not match any option of the select field",
+    }
+  }
+  return { ...result, userInput: normalized }
 }
 
 // Attachments validate to a bare storage key; turn it into a public URL (with

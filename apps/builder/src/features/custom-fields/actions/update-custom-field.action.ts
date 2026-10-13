@@ -1,9 +1,7 @@
 "use server"
 
-import { db, eq, findOrFail } from "@chatbotx.io/database/client"
-import { customFieldModel } from "@chatbotx.io/database/schema"
+import { customFieldService } from "@chatbotx.io/business"
 import { zodBigintAsString } from "@chatbotx.io/utils"
-import { ensureFolderIsExists } from "@/features/folders/actions/utils"
 import { workspaceActionClient } from "@/lib/safe-action"
 import {
   type UpdateCustomFieldRequest,
@@ -22,32 +20,15 @@ export const updateCustomFieldAction = workspaceActionClient
     await updateCustomField({ workspaceId, id }, parsedInput)
   })
 
+/**
+ * Delegates to the business service, which checks the folder, scopes the
+ * field to the workspace, migrates values of renamed select options and
+ * invalidates the custom-field and contact caches.
+ */
 export const updateCustomField = async (
   ctx: {
     workspaceId: string
     id: string
   },
   parsedInput: UpdateCustomFieldRequest,
-) => {
-  const customField = await findOrFail({
-    table: customFieldModel,
-    where: {
-      id: ctx.id,
-      workspaceId: ctx.workspaceId,
-    },
-    message: "Custom field not found",
-  })
-
-  if (parsedInput.folderId && parsedInput.folderId !== customField.folderId) {
-    await ensureFolderIsExists(
-      parsedInput.folderId,
-      ctx.workspaceId,
-      "customField",
-    )
-  }
-
-  await db
-    .update(customFieldModel)
-    .set(parsedInput)
-    .where(eq(customFieldModel.id, ctx.id))
-}
+) => await customFieldService.update(ctx, parsedInput)

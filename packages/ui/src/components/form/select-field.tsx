@@ -19,10 +19,34 @@ export type SingleSelectOption = {
   icon?: LucideIcon
   iconColor?: string
   disabled?: boolean
+  /**
+   * Label-color hints (CSS color values, e.g. `var(--label-red-fg)`): the
+   * select shows a color dot, the multi-select colors its badges.
+   */
+  style?: {
+    badgeColor?: string
+    iconColor?: string
+  }
 }
 
 export type SelectOption = SingleSelectOption & {
   children?: SelectOption[]
+}
+
+function SelectOptionIcon({ option }: { option: SingleSelectOption }) {
+  if (option.icon) {
+    return <option.icon className="h-4 w-4" fill={option.iconColor} />
+  }
+  if (option.style?.iconColor) {
+    return (
+      <span
+        aria-hidden="true"
+        className="size-2 shrink-0 rounded-full"
+        style={{ backgroundColor: option.style.iconColor }}
+      />
+    )
+  }
+  return " "
 }
 
 export type SelectFieldProps<T extends FieldValues> = React.ComponentProps<
@@ -87,11 +111,7 @@ export const SelectField = <T extends FieldValues>(
           key={option.value}
           value={option.value}
         >
-          {option.icon ? (
-            <option.icon className="h-4 w-4" fill={option.iconColor} />
-          ) : (
-            " "
-          )}
+          <SelectOptionIcon option={option} />
           {option.label}
         </SelectItem>
       )),

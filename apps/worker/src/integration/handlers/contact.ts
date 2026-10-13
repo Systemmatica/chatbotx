@@ -7,6 +7,7 @@ import {
 } from "@chatbotx.io/business"
 import { contactSequenceService } from "@chatbotx.io/business/contact-sequence"
 import { and, db, eq, inArray, isNull } from "@chatbotx.io/database/client"
+import { labelColorForName } from "@chatbotx.io/database/partials"
 import {
   contactModel,
   contactNoteModel,
@@ -174,6 +175,7 @@ export async function attachTagsByNames(
       .values(
         tagNames.map((t) => ({
           name: t,
+          color: labelColorForName(t),
           workspaceId,
           id: createId(),
         })),

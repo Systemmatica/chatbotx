@@ -22,6 +22,7 @@ import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { useFormatter, useTranslations } from "next-intl"
 import { use, useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { LabelChip, LabelChipList } from "@/components/labels/label-chip"
 import {
   type ContactFilterCriteria,
   ContactListFilterButton,
@@ -64,6 +65,37 @@ const parseSortParam = (value: string | null) => {
   } catch {
     return []
   }
+}
+
+const MAX_VISIBLE_TAGS = 3
+
+function ContactTagsCell({
+  tags,
+}: {
+  tags: { id: string; name: string; color: string | null }[]
+}) {
+  if (tags.length === 0) {
+    return null
+  }
+  const hidden = tags.length - MAX_VISIBLE_TAGS
+  return (
+    <LabelChipList className="max-w-64">
+      {tags.slice(0, MAX_VISIBLE_TAGS).map((tag) => (
+        <LabelChip color={tag.color} key={tag.id} name={tag.name} />
+      ))}
+      {hidden > 0 ? (
+        <span
+          className="text-muted-foreground text-xs"
+          title={tags
+            .slice(MAX_VISIBLE_TAGS)
+            .map((tag) => tag.name)
+            .join(", ")}
+        >
+          +{hidden}
+        </span>
+      ) : null}
+    </LabelChipList>
+  )
 }
 
 function NameCell({
@@ -361,6 +393,20 @@ export function ContactsTable({
         enableHiding: false,
         meta: {
           label: t("fields.source.label"),
+        },
+      },
+      {
+        id: "tags",
+        header: ({ column }: { column: Column<ContactResource, unknown> }) => (
+          <DataTableColumnHeader
+            column={column}
+            title={t("fields.tags.label")}
+          />
+        ),
+        cell: ({ row }) => <ContactTagsCell tags={row.original.tags ?? []} />,
+        enableSorting: false,
+        meta: {
+          label: t("fields.tags.label"),
         },
       },
       {

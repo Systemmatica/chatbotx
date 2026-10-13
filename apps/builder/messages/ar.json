@@ -2129,6 +2129,12 @@
         "description": "يظهر هذا الرمز مرة واحدة فقط. احفظه في مكان آمن — لن تتمكن من عرضه مرة أخرى.",
         "done": "تم"
       }
+    },
+    "selectField": {
+      "label": "Select"
+    },
+    "multiSelectField": {
+      "label": "Multi-select"
     }
   },
   "flows": {
@@ -3968,6 +3974,24 @@
       "default": "By field type",
       "search": "Search icons",
       "reset": "Use the field type icon"
+    },
+    "options": {
+      "title": "Options",
+      "label": "Option",
+      "add": "Add",
+      "addPlaceholder": "Type an option and press Enter",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "delete": "Delete option",
+      "empty": "No options yet",
+      "hint": "Renaming an option updates contacts that have it. Contacts keep a deleted option's value; it is shown greyed out.",
+      "missing": "This option no longer exists",
+      "clear": "Clear",
+      "errors": {
+        "required": "Option name is required",
+        "comma": "Option name cannot contain a comma",
+        "duplicate": "An option with this name already exists"
+      }
     }
   },
   "keywords": {
@@ -5633,7 +5657,8 @@
       "badge": "{kind} “{name}” · {date}",
       "badgeNoDate": "{kind} “{name}”",
       "unknownDate": "date received unknown"
-    }
+    },
+    "tagPrefix": "Tag:"
   },
   "flowCanvas": {
     "autoLayout": "Auto-arrange",
@@ -5750,5 +5775,20 @@
     "unpinned": "Flow unpinned",
     "limitReached": "You can pin up to {max} flows. Unpin one to add another.",
     "error": "Could not update the pin. Please try again."
+  },
+  "labelColors": {
+    "label": "Color",
+    "pick": "Pick a color",
+    "preview": "Label",
+    "default": "Default",
+    "gray": "Gray",
+    "brown": "Brown",
+    "orange": "Orange",
+    "yellow": "Yellow",
+    "green": "Green",
+    "blue": "Blue",
+    "purple": "Purple",
+    "pink": "Pink",
+    "red": "Red"
   }
 }

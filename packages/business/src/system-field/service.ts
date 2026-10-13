@@ -55,7 +55,7 @@ export type MePrivacyData = {
   language: string
   params: MePrivacyParams
   sourceId: string
-  tags: Pick<TagModel, "id" | "name">[]
+  tags: Pick<TagModel, "id" | "name" | "color">[]
 }
 
 export type MeExportData = {
@@ -192,7 +192,11 @@ class SystemFieldService extends BaseService {
       language: workspace.language,
       params,
       sourceId: context.contactInbox.sourceId,
-      tags: tags.map((tag) => ({ id: tag.id, name: tag.name })),
+      tags: tags.map((tag) => ({
+        id: tag.id,
+        name: tag.name,
+        color: tag.color,
+      })),
     }
   }
 

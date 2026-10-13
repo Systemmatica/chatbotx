@@ -285,7 +285,9 @@
         "date",
         "datetime",
         "boolean",
-        "longText"
+        "longText",
+        "select",
+        "multiSelect"
       ],
       "name": "customFieldType",
       "entityType": "enums",
@@ -475,6 +477,23 @@
     {
       "values": ["me"],
       "name": "SystemFieldType",
+      "entityType": "enums",
+      "schema": "public"
+    },
+    {
+      "values": [
+        "default",
+        "gray",
+        "brown",
+        "orange",
+        "yellow",
+        "green",
+        "blue",
+        "purple",
+        "pink",
+        "red"
+      ],
+      "name": "labelColor",
       "entityType": "enums",
       "schema": "public"
     },
@@ -9719,6 +9738,19 @@
       "generated": null,
       "identity": null,
       "name": "icon",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "CustomField"
+    },
+    {
+      "type": "jsonb",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "options",
       "entityType": "columns",
       "schema": "public",
       "table": "CustomField"
@@ -22280,6 +22312,19 @@
       "generated": null,
       "identity": null,
       "name": "name",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "Tag"
+    },
+    {
+      "type": "labelColor",
+      "typeSchema": "public",
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "color",
       "entityType": "columns",
       "schema": "public",
       "table": "Tag"

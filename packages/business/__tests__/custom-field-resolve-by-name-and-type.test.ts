@@ -46,6 +46,16 @@ vi.mock("@chatbotx.io/database/client", () => ({
 
 vi.mock("@chatbotx.io/database/partials", () => ({
   rootFolderId: "root",
+  diffCustomFieldOptionRenames: () => [],
+  isSelectCustomFieldType: (type: string) =>
+    type === "select" || type === "multiSelect",
+}))
+
+vi.mock("../src/contact-custom-field/service", () => ({
+  contactCustomFieldService: {
+    renameSelectOptionValues: vi.fn(async () => []),
+    invalidateContacts: vi.fn(),
+  },
 }))
 
 vi.mock("@chatbotx.io/database/schema", () => ({

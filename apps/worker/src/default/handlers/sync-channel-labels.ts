@@ -1,6 +1,10 @@
 import { buildContext } from "@chatbotx.io/business"
 import { db, isNull, sql } from "@chatbotx.io/database/client"
-import { type ChannelType, channelTypes } from "@chatbotx.io/database/partials"
+import {
+  type ChannelType,
+  channelTypes,
+  labelColorForName,
+} from "@chatbotx.io/database/partials"
 import {
   contactsToTagsModel,
   contactToTagChannelModel,
@@ -183,7 +187,12 @@ async function upsertLabelMapping(props: {
 
   const [tag] = await db
     .insert(tagModel)
-    .values({ id: createId(), name: label.name, workspaceId })
+    .values({
+      id: createId(),
+      name: label.name,
+      color: labelColorForName(label.name),
+      workspaceId,
+    })
     .onConflictDoUpdate({
       target: [tagModel.workspaceId, tagModel.name],
       targetWhere: isNull(tagModel.deletedAt),

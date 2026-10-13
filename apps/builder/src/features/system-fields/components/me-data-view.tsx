@@ -17,7 +17,6 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "@chatbotx.io/ui/components/ui/avatar"
-import { Badge } from "@chatbotx.io/ui/components/ui/badge"
 import { Button, buttonVariants } from "@chatbotx.io/ui/components/ui/button"
 import {
   Card,
@@ -47,6 +46,7 @@ import {
 import { useTranslations } from "next-intl"
 import { useAction } from "next-safe-action/hooks"
 import { useEffect, useState } from "react"
+import { LabelChip } from "@/components/labels/label-chip"
 import { deleteMeDataAction } from "../actions/delete-me-data.action"
 import { maskPii } from "../lib/mask"
 import { buildMeDownloadHref, toMeLinkInput } from "../lib/me-link-params"
@@ -190,9 +190,7 @@ export function MeDataView({ data }: MeDataViewProps) {
             {data.tags.length > 0 ? (
               <div className="flex flex-wrap gap-2">
                 {data.tags.map((tag) => (
-                  <Badge key={tag.id} variant="secondary">
-                    {tag.name}
-                  </Badge>
+                  <LabelChip color={tag.color} key={tag.id} name={tag.name} />
                 ))}
               </div>
             ) : (

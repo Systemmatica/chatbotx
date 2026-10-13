@@ -43,7 +43,9 @@ const customFieldsWorkspaceTokenAPI = {
       successStatus: 201,
       tags: ["Custom Fields"],
     })
-    .input(createCustomFieldRequest.pick({ name: true, type: true }))
+    .input(
+      createCustomFieldRequest.pick({ name: true, type: true, options: true }),
+    )
     .output(publicCustomFieldResource)
     .errors(possibleErrorsOnCreatingResource)
     .handler(

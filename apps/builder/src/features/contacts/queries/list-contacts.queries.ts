@@ -122,7 +122,8 @@ async function queryContacts(
       orderBy,
       extras: tagReceivedAt.extras,
       with: {
-        tags: true,
+        // Soft-deleted tags stay linked until cleanup; never show them.
+        tags: { where: { deletedAt: { isNull: true } } },
         contactCustomFields: true,
         contactInboxes: {
           with: {
@@ -182,6 +183,8 @@ export async function listContactsRSC(
       orderBy,
       extras: tagReceivedAt.extras,
       with: {
+        // Soft-deleted tags stay linked until cleanup; never show them.
+        tags: { where: { deletedAt: { isNull: true } } },
         contactInboxes: {
           with: {
             inbox: true,

@@ -10,9 +10,12 @@ import { validateCustomFieldValue } from "@chatbotx.io/business/javascript-execu
 import { db, inArray } from "@chatbotx.io/database/client"
 import {
   type ContactImportMeta,
+  type CustomFieldOption,
   type CustomFieldType,
   contactImportMetaSchema,
   contactSources,
+  isSelectCustomFieldType,
+  normalizeSelectFieldValue,
 } from "@chatbotx.io/database/partials"
 import {
   contactInboxModel,
@@ -33,6 +36,8 @@ import { type ContactRow, extractRowData } from "./extractor"
 
 type ContactDeps = {
   customFieldTypes: Map<string, CustomFieldType>
+  /** Options of select / multiSelect fields, keyed by custom field id. */
+  customFieldOptions: Map<string, CustomFieldOption[] | null>
   inbox: typeof inboxModel.$inferSelect
   ownerId: string
 }
@@ -71,7 +76,7 @@ const prepareContacts = async ({
     customFieldIds.length
       ? db.query.customFieldModel.findMany({
           where: { id: { in: customFieldIds }, workspaceId: row.workspaceId },
-          columns: { id: true, type: true },
+          columns: { id: true, type: true, options: true },
         })
       : [],
   ])
@@ -87,13 +92,20 @@ const prepareContacts = async ({
   }
 
   const customFieldTypes = new Map<string, CustomFieldType>()
+  const customFieldOptions = new Map<string, CustomFieldOption[] | null>()
   for (const field of fields) {
     customFieldTypes.set(field.id, field.type)
+    customFieldOptions.set(field.id, field.options)
   }
 
   return {
     ok: true,
-    deps: { customFieldTypes, inbox, ownerId: workspace.ownerId },
+    deps: {
+      customFieldTypes,
+      customFieldOptions,
+      inbox,
+      ownerId: workspace.ownerId,
+    },
   }
 }
 
@@ -116,12 +128,18 @@ const processContactRow = (
       return []
     }
 
-    const normalized = validateCustomFieldValue(
-      type,
-      field.value,
-      meta.timezone,
-    )
-    if (normalized === null) {
+    const validated = validateCustomFieldValue(type, field.value, meta.timezone)
+    // New contacts are bulk-inserted without the service write path, so a
+    // select value must be matched against the options here.
+    const normalized =
+      validated !== null && isSelectCustomFieldType(type)
+        ? normalizeSelectFieldValue({
+            type,
+            options: deps.customFieldOptions.get(field.customFieldId),
+            value: validated,
+          })
+        : validated
+    if (normalized === null || normalized === "") {
       return []
     }
 

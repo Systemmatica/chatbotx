@@ -12,8 +12,11 @@ import {
 import { type SQL, sql } from "drizzle-orm"
 import {
   customFieldTypes,
+  isSelectCustomFieldType,
+  MULTI_SELECT_SEPARATOR,
   type OperatorType,
   operatorTypes,
+  type SelectCustomFieldType,
 } from "../../partials"
 import { contactCustomFieldModel, customFieldModel } from "../../schema"
 import { escapeLikePattern, likeContains } from "../../utils"
@@ -29,6 +32,7 @@ type IntervalValue = [string, string]
 
 const NEGATION_TO_POSITIVE: Partial<Record<OperatorType, OperatorType>> = {
   [operatorTypes.enum.ne]: operatorTypes.enum.eq,
+  [operatorTypes.enum.notIn]: operatorTypes.enum.in,
   [operatorTypes.enum.notContains]: operatorTypes.enum.contains,
   [operatorTypes.enum.notBetween]: operatorTypes.enum.isBetween,
   [operatorTypes.enum.isEmpty]: operatorTypes.enum.isNotEmpty,
@@ -96,6 +100,10 @@ function buildCustomFieldPositivePredicate(
   if (operator === operatorTypes.enum.isNotEmpty) {
     const column = contactCustomFieldModel.value
     return sql`(${column} IS NOT NULL AND ${column} <> '')`
+  }
+
+  if (isSelectCustomFieldType(customFieldType)) {
+    return buildSelectCustomFieldPredicate(operator, value, customFieldType)
   }
 
   const intervalValue = getCustomFieldIntervalValue(value)
@@ -508,4 +516,44 @@ function buildTextCustomFieldPredicate(
     default:
       return
   }
+}
+
+const toSelectLabels = (value: unknown): string[] => {
+  const values = Array.isArray(value) ? value : [value]
+  return values.filter(
+    (item): item is string => typeof item === "string" && item !== "",
+  )
+}
+
+/**
+ * Select / multiSelect fields store canonical option labels (multi-select as
+ * "A, B"). `eq` = has that option, `in` = has any of the options; `ne` /
+ * `notIn` are the negated EXISTS of those via NEGATION_TO_POSITIVE, so
+ * contacts without a value also match them.
+ */
+function buildSelectCustomFieldPredicate(
+  operator: string,
+  value: unknown,
+  customFieldType: SelectCustomFieldType,
+): SQL | undefined {
+  if (
+    operator !== operatorTypes.enum.eq &&
+    operator !== operatorTypes.enum.in
+  ) {
+    return
+  }
+  const labels = toSelectLabels(value)
+  if (labels.length === 0) {
+    return
+  }
+
+  const list = sql`ARRAY[${sql.join(
+    labels.map((label) => sql`${label}`),
+    sql`, `,
+  )}]::text[]`
+  const column = contactCustomFieldModel.value
+  if (customFieldType === "select") {
+    return sql`${column} = ANY(${list})`
+  }
+  return sql`EXISTS (SELECT 1 FROM unnest(string_to_array(${column}, ${MULTI_SELECT_SEPARATOR})) AS parts(part) WHERE btrim(part) = ANY(${list}))`
 }

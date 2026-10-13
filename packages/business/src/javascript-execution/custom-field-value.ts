@@ -64,6 +64,11 @@ const customFieldValueNormalizers = {
   number: normalizeNumber,
   phoneNumber: normalizePhone,
   shortText: (raw) => raw,
+  // Option membership needs the field's options, which this type-only layer
+  // does not have; the write path (`normalizeCustomFieldValueForStorage`)
+  // rejects values that are not an option.
+  select: (raw) => raw.trim(),
+  multiSelect: (raw) => raw.trim(),
 } as const satisfies Record<CustomFieldType, CustomFieldValueNormalizer>
 
 /**

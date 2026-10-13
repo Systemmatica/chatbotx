@@ -27,6 +27,7 @@ import {
 } from "lucide-react"
 import type { useTranslations } from "next-intl"
 import type { Dispatch, SetStateAction } from "react"
+import { LabelChip } from "@/components/labels/label-chip"
 
 type TagWithContacts = TagModel & {
   contactsCount?: number
@@ -79,8 +80,11 @@ export function getTagColumns({
         <Tooltip>
           <TooltipTrigger
             render={
-              <div className="inline-block max-w-[300px] truncate">
-                {row.original.name}
+              <div className="inline-flex max-w-[300px]">
+                <LabelChip
+                  color={row.original.color}
+                  name={row.original.name}
+                />
               </div>
             }
           />

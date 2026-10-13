@@ -1,6 +1,7 @@
 import { db } from "@chatbotx.io/database/client"
 import {
   type OperatorType,
+  parseMultiSelectValue,
   triggerEventTypes,
 } from "@chatbotx.io/database/partials"
 import type { WorkspaceModel } from "@chatbotx.io/database/types"
@@ -207,11 +208,41 @@ export class ConditionEvaluator {
       )
     }
 
+    if (
+      customFieldType === "multiSelect" &&
+      (normalizedOperator === "is" || normalizedOperator === "isNot")
+    ) {
+      return this.evaluateMultiSelectOperator(
+        normalizedOperator,
+        actualValue,
+        expected,
+      )
+    }
+
     return this.evaluateStandardOperator(
       normalizedOperator,
       actualValue,
       expected,
     )
+  }
+
+  /**
+   * A multi-select value is stored as "A, B": `is X` means "has option X",
+   * `isNot X` means "does not have it" (case-insensitive, like option lookup).
+   */
+  private evaluateMultiSelectOperator(
+    operator: "is" | "isNot",
+    actualValue: unknown,
+    expected: unknown,
+  ): boolean {
+    if (typeof expected !== "string" || expected.trim() === "") {
+      return false
+    }
+    const key = expected.trim().toLowerCase()
+    const hasOption = parseMultiSelectValue(
+      typeof actualValue === "string" ? actualValue : "",
+    ).some((label) => label.toLowerCase() === key)
+    return operator === "is" ? hasOption : !hasOption
   }
 
   private extractExpectedValue(expectedValue: unknown): unknown {

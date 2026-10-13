@@ -2,6 +2,7 @@
 
 import { tagSyncService } from "@chatbotx.io/business"
 import { db } from "@chatbotx.io/database/client"
+import { labelColorForName } from "@chatbotx.io/database/partials"
 import { tagModel } from "@chatbotx.io/database/schema"
 import { createId } from "@chatbotx.io/utils"
 import { returnValidationErrors } from "next-safe-action"
@@ -60,6 +61,7 @@ export const createTag = async (
     .values({
       ...parsedInput,
       folderId: parsedInput.folderId ?? null,
+      color: parsedInput.color ?? labelColorForName(parsedInput.name),
       id: createId(),
     })
     .returning()

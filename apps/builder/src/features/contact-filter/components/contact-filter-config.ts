@@ -7,6 +7,7 @@ import {
   type ContactFilterField,
   type ContactInfoFilterValue,
   type ContactInfoType,
+  type CustomFieldOption,
   contactInfoFilterValues,
   contactInfoTypes,
   contactSources,
@@ -22,6 +23,7 @@ import {
   allContinentOptions,
   allCountryOptions,
 } from "@/features/workspaces/schema/types"
+import { getLabelColorStyle } from "@/lib/label-colors"
 import { formatFlowNodeValue } from "../lib/flow-node-options"
 import {
   CONTACT_FILTER_FIELD_DEFINITIONS,
@@ -61,6 +63,8 @@ export type CustomFieldFilterOption = {
   id: string
   name: string
   type?: string
+  /** Choices of a select / multiSelect field (label = filter value). */
+  options?: CustomFieldOption[] | null
 }
 
 export type ContactFilterFieldGroup =
@@ -106,10 +110,26 @@ export const convertCustomFieldTypeToConditionType = (
       return formFieldTypes.enum.datetime
     case "boolean":
       return formFieldTypes.enum.boolean
+    case "select":
+    case "multiSelect":
+      return formFieldTypes.enum.select
     default:
       return formFieldTypes.enum.text
   }
 }
+
+/** Filter value options of a select field: value = label, colored badges. */
+const toSelectFilterOptions = (
+  options: CustomFieldOption[] | null | undefined,
+): SelectOption[] | undefined =>
+  options?.map((option) => {
+    const style = getLabelColorStyle(option.color, option.label)
+    return {
+      label: option.label,
+      value: option.label,
+      style: { badgeColor: style.background, iconColor: style.foreground },
+    }
+  })
 
 const schemaKindToFormField = (
   kind: ContactFilterSchemaKind,
@@ -454,6 +474,7 @@ export const getFieldConfigs = ({
     label: field.name,
     formField: convertCustomFieldTypeToConditionType(field.type),
     group: "customFields",
+    options: toSelectFilterOptions(field.options),
   }))
 
   // Each workspace coupon topic becomes its own filter field (replaces the

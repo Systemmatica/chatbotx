@@ -8,9 +8,15 @@ import {
 } from "@chatbotx.io/business/contact-locale"
 import type {
   ChannelType,
+  CustomFieldOption,
   CustomFieldType,
+  SelectCustomFieldType,
 } from "@chatbotx.io/database/partials"
-import { channelTypes, customFieldTypes } from "@chatbotx.io/database/partials"
+import {
+  channelTypes,
+  customFieldTypes,
+  isSelectCustomFieldType,
+} from "@chatbotx.io/database/partials"
 import {
   Avatar,
   AvatarFallback,
@@ -39,6 +45,7 @@ import { useWorkspaceId } from "@/hooks/routing"
 import { useChatStore } from "../chat/store/chat-store-provider"
 import { getBrowserTimezone } from "../contact-filter/lib/timezone"
 import type { ContactInboxResource } from "../contact-inboxes/schema/resource"
+import { SelectValueChips } from "../custom-fields/components/select-value"
 import { ContactCustomFieldManage } from "../custom-fields/contact-custom-field-manage"
 import { resolveCustomFieldIcon } from "../custom-fields/lib/custom-field-icons"
 import { useCustomFieldStore } from "../custom-fields/provider/custom-field-store-context"
@@ -159,6 +166,19 @@ const buildScopedIdentityFields = (
 const BIO_CLAMP_THRESHOLD = 120
 
 /** Channel profile bio: muted, clamped to 3 lines with an expand toggle. */
+/** Displayed value of a contact field: option chips for select fields. */
+const ContactFieldValue = ({ field }: { field: ContactEditableField }) =>
+  isSelectCustomFieldType(field.type) ? (
+    <SelectValueChips
+      className="min-w-0"
+      options={field.selectOptions}
+      type={field.type as SelectCustomFieldType}
+      value={field.value}
+    />
+  ) : (
+    <span className="truncate dark:text-white">{field.value}</span>
+  )
+
 const ContactBio = ({ bio }: { bio: string }) => {
   const t = useTranslations()
   const [expanded, setExpanded] = useState(false)
@@ -276,6 +296,7 @@ export const ContactDetail = ({
         label: targetCustomField.name,
         value: "",
         type: targetCustomField.type,
+        selectOptions: targetCustomField.options ?? undefined,
       },
     ])
   }
@@ -283,7 +304,12 @@ export const ContactDetail = ({
   const customFieldMap = useMemo(() => {
     const map = new Map<
       string,
-      { name: string; type: CustomFieldType; icon: string | null }
+      {
+        name: string
+        type: CustomFieldType
+        icon: string | null
+        options: CustomFieldOption[] | null
+      }
     >()
     for (const field of customFields) {
       const parsedType = customFieldTypes.safeParse(field.type)
@@ -294,6 +320,7 @@ export const ContactDetail = ({
         name: field.name,
         type: parsedType.data,
         icon: field.icon,
+        options: field.options ?? null,
       })
     }
     return map
@@ -397,6 +424,7 @@ export const ContactDetail = ({
                   )
                 : contactCustomField.value,
               type: targetCustomField.type,
+              selectOptions: targetCustomField.options ?? undefined,
             })
           }
         }
@@ -435,14 +463,14 @@ export const ContactDetail = ({
       {contact.bio ? <ContactBio bio={contact.bio} key={contact.id} /> : null}
       <div className="flex flex-col gap-1 font-medium text-[12px] text-gray-600">
         {contactFields.map((editable) => {
-          const fieldValue =
-            editable.value && editable.value.length > 0 ? (
-              <span className="truncate dark:text-white">{editable.value}</span>
-            ) : (
-              <span className="italic">
-                {editable.readOnly ? "--" : `-- ${t("actions.clickToEdit")} --`}
-              </span>
-            )
+          const hasValue = Boolean(editable.value && editable.value.length > 0)
+          const fieldValue = hasValue ? (
+            <ContactFieldValue field={editable} />
+          ) : (
+            <span className="italic">
+              {editable.readOnly ? "--" : `-- ${t("actions.clickToEdit")} --`}
+            </span>
+          )
 
           return (
             <div className="flex w-full items-center gap-1" key={editable.key}>

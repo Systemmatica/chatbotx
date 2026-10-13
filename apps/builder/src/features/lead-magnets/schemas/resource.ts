@@ -17,6 +17,8 @@ export type LeadMagnetResource = z.infer<typeof leadMagnetResource>
 export const leadMagnetWithStatsResource = leadMagnetResource.extend({
   /** `null` when the tag was deleted; the next save re-creates it. */
   tagName: z.string().nullable(),
+  /** Palette token of the tag; `null` derives the color from the name. */
+  tagColor: z.string().nullable(),
   /** Contacts holding the lead magnet's tag. */
   recipients: z.number(),
 })

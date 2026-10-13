@@ -13,6 +13,8 @@ const translationKeyByCustomFieldType = {
   datetime: "fields.datetime.label",
   boolean: "fields.boolean.label",
   longText: "fields.longText.label",
+  select: "fields.selectField.label",
+  multiSelect: "fields.multiSelectField.label",
 } as const satisfies Record<CustomFieldType, string>
 
 export default function CustomFieldTypeLabel({

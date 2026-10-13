@@ -49,6 +49,40 @@ describe("contact custom field normalization", () => {
     ).resolves.toBeNull()
   })
 
+  test("select fields only accept option labels (canonicalized)", async () => {
+    const resolver = vi.fn(async () => "UTC")
+    const options = [
+      { id: "1", label: "Hot", color: "red" as const },
+      { id: "2", label: "Cold", color: "blue" as const },
+    ]
+
+    await expect(
+      normalizeCustomFieldValueForStorage({
+        type: "select",
+        value: "hot",
+        options,
+        resolveSourceTimezone: resolver,
+      }),
+    ).resolves.toBe("Hot")
+    await expect(
+      normalizeCustomFieldValueForStorage({
+        type: "select",
+        value: "Warm",
+        options,
+        resolveSourceTimezone: resolver,
+      }),
+    ).resolves.toBeNull()
+    await expect(
+      normalizeCustomFieldValueForStorage({
+        type: "multiSelect",
+        value: "cold,hot",
+        options,
+        resolveSourceTimezone: resolver,
+      }),
+    ).resolves.toBe("Cold, Hot")
+    expect(resolver).not.toHaveBeenCalled()
+  })
+
   test("passes non-temporal values through unchanged", async () => {
     const resolver = vi.fn(async () => "Asia/Ho_Chi_Minh")
 

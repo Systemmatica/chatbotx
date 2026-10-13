@@ -10,3 +10,54 @@
  */
 @source "../../node_modules/@chatbotx.io/ui";
 @source "../../node_modules/@chatbotx.io/minigame-ui";
+
+/**
+ * Notion-style label palette for tags and select-field options. Tokens are
+ * stored in the DB by name (see `labelColors`); `src/lib/label-colors.ts`
+ * maps each token to these variables, so both themes are handled here.
+ */
+:root {
+  --label-default-bg: oklch(0.93 0.003 85 / 0.7);
+  --label-default-fg: oklch(0.3 0.006 70);
+  --label-gray-bg: oklch(0.91 0.004 85);
+  --label-gray-fg: oklch(0.42 0.006 70);
+  --label-brown-bg: oklch(0.92 0.025 50);
+  --label-brown-fg: oklch(0.42 0.06 45);
+  --label-orange-bg: oklch(0.92 0.05 65);
+  --label-orange-fg: oklch(0.45 0.12 50);
+  --label-yellow-bg: oklch(0.95 0.06 90);
+  --label-yellow-fg: oklch(0.45 0.09 75);
+  --label-green-bg: oklch(0.93 0.04 150);
+  --label-green-fg: oklch(0.42 0.08 155);
+  --label-blue-bg: oklch(0.92 0.03 235);
+  --label-blue-fg: oklch(0.42 0.09 240);
+  --label-purple-bg: oklch(0.92 0.03 310);
+  --label-purple-fg: oklch(0.43 0.11 305);
+  --label-pink-bg: oklch(0.93 0.03 350);
+  --label-pink-fg: oklch(0.45 0.13 355);
+  --label-red-bg: oklch(0.93 0.035 25);
+  --label-red-fg: oklch(0.47 0.15 25);
+}
+
+.dark {
+  --label-default-bg: oklch(1 0 0 / 0.1);
+  --label-default-fg: oklch(0.92 0 0);
+  --label-gray-bg: oklch(0.42 0 0);
+  --label-gray-fg: oklch(0.93 0 0);
+  --label-brown-bg: oklch(0.37 0.04 45);
+  --label-brown-fg: oklch(0.92 0.02 50);
+  --label-orange-bg: oklch(0.43 0.08 55);
+  --label-orange-fg: oklch(0.94 0.03 65);
+  --label-yellow-bg: oklch(0.47 0.08 80);
+  --label-yellow-fg: oklch(0.95 0.04 90);
+  --label-green-bg: oklch(0.4 0.06 155);
+  --label-green-fg: oklch(0.93 0.03 150);
+  --label-blue-bg: oklch(0.38 0.07 250);
+  --label-blue-fg: oklch(0.93 0.02 235);
+  --label-purple-bg: oklch(0.36 0.07 305);
+  --label-purple-fg: oklch(0.93 0.02 310);
+  --label-pink-bg: oklch(0.38 0.08 355);
+  --label-pink-fg: oklch(0.93 0.02 350);
+  --label-red-bg: oklch(0.39 0.09 25);
+  --label-red-fg: oklch(0.93 0.03 25);
+}

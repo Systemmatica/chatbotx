@@ -48,6 +48,11 @@ interface TagsInputFieldProps<TFieldValues extends FieldValues> {
   variant?: "default" | "enterprise" | "minimal";
   tagVariant?: "default" | "secondary" | "outline" | "destructive";
   onSelect?: (tags: string[]) => void;
+  /**
+   * Per-tag chip classes (e.g. label colors). When it returns a value the chip
+   * uses it instead of the variant colors, in the field and the suggestions.
+   */
+  getTagClassName?: (tag: string) => string | undefined;
 }
 
 const TagsInputFieldBase = <TFieldValues extends FieldValues>({
@@ -69,6 +74,7 @@ const TagsInputFieldBase = <TFieldValues extends FieldValues>({
   variant = "enterprise",
   tagVariant = "default",
   onSelect,
+  getTagClassName,
 }: TagsInputFieldProps<TFieldValues>) => {
   const { control } = useFormContext();
   const [inputValue, setInputValue] = useState("");
@@ -226,7 +232,9 @@ const TagsInputFieldBase = <TFieldValues extends FieldValues>({
                   )}
 
                   <AnimatePresence initial={false}>
-                    {tags.map((tag: string, index: number) => (
+                    {tags.map((tag: string, index: number) => {
+                      const customClassName = getTagClassName?.(tag);
+                      return (
                       <motion.div
                         key={`${tag}-${index}`}
                         initial={{ opacity: 0 }}
@@ -239,7 +247,10 @@ const TagsInputFieldBase = <TFieldValues extends FieldValues>({
                           className={cn(
                             "flex items-center gap-1 pe-1 group transition-colors",
                             variant === "enterprise" &&
-                              "bg-primary border-primary/20"
+                              !customClassName &&
+                              "bg-primary border-primary/20",
+                            customClassName &&
+                              cn("border-transparent", customClassName)
                           )}
                         >
                           <span className="max-w-37.5 truncate">{tag}</span>
@@ -256,7 +267,8 @@ const TagsInputFieldBase = <TFieldValues extends FieldValues>({
                           )}
                         </Badge>
                       </motion.div>
-                    ))}
+                      );
+                    })}
                   </AnimatePresence>
 
                   <div className="flex-1 min-w-30">
@@ -355,7 +367,17 @@ const TagsInputFieldBase = <TFieldValues extends FieldValues>({
                         >
                           {startIcon ? startIcon : <Tag className="w-3 h-3" />}
                         </span>
-                        <span>{suggestion}</span>
+                        <span
+                          className={cn(
+                            getTagClassName?.(suggestion) &&
+                              cn(
+                                "rounded-sm px-1.5 py-0.5 text-xs font-medium",
+                                getTagClassName(suggestion)
+                              )
+                          )}
+                        >
+                          {suggestion}
+                        </span>
                       </div>
                     </button>
                   );

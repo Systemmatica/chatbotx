@@ -19,7 +19,10 @@ import { Loader2Icon } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { type ReactElement, useState } from "react"
 import { toast } from "sonner"
-import { useTagOptions } from "@/features/tags/provider/tag-hook"
+import {
+  useTagChipClassName,
+  useTagOptions,
+} from "@/features/tags/provider/tag-hook"
 import { useWorkspaceId } from "@/hooks/routing"
 import { removeContactTagAction } from "../actions/remove-contact-tag.action"
 import { removeContactTagsRequest } from "../schemas/contact-tag"
@@ -39,6 +42,8 @@ export default function RemoveContactTagDialog({
   const workspaceId = useWorkspaceId()
 
   const tagOptions = useTagOptions()
+
+  const tagChipClassName = useTagChipClassName()
 
   const { form, handleSubmitWithAction, resetFormAndAction } =
     useHookFormAction(
@@ -91,6 +96,7 @@ export default function RemoveContactTagDialog({
           >
             <TagsInputField
               addAnotherPlaceholder={t("actions.addAnother")}
+              getTagClassName={tagChipClassName}
               label={t("fields.tag.label")}
               name="tags"
               placeholder={t("actions.enterFieldAndPressEnter", {
