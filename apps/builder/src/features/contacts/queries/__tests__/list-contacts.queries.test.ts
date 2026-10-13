@@ -1,10 +1,35 @@
 // @vitest-environment node
 import { describe, expect, test, vi } from "vitest"
 
+type SqlFragment = {
+  strings: readonly string[]
+  values: unknown[]
+  mapWith: () => SqlFragment
+}
+const sql = (strings: readonly string[], ...values: unknown[]): SqlFragment => {
+  const fragment: SqlFragment = { strings, values, mapWith: () => fragment }
+  return fragment
+}
+/** Flattens a recorded `sql` fragment to text, for readable assertions. */
+const sqlText = (value: unknown): string => {
+  if (typeof value === "object" && value !== null && "strings" in value) {
+    const fragment = value as SqlFragment
+    return fragment.strings
+      .map((part, index) =>
+        index < fragment.values.length
+          ? part + sqlText(fragment.values[index])
+          : part,
+      )
+      .join("")
+  }
+  return String(value)
+}
+
 vi.mock("@chatbotx.io/database/client", () => ({
   countWithRelationsFilterCapped: vi.fn(),
   countWithRelationsFilter: vi.fn(),
   db: { query: { contactModel: { findMany: vi.fn() } }, $count: vi.fn() },
+  sql,
 }))
 vi.mock("@chatbotx.io/database/queries", () => ({
   applyContactFilter: (criteria: unknown) => ({
@@ -57,6 +82,12 @@ vi.mock("@chatbotx.io/database/queries", () => ({
 }))
 vi.mock("@chatbotx.io/database/schema", () => ({
   contactModel: { createdAt: "createdAt", fullName: "fullName" },
+  contactsToTagsModel: {
+    toString: () => "ContactToTag",
+    contactId: "ContactToTag.contactId",
+    tagId: "ContactToTag.tagId",
+    createdAt: "ContactToTag.createdAt",
+  },
 }))
 vi.mock("@/lib/auth/utils", () => ({
   getCurrentUserAndTargetWorkspace: vi.fn(),
@@ -68,9 +99,12 @@ vi.mock("@/lib/log", () => ({
 const { countWithRelationsFilterCapped, db } = await import(
   "@chatbotx.io/database/client"
 )
-const { generateWhere, listContactsForAPI, resolveOrderBy } = await import(
-  "../list-contacts.queries"
-)
+const {
+  generateWhere,
+  listContactsForAPI,
+  resolveOrderBy,
+  resolveTagReceivedAtQuery,
+} = await import("../list-contacts.queries")
 const { CONTACTS_DEFAULT_PER_PAGE } = await import("../../constants")
 
 const baseInput = { workspaceId: "1" }
@@ -247,5 +281,54 @@ describe("listContactsForAPI", () => {
       totalCount: 10_000,
       totalCountCapped: true,
     })
+  })
+})
+
+const RECEIVED_AT_DESC = /ContactToTag\.tagId = 42\) DESC NULLS LAST$/
+
+describe("resolveTagReceivedAtQuery", () => {
+  const singleTag = {
+    operator: "and" as const,
+    conditions: [
+      { field: "tags" as const, operator: "in" as const, value: ["42"] },
+    ],
+  }
+  const table = { id: "c.id", createdAt: "c.createdAt" } as never
+
+  test("adds nothing when the list is not filtered by one tag", () => {
+    expect(resolveTagReceivedAtQuery(baseInput)).toEqual({})
+    expect(
+      resolveTagReceivedAtQuery({
+        ...baseInput,
+        contactFilter: {
+          operator: "and",
+          conditions: [{ field: "tags", operator: "in", value: ["1", "2"] }],
+        },
+      } as never),
+    ).toEqual({})
+  })
+
+  test("selects the tag's received date for a single-tag filter", () => {
+    const query = resolveTagReceivedAtQuery({
+      ...baseInput,
+      contactFilter: singleTag,
+    } as never)
+
+    expect(query.orderBy).toBeUndefined()
+    expect(sqlText(query.extras?.tagReceivedAt(table))).toBe(
+      "(SELECT ContactToTag.createdAt FROM ContactToTag WHERE ContactToTag.contactId = c.id AND ContactToTag.tagId = 42)",
+    )
+  })
+
+  test("orders by the received date, unknown dates last", () => {
+    const query = resolveTagReceivedAtQuery({
+      ...baseInput,
+      contactFilter: singleTag,
+      sort: [{ id: "tagReceivedAt", desc: true }],
+    } as never)
+
+    const order = query.orderBy?.(table).map(sqlText)
+    expect(order?.[0]).toMatch(RECEIVED_AT_DESC)
+    expect(order?.slice(1)).toEqual(["c.createdAt DESC", "c.id DESC"])
   })
 })

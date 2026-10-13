@@ -2,6 +2,7 @@ import {
   adsConversionService,
   contactCustomFieldService,
   contactService,
+  publishContactTagsChanged,
   tagSyncService,
 } from "@chatbotx.io/business"
 import { contactSequenceService } from "@chatbotx.io/business/contact-sequence"
@@ -222,6 +223,11 @@ export async function attachTagsByNames(
       emitTagApplied(workspaceId, contactId, tagId),
     ),
   )
+  await publishContactTagsChanged({
+    workspaceId,
+    contactId,
+    tagIds: newlyLinkedTagIds,
+  })
 
   // Ads conversion `tagApplied` trigger: only when the caller already has a
   // specific WhatsApp conversation in scope (the flow-step path) — resolves
@@ -299,6 +305,11 @@ export async function detachTagsByNames(
   await Promise.all(
     tags.map((tag) => emitTagRemoved(workspaceId, contactId, tag.id)),
   )
+  await publishContactTagsChanged({
+    workspaceId,
+    contactId,
+    tagIds: tags.map((tag) => tag.id),
+  })
 }
 
 export async function deleteContact({

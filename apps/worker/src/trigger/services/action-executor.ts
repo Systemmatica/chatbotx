@@ -3,6 +3,7 @@ import {
   contactCustomFieldService,
   conversationService,
   metaConversionsService,
+  publishContactTagsChanged,
   staffNotificationService,
   tagSyncService,
 } from "@chatbotx.io/business"
@@ -110,6 +111,11 @@ export class ActionExecutor {
               tagId: link.tagId,
             })
           }
+          await publishContactTagsChanged({
+            workspaceId,
+            contactId: conversation.contactId,
+            tagIds: newlyLinked.map((link) => link.tagId),
+          })
         }
         break
       }
@@ -133,6 +139,11 @@ export class ActionExecutor {
               tagId,
             })
           }
+          await publishContactTagsChanged({
+            workspaceId,
+            contactId: conversation.contactId,
+            tagIds,
+          })
         }
         break
       }

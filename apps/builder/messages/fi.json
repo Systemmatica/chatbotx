@@ -3804,7 +3804,8 @@
     "countCapped": "{count}+ yhteystietoa",
     "exportAllNotice": "Kaikki nykyistä suodatinta vastaavat yhteystiedot viedään.",
     "exportTakingLong": "Vienti kestää odotettua kauemmin",
-    "exportTakingLongDescription": "Vientiä käsitellään edelleen. Voit sulkea tämän valintaikkunan ja tarkistaa tilanteen muutaman minuutin kuluttua vientihistoriasta."
+    "exportTakingLongDescription": "Vientiä käsitellään edelleen. Voit sulkea tämän valintaikkunan ja tarkistaa tilanteen muutaman minuutin kuluttua vientihistoriasta.",
+    "tagReceivedAt": "Received"
   },
   "kanban": {
     "title": "Kanban",
@@ -3900,7 +3901,10 @@
           "done": "Done"
         }
       }
-    }
+    },
+    "loadFailed": "Could not load boards.",
+    "loadTimedOut": "The server is taking too long to respond.",
+    "retry": "Retry"
   },
   "currentStep": {
     "title": "Current step",

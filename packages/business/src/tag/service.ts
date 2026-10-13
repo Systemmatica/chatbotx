@@ -25,6 +25,7 @@ import { BaseService } from "../base.service"
 import { type ContactAccessScope, contactService } from "../contact"
 import { notFoundException } from "../errors"
 import { logger } from "../logger"
+import { publishContactTagsChanged } from "../platform/realtime-broadcast"
 import { tagSyncService } from "./sync.service"
 
 const CONTACT_CHUNK_SIZE = 200
@@ -205,6 +206,11 @@ class TagService extends BaseService {
     await adsConversionService.enqueueTagAppliedEvaluationsBulk({
       workspaceId,
       pairs: newlyAttached.map((pair) => ({ contactId, tagId: pair.tagId })),
+    })
+    await publishContactTagsChanged({
+      workspaceId,
+      contactId,
+      tagIds: newlyAttached.map((pair) => pair.tagId),
     })
   }
 
@@ -388,6 +394,11 @@ class TagService extends BaseService {
       emitTagRemoved(workspaceId, contactId, pair.tagId) // biome-ignore lint/suspicious/noEmptyBlockStatements: fire-and-forget
         .catch(() => {})
     }
+    await publishContactTagsChanged({
+      workspaceId,
+      contactId,
+      tagIds: removed.map((pair) => pair.tagId),
+    })
   }
 
   async detachAllFromContact(props: {

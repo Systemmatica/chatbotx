@@ -3804,7 +3804,8 @@
     "countCapped": "{count}+ contacten",
     "exportAllNotice": "Alle contacten die overeenkomen met het huidige filter worden geëxporteerd.",
     "exportTakingLong": "Het exporteren duurt langer dan verwacht",
-    "exportTakingLongDescription": "De export wordt nog verwerkt. Je kunt dit dialoogvenster sluiten en over enkele minuten de exportgeschiedenis bekijken."
+    "exportTakingLongDescription": "De export wordt nog verwerkt. Je kunt dit dialoogvenster sluiten en over enkele minuten de exportgeschiedenis bekijken.",
+    "tagReceivedAt": "Received"
   },
   "kanban": {
     "title": "Kanban",
@@ -3900,7 +3901,10 @@
           "done": "Done"
         }
       }
-    }
+    },
+    "loadFailed": "Could not load boards.",
+    "loadTimedOut": "The server is taking too long to respond.",
+    "retry": "Retry"
   },
   "currentStep": {
     "title": "Current step",

@@ -3902,7 +3902,8 @@
     "countCapped": "{count}+ contacts",
     "exportAllNotice": "All contacts matching the current filter will be exported.",
     "exportTakingLong": "Export is taking longer than expected",
-    "exportTakingLongDescription": "The export is still processing. You can close this dialog and check back in a few minutes from the export history."
+    "exportTakingLongDescription": "The export is still processing. You can close this dialog and check back in a few minutes from the export history.",
+    "tagReceivedAt": "Received"
   },
   "kanban": {
     "title": "Kanban",
@@ -3998,7 +3999,10 @@
           "done": "Done"
         }
       }
-    }
+    },
+    "loadFailed": "Could not load boards.",
+    "loadTimedOut": "The server is taking too long to respond.",
+    "retry": "Retry"
   },
   "currentStep": {
     "title": "Current step",

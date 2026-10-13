@@ -3804,7 +3804,8 @@
     "countCapped": "{count}+ contatti",
     "exportAllNotice": "Verranno esportati tutti i contatti che corrispondono al filtro corrente.",
     "exportTakingLong": "L'esportazione sta richiedendo più tempo del previsto",
-    "exportTakingLongDescription": "L'esportazione è ancora in corso. Puoi chiudere questa finestra e ricontrollare tra qualche minuto nella cronologia delle esportazioni."
+    "exportTakingLongDescription": "L'esportazione è ancora in corso. Puoi chiudere questa finestra e ricontrollare tra qualche minuto nella cronologia delle esportazioni.",
+    "tagReceivedAt": "Received"
   },
   "kanban": {
     "title": "Kanban",
@@ -3900,7 +3901,10 @@
           "done": "Done"
         }
       }
-    }
+    },
+    "loadFailed": "Could not load boards.",
+    "loadTimedOut": "The server is taking too long to respond.",
+    "retry": "Retry"
   },
   "currentStep": {
     "title": "Current step",

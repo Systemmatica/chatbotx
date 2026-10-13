@@ -38,7 +38,7 @@ export const ContactInboxPanel = ({
 }) => {
   const t = useTranslations()
 
-  const { conversations } = useChatStore((state) => state)
+  const { conversations, contactTagsChange } = useChatStore((state) => state)
 
   const storeContact = useMemo(
     () =>
@@ -120,6 +120,36 @@ export const ContactInboxPanel = ({
 
     loadLeadMagnets(contactId)
   }, [activeConversationId, storeContact?.id, workspaceId, loadLeadMagnets])
+
+  // The bot (flow step, trigger, API) changed this contact's tags: refresh
+  // the tag list and received lead magnets without reopening the chat.
+  // Only signals newer than the last handled one count, so switching chats
+  // does not replay an old signal.
+  const handledTagsChangeSeqRef = useRef(contactTagsChange?.seq ?? 0)
+  useEffect(() => {
+    if (
+      !contactTagsChange ||
+      contactTagsChange.seq === handledTagsChangeSeqRef.current
+    ) {
+      return
+    }
+    handledTagsChangeSeqRef.current = contactTagsChange.seq
+    const contactId = storeContact?.id
+    if (!contactId || contactTagsChange.contactId !== contactId) {
+      return
+    }
+    loadLeadMagnets(contactId)
+    client.contactsAPIs
+      .getContactAuthenticatedAPI({ workspaceId, contactId })
+      .then((data) => {
+        setContactData((current) =>
+          current?.id === contactId ? { ...current, tags: data.tags } : current,
+        )
+      })
+      .catch(() => {
+        // Keep the current tags; the next open refetches them.
+      })
+  }, [contactTagsChange, storeContact?.id, workspaceId, loadLeadMagnets])
 
   const accordionModules: AccordionModule[] = useMemo(() => {
     if (!contactData) {

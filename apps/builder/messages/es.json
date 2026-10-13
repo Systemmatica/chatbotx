@@ -3804,7 +3804,8 @@
     "countCapped": "{count}+ contactoos",
     "exportAllNotice": "Todos contactoos matching el current filter se be exported.",
     "exportTakingLong": "Export es taking longer than expected",
-    "exportTakingLongDescription": "The export es still processing. tú puede Cerrar este dialog y check back en un few minutos desde el export history."
+    "exportTakingLongDescription": "The export es still processing. tú puede Cerrar este dialog y check back en un few minutos desde el export history.",
+    "tagReceivedAt": "Received"
   },
   "kanban": {
     "title": "Kanban",
@@ -3900,7 +3901,10 @@
           "done": "Done"
         }
       }
-    }
+    },
+    "loadFailed": "Could not load boards.",
+    "loadTimedOut": "The server is taking too long to respond.",
+    "retry": "Retry"
   },
   "currentStep": {
     "title": "Current step",

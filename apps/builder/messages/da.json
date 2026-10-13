@@ -3804,7 +3804,8 @@
     "countCapped": "{count}+ kontakter",
     "exportAllNotice": "Alle kontakter matching den current filter vil være exported.",
     "exportTakingLong": "Eksportér er taking longer than expected",
-    "exportTakingLongDescription": "Den eksportér er still processing. Du kan close denne dialog og check tilbage i a few minutter fra den eksportér historik."
+    "exportTakingLongDescription": "Den eksportér er still processing. Du kan close denne dialog og check tilbage i a few minutter fra den eksportér historik.",
+    "tagReceivedAt": "Received"
   },
   "kanban": {
     "title": "Kanban",
@@ -3900,7 +3901,10 @@
           "done": "Done"
         }
       }
-    }
+    },
+    "loadFailed": "Could not load boards.",
+    "loadTimedOut": "The server is taking too long to respond.",
+    "retry": "Retry"
   },
   "currentStep": {
     "title": "Current step",

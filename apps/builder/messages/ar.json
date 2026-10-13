@@ -3804,7 +3804,8 @@
     "countCapped": "أكثر من {count} جهة اتصال",
     "exportAllNotice": "سيتم تصدير جميع جهات الاتصال المطابقة لعامل التصفية الحالي.",
     "exportTakingLong": "يستغرق التصدير وقتًا أطول من المتوقع",
-    "exportTakingLongDescription": "لا تزال عملية التصدير جارية. يمكنك إغلاق مربع الحوار هذا والتحقق مرة أخرى بعد بضع دقائق من سجل التصدير."
+    "exportTakingLongDescription": "لا تزال عملية التصدير جارية. يمكنك إغلاق مربع الحوار هذا والتحقق مرة أخرى بعد بضع دقائق من سجل التصدير.",
+    "tagReceivedAt": "Received"
   },
   "kanban": {
     "title": "Kanban",
@@ -3900,7 +3901,10 @@
           "done": "Done"
         }
       }
-    }
+    },
+    "loadFailed": "Could not load boards.",
+    "loadTimedOut": "The server is taking too long to respond.",
+    "retry": "Retry"
   },
   "currentStep": {
     "title": "Current step",

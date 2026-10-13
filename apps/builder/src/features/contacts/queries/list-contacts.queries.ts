@@ -3,19 +3,25 @@ import {
   countWithRelationsFilter,
   countWithRelationsFilterCapped,
   db,
+  type SQL,
+  sql,
 } from "@chatbotx.io/database/client"
 import {
   applyContactFilter,
   buildSmartKeywordWhere,
   pruneEmailPhoneFilterConditions,
 } from "@chatbotx.io/database/queries"
-import { contactModel } from "@chatbotx.io/database/schema"
+import { contactModel, contactsToTagsModel } from "@chatbotx.io/database/schema"
 import {
   getPaginationWithDefaults,
   parseOrderByAsObject,
 } from "@chatbotx.io/database/utils"
 import { logger } from "@/lib/log"
 import { CONTACTS_DEFAULT_PER_PAGE } from "../constants"
+import {
+  getSingleTagFilterId,
+  isSortedByTagReceivedAt,
+} from "../lib/tag-received-at"
 import {
   type ContactPermissionScope,
   maskContactEmailAndPhone,
@@ -42,6 +48,41 @@ const hasWhereParts = (where: ContactWhere): boolean =>
 export function resolveOrderBy(input: ListContactsRequest) {
   const orderBy = parseOrderByAsObject(contactModel, input)
   return Object.keys(orderBy).length > 0 ? orderBy : DEFAULT_ORDER_BY
+}
+
+type ContactTable = typeof contactModel
+
+/**
+ * When the list is filtered by exactly one tag, select (and optionally sort
+ * by) the date the contact got that tag. A primary-key lookup per row on
+ * ContactToTag, added only in that case so the plain list stays as cheap.
+ */
+export function resolveTagReceivedAtQuery(input: ListContactsRequest): {
+  extras?: { tagReceivedAt: (table: ContactTable) => SQL<Date | null> }
+  orderBy?: (table: ContactTable) => SQL[]
+} {
+  const tagId = getSingleTagFilterId(input.contactFilter)
+  if (!tagId) {
+    return {}
+  }
+
+  const receivedAt = (table: ContactTable) =>
+    sql<Date | null>`(SELECT ${contactsToTagsModel.createdAt} FROM ${contactsToTagsModel} WHERE ${contactsToTagsModel.contactId} = ${table.id} AND ${contactsToTagsModel.tagId} = ${tagId})`.mapWith(
+      contactsToTagsModel.createdAt,
+    )
+
+  const sort = isSortedByTagReceivedAt(input.sort)
+  return {
+    extras: { tagReceivedAt: receivedAt },
+    orderBy: sort
+      ? (table) => [
+          // Unknown dates (links older than the column) sort last either way.
+          sql`${receivedAt(table)} ${sort.desc ? sql`DESC` : sql`ASC`} NULLS LAST`,
+          sql`${table.createdAt} DESC`,
+          sql`${table.id} DESC`,
+        ]
+      : undefined,
+  }
 }
 
 export async function listContacts(
@@ -71,13 +112,15 @@ async function queryContacts(
   const where = generateWhere(normalizedInput, scope)
 
   const pagination = getPaginationWithDefaults(normalizedInput)
-  const orderBy = resolveOrderBy(normalizedInput)
+  const tagReceivedAt = resolveTagReceivedAtQuery(normalizedInput)
+  const orderBy = tagReceivedAt.orderBy ?? resolveOrderBy(normalizedInput)
 
   const [data, countResult] = await Promise.all([
     db.query.contactModel.findMany({
       where,
       ...pagination,
       orderBy,
+      extras: tagReceivedAt.extras,
       with: {
         tags: true,
         contactCustomFields: true,
@@ -129,13 +172,15 @@ export async function listContactsRSC(
   const where = generateWhere(normalizedInput, scope)
 
   const pagination = getPaginationWithDefaults(normalizedInput)
-  const orderBy = resolveOrderBy(normalizedInput)
+  const tagReceivedAt = resolveTagReceivedAtQuery(normalizedInput)
+  const orderBy = tagReceivedAt.orderBy ?? resolveOrderBy(normalizedInput)
 
   const [data, countResult] = await Promise.all([
     db.query.contactModel.findMany({
       where,
       ...pagination,
       orderBy,
+      extras: tagReceivedAt.extras,
       with: {
         contactInboxes: {
           with: {

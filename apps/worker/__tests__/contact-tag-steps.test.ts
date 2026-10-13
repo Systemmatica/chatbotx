@@ -168,7 +168,9 @@ const enqueueDetach = vi.fn(() => {
   order.push("enqueue")
 })
 const enqueueTagAppliedEvaluationsForInbox = vi.fn(async () => undefined)
+const publishContactTagsChanged = vi.fn(async () => undefined)
 vi.mock("@chatbotx.io/business", () => ({
+  publishContactTagsChanged,
   tagSyncService: { enqueueAttach, enqueueDetach },
   adsConversionService: {
     isEligibleChannel: (channel: string | null | undefined) =>
@@ -448,6 +450,25 @@ describe("addContactTag", () => {
     expect(emitTagApplied).toHaveBeenCalledWith("ws-1", "c-1", "tag-1")
   })
 
+  test("publishes a realtime contactTagsChanged with only newly-linked tags, after commit", async () => {
+    state.txExistingTags = [{ id: "tag-1" }, { id: "tag-2" }]
+    state.txNewlyLinked = [{ tagId: "tag-1" }]
+    publishContactTagsChanged.mockImplementationOnce(() => {
+      order.push("publish")
+      return Promise.resolve(undefined)
+    })
+
+    await addContactTag(addProps(["alpha", "beta"]))
+
+    expect(publishContactTagsChanged).toHaveBeenCalledTimes(1)
+    expect(publishContactTagsChanged).toHaveBeenCalledWith({
+      workspaceId: "ws-1",
+      contactId: "c-1",
+      tagIds: ["tag-1"],
+    })
+    expect(order.indexOf("tx-done")).toBeLessThan(order.indexOf("publish"))
+  })
+
   test("does NOT enqueue or emit when all pairs already exist (empty RETURNING)", async () => {
     state.txExistingTags = [{ id: "tag-1" }]
     state.txNewlyLinked = []
@@ -567,6 +588,18 @@ describe("removeContactTag", () => {
     expect(db.delete).not.toHaveBeenCalled()
     expect(enqueueDetach).not.toHaveBeenCalled()
     expect(emitTagRemoved).not.toHaveBeenCalled()
+  })
+
+  test("publishes a realtime contactTagsChanged for the resolved tags", async () => {
+    state.tagFindMany = [{ id: "tag-1" }, { id: "tag-2" }]
+
+    await removeContactTag(removeProps(["alpha", "beta"]))
+
+    expect(publishContactTagsChanged).toHaveBeenCalledWith({
+      workspaceId: "ws-1",
+      contactId: "c-1",
+      tagIds: ["tag-1", "tag-2"],
+    })
   })
 
   test("deletes once and enqueues detach + emits removed per resolved tag", async () => {

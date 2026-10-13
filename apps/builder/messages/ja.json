@@ -3783,7 +3783,8 @@
     "countCapped": "{count}件以上の連絡先",
     "exportAllNotice": "現在のフィルターに一致するすべての連絡先がエクスポートされます。",
     "exportTakingLong": "エクスポートに予想以上の時間がかかっています",
-    "exportTakingLongDescription": "エクスポートは引き続き処理中です。このダイアログを閉じ、数分後にエクスポート履歴から確認できます。"
+    "exportTakingLongDescription": "エクスポートは引き続き処理中です。このダイアログを閉じ、数分後にエクスポート履歴から確認できます。",
+    "tagReceivedAt": "Received"
   },
   "kanban": {
     "title": "Kanban",
@@ -3879,7 +3880,10 @@
           "done": "Done"
         }
       }
-    }
+    },
+    "loadFailed": "Could not load boards.",
+    "loadTimedOut": "The server is taking too long to respond.",
+    "retry": "Retry"
   },
   "currentStep": {
     "title": "Current step",

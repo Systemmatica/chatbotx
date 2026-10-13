@@ -99,6 +99,11 @@ vi.mock("../src/tag/sync.service", () => ({
   },
 }))
 
+// Realtime publish resolves tenant settings (DB-backed); not under test here.
+vi.mock("../src/platform/realtime-broadcast", () => ({
+  publishContactTagsChanged: vi.fn(async () => undefined),
+}))
+
 const { tagService } = await import("../src/tag/service")
 
 describe("TagService.bulkAttachToContacts", () => {
