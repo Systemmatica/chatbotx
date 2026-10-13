@@ -22,6 +22,7 @@ import { useTranslations } from "next-intl"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { createFlowAction } from "./actions/create-flow-action"
+import { FlowTemplatePicker } from "./components/flow-template-picker"
 import { createFlowSchema } from "./schemas/action"
 
 export function CreateFlowDialog({
@@ -90,7 +91,7 @@ export function CreateFlowDialog({
           </Button>
         }
       />
-      <DialogContent className={"max-h-screen max-w-sm overflow-y-scroll"}>
+      <DialogContent className={"max-h-screen max-w-md overflow-y-auto"}>
         <DialogHeader>
           <DialogTitle>
             {t("messages.createFeature", { feature: t("fields.flow.label") })}
@@ -128,6 +129,16 @@ export function CreateFlowDialog({
             </form>
           </Form>
         </div>
+        <FlowTemplatePicker
+          disabled={form.formState.isSubmitting}
+          folderId={folderId && folderId !== rootFolderId ? folderId : null}
+          onCreated={(flowId) => {
+            setOpen(false)
+            resetFormAndAction()
+            router.push(`${pathname}/${flowId}`)
+          }}
+          workspaceId={workspaceId}
+        />
       </DialogContent>
     </Dialog>
   )

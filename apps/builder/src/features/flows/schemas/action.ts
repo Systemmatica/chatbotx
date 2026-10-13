@@ -12,6 +12,17 @@ export const createFlowSchema = z.object({
 })
 export type CreateFlowSchema = z.infer<typeof createFlowSchema>
 
+export const flowTemplateIds = z.enum(["funnelThreeEntries"])
+export type FlowTemplateId = z.infer<typeof flowTemplateIds>
+
+export const createFlowsFromTemplateSchema = z.object({
+  templateId: flowTemplateIds,
+  folderId: zodBigintAsString().nullable(),
+})
+export type CreateFlowsFromTemplateSchema = z.infer<
+  typeof createFlowsFromTemplateSchema
+>
+
 export const updateFlowSchema = z.object({
   name: z.optional(z.string().trim().min(1).max(255)),
   active: z.optional(z.boolean()),

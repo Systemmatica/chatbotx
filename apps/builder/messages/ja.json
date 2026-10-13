@@ -2309,7 +2309,9 @@
       "textLabel": "スタッフへのメッセージ",
       "textPlaceholder": "例: 連絡先が支払いステップに到達しました",
       "description": "通知を接続したスタッフの Telegram に送信されます。変数を使用できます。"
-    }
+    },
+    "duplicateFlow": "Duplicate flow",
+    "copyName": "{name} (copy)"
   },
   "folders": {
     "heading": {
@@ -5601,6 +5603,70 @@
     "autoLayoutError": "Could not arrange the flow",
     "nextStep": "Next step",
     "createBlock": "Create block",
-    "createCondition": "Create condition"
+    "createCondition": "Create condition",
+    "copy": "Copy",
+    "cut": "Cut",
+    "paste": "Paste",
+    "pasteError": "Could not paste the blocks",
+    "pasteOtherWorkspace": "These blocks were copied from another workspace and cannot be pasted here",
+    "startBlockNotCut": "The start block was copied but stays in place",
+    "outline": {
+      "title": "Blocks",
+      "show": "Show block list",
+      "hide": "Hide block list",
+      "search": "Find a block by name",
+      "empty": "No blocks match",
+      "unreachable": "Not connected",
+      "unreachableHint": "No path from the start block leads here",
+      "unnamed": "Untitled block",
+      "start": "Start block"
+    },
+    "deletedBlocks": "{count, plural, one {Block deleted} other {# blocks deleted}}",
+    "deletedStep": "Step deleted",
+    "stepHandle": "Step {position} of {total}. Drag or press Space to reorder, Alt+Up or Alt+Down to move",
+    "stepHandleHint": "Drag to reorder (Alt+↑/↓ moves the step)"
+  },
+  "flowTemplates": {
+    "orStartFrom": "Or start from a template",
+    "createdSuccess": "{count, plural, one {# flow created} other {# flows created}} from the template",
+    "funnel": {
+      "title": "Funnel: 3 entries → one common flow",
+      "description": "A shared nurture flow plus three entry flows: website lead magnet, reels keyword and a book. Creates 4 draft flows with sample texts to replace.",
+      "commonFlowName": "Funnel: common flow",
+      "siteEntryFlowName": "Funnel: website lead magnet entry",
+      "reelsEntryFlowName": "Funnel: reels keyword entry",
+      "bookEntryFlowName": "Funnel: book entry",
+      "businessFieldName": "Business area",
+      "greetingBlock": "1. Greeting",
+      "valueBlock": "2. Useful material",
+      "waitBlock": "3. Wait 1 day",
+      "followUpBlock": "4. Follow-up",
+      "offerBlock": "5. Offer",
+      "offerYesBlock": "5.1 Interested",
+      "offerLaterBlock": "5.2 Later",
+      "giftBlock": "1. Material",
+      "handoverBlock": "2. To the common flow",
+      "formatBlock": "1. Choose a format",
+      "pdfBlock": "1.1 PDF",
+      "epubBlock": "1.2 EPUB",
+      "greeting": "Hi! Nice to meet you. I help [who you help] with [what you help with].",
+      "businessQuestion": "Tell me, what does your business do?",
+      "businessRetry": "Please reply with a short text about your business.",
+      "businessThanks": "Thank you! I will pick materials for your field.",
+      "value": "Here is something useful on the topic: [link or useful text]",
+      "followUp": "Did you have a chance to look at it? One more idea that helps: [short tip or case]",
+      "offer": "Would you like to go through your situation together? I offer [your offer and terms].",
+      "offerYesButton": "Yes, interested",
+      "offerLaterButton": "Not now",
+      "offerYes": "Great! Here is the link to book a time: [link]",
+      "offerLater": "Sure, let's come back to it later. If you have questions, just write here.",
+      "siteGift": "Thanks for signing up on the website! Here is the promised material: [lead magnet link]",
+      "reelsGift": "You sent the keyword from the video, here is what was promised: [material link]",
+      "bookQuestion": "Thanks for your interest in the book! Which format should I send: PDF or EPUB?",
+      "pdfButton": "PDF",
+      "epubButton": "EPUB",
+      "pdf": "Your book in PDF: [PDF link]",
+      "epub": "Your book in EPUB: [EPUB link]"
+    }
   }
 }

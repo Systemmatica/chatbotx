@@ -50,6 +50,24 @@ describe("createDeleteNode", () => {
     expect(deleteElements).toHaveBeenCalledWith({ nodes: [{ id: "node-42" }] })
   })
 
+  test("deletes several nodes in one go (cut)", async () => {
+    const deleteElements = vi.fn(() => Promise.resolve({}))
+    const deps = makeDeps({ deleteElements })
+    await createDeleteNode(deps)(["a", "b"])
+    expect(deleteElements).toHaveBeenCalledWith({
+      nodes: [{ id: "a" }, { id: "b" }],
+    })
+    expect(deps.calls).toContain("saveDraft")
+  })
+
+  test("does nothing for an empty id list", async () => {
+    const deleteElements = vi.fn(() => Promise.resolve({}))
+    const deps = makeDeps({ deleteElements })
+    await createDeleteNode(deps)([])
+    expect(deleteElements).not.toHaveBeenCalled()
+    expect(deps.isMutatingRef.current).toBe(false)
+  })
+
   test("cancels the pending autosave before deleting", async () => {
     const deps = makeDeps()
     await createDeleteNode(deps)("node-1")

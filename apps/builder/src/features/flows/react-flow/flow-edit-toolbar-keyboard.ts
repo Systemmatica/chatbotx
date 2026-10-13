@@ -9,6 +9,7 @@ export const isEditableTarget = (target: EventTarget | null): boolean => {
   return Boolean(
     target.tagName === "INPUT" ||
       target.tagName === "TEXTAREA" ||
+      target.tagName === "SELECT" ||
       target.isContentEditable,
   )
 }

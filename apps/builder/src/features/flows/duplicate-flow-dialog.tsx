@@ -19,7 +19,7 @@ import type { FlowResource } from "./schemas/resource"
 
 type DuplicateFlowDialogProps = {
   workspaceId: string
-  flow: FlowResource | null
+  flow: Pick<FlowResource, "id" | "name"> | null
   open: boolean
   onOpenChange: (val: boolean) => void
   onSuccess?: (flowId: string) => void
@@ -82,7 +82,13 @@ export function DuplicateFlowDialog({
           />
           <Button
             disabled={isPending || !flow}
-            onClick={() => execute()}
+            onClick={() =>
+              execute({
+                name: flow
+                  ? t("flows.copyName", { name: flow.name })
+                  : undefined,
+              })
+            }
             size="sm"
             variant="default"
           >
