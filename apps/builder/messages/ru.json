@@ -5668,5 +5668,22 @@
       "pdf": "Ваша книга в PDF: [ссылка на PDF]",
       "epub": "Ваша книга в EPUB: [ссылка на EPUB]"
     }
+  },
+  "slashCommands": {
+    "menuLabel": "Команды",
+    "groups": {
+      "variables": "Переменные",
+      "formatting": "Форматирование",
+      "insert": "Вставить"
+    },
+    "items": {
+      "bold": "Жирный",
+      "italic": "Курсив",
+      "strike": "Зачёркнутый",
+      "code": "Код",
+      "link": "Ссылка",
+      "emoji": "Эмодзи",
+      "lineBreak": "Перенос строки"
+    }
   }
 }

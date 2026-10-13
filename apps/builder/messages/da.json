@@ -5668,5 +5668,22 @@
       "pdf": "Your book in PDF: [PDF link]",
       "epub": "Your book in EPUB: [EPUB link]"
     }
+  },
+  "slashCommands": {
+    "menuLabel": "Commands",
+    "groups": {
+      "variables": "Variables",
+      "formatting": "Formatting",
+      "insert": "Insert"
+    },
+    "items": {
+      "bold": "Bold",
+      "italic": "Italic",
+      "strike": "Strikethrough",
+      "code": "Code",
+      "link": "Link",
+      "emoji": "Emoji",
+      "lineBreak": "Line break"
+    }
   }
 }
