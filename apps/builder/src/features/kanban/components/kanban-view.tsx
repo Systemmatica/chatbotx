@@ -46,6 +46,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { toast } from "sonner"
 import { useTagSelectOptions } from "@/features/tags/provider/tag-hook"
 import { client } from "@/lib/orpc/orpc"
+import {
+  isAbortError,
+  RequestTimeoutError,
+  withTimeout,
+} from "@/lib/with-timeout"
 import { appendColumnCards, moveCardBetweenColumns } from "../lib/columns"
 import type { KanbanTemplateId } from "../lib/templates"
 import type {
@@ -59,6 +64,13 @@ import { KanbanColumn } from "./kanban-column"
 
 const CARDS_PER_COLUMN = 50
 const ALL_TAGS = ""
+/**
+ * A board request that has not answered by then is given up on: the view
+ * shows an error with a retry button instead of spinning forever.
+ */
+const REQUEST_TIMEOUT_MS = 30_000
+
+type BoardsStatus = "loading" | "ready" | "failed" | "timedOut"
 
 const errorMessage = (error: unknown, fallback: string) =>
   error instanceof Error ? error.message : fallback
@@ -87,7 +99,8 @@ export function KanbanView({
   const tagOptions = useTagSelectOptions()
 
   const [boards, setBoards] = useState<KanbanBoardResource[]>([])
-  const [boardsLoaded, setBoardsLoaded] = useState(false)
+  const [boardsStatus, setBoardsStatus] = useState<BoardsStatus>("loading")
+  const [boardsReloadKey, setBoardsReloadKey] = useState(0)
   const [selectedBoardId, setSelectedBoardId] = useState<string | null>(null)
   const [columns, setColumns] = useState<KanbanColumnResource[]>([])
   const [isLoadingCards, setIsLoadingCards] = useState(false)
@@ -114,24 +127,38 @@ export function KanbanView({
     setSearch(value.trim())
   }, 300)
 
-  const loadBoards = useCallback(async () => {
-    try {
-      const { data } = await client.kanbanAPI.listKanbanBoardsAPI({
-        workspaceId,
-        flowId: flowId ?? null,
+  // biome-ignore lint/correctness/useExhaustiveDependencies: boardsReloadKey re-runs the request on "Retry"
+  useEffect(() => {
+    const controller = new AbortController()
+    setBoardsStatus("loading")
+    withTimeout(
+      (signal) =>
+        client.kanbanAPI.listKanbanBoardsAPI(
+          { workspaceId, flowId: flowId ?? null },
+          { signal },
+        ),
+      { timeoutMs: REQUEST_TIMEOUT_MS, signal: controller.signal },
+    )
+      .then(({ data }) => {
+        setBoards(data)
+        setSelectedBoardId((current) =>
+          current && data.some((board) => board.id === current)
+            ? current
+            : (data[0]?.id ?? null),
+        )
+        setBoardsStatus("ready")
       })
-      setBoards(data)
-      setSelectedBoardId((current) =>
-        current && data.some((board) => board.id === current)
-          ? current
-          : (data[0]?.id ?? null),
-      )
-    } catch (error) {
-      toast.error(errorMessage(error, t("messages.errorLoadingData")))
-    } finally {
-      setBoardsLoaded(true)
-    }
-  }, [workspaceId, flowId, t])
+      .catch((error: unknown) => {
+        if (controller.signal.aborted) {
+          // Unmounted or superseded: the next run owns the state.
+          return
+        }
+        setBoardsStatus(
+          error instanceof RequestTimeoutError ? "timedOut" : "failed",
+        )
+      })
+    return () => controller.abort()
+  }, [workspaceId, flowId, boardsReloadKey])
 
   const loadCards = useCallback(async () => {
     if (!selectedBoardId) {
@@ -141,19 +168,30 @@ export function KanbanView({
     const requestId = ++requestIdRef.current
     setIsLoadingCards(true)
     try {
-      const result = await client.kanbanAPI.getKanbanBoardCardsAPI({
-        workspaceId,
-        boardId: selectedBoardId,
-        search: search || undefined,
-        tagId: tagId || undefined,
-        perColumn: CARDS_PER_COLUMN,
-      })
+      const result = await withTimeout(
+        (signal) =>
+          client.kanbanAPI.getKanbanBoardCardsAPI(
+            {
+              workspaceId,
+              boardId: selectedBoardId,
+              search: search || undefined,
+              tagId: tagId || undefined,
+              perColumn: CARDS_PER_COLUMN,
+            },
+            { signal },
+          ),
+        { timeoutMs: REQUEST_TIMEOUT_MS },
+      )
       if (requestId === requestIdRef.current) {
         setColumns(result.columns)
       }
     } catch (error) {
-      if (requestId === requestIdRef.current) {
-        toast.error(errorMessage(error, t("messages.errorLoadingData")))
+      if (requestId === requestIdRef.current && !isAbortError(error)) {
+        toast.error(
+          error instanceof RequestTimeoutError
+            ? t("kanban.loadTimedOut")
+            : errorMessage(error, t("messages.errorLoadingData")),
+        )
       }
     } finally {
       if (requestId === requestIdRef.current) {
@@ -161,10 +199,6 @@ export function KanbanView({
       }
     }
   }, [workspaceId, selectedBoardId, search, tagId, t])
-
-  useEffect(() => {
-    loadBoards()
-  }, [loadBoards])
 
   useEffect(() => {
     loadCards()
@@ -295,10 +329,34 @@ export function KanbanView({
     [tagOptions, t],
   )
 
-  if (!boardsLoaded) {
+  if (boardsStatus === "loading") {
     return (
       <div className="flex justify-center py-16">
         <Loader2Icon className="size-6 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
+
+  if (boardsStatus === "failed" || boardsStatus === "timedOut") {
+    return (
+      <div
+        className="flex flex-col items-center justify-center gap-3 py-16 text-center"
+        role="alert"
+      >
+        <p className="font-semibold">{t("kanban.loadFailed")}</p>
+        <p className="text-muted-foreground text-sm">
+          {boardsStatus === "timedOut"
+            ? t("kanban.loadTimedOut")
+            : t("messages.errorLoadingData")}
+        </p>
+        <Button
+          onClick={() => setBoardsReloadKey((key) => key + 1)}
+          type="button"
+          variant="outline"
+        >
+          <RefreshCwIcon />
+          {t("kanban.retry")}
+        </Button>
       </div>
     )
   }
