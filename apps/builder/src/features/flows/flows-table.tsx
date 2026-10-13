@@ -104,7 +104,9 @@ export function FlowsTable({
         <DuplicateFlowDialog
           flow={rowAction?.row.original || null}
           onOpenChange={() => setRowAction(null)}
-          onSuccess={() => router.refresh()}
+          onSuccess={(duplicatedFlowId) =>
+            router.push(`/space/${workspaceId}/flows/${duplicatedFlowId}`)
+          }
           open={rowAction?.variant === "duplicate"}
           workspaceId={workspaceId}
         />

@@ -327,7 +327,7 @@ export function FlowEditToolbar({
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setAction("duplicate")}>
               <CopyIcon />
-              {t("actions.duplicate")}
+              {t("flows.duplicateFlow")}
             </DropdownMenuItem>
           </DropdownMenuGroup>
           <DropdownMenuSeparator />

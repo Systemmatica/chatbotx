@@ -335,3 +335,75 @@ describe("flowService.importFlowExport", () => {
     )
   })
 })
+
+describe("flowService.importFlowExports", () => {
+  afterEach(() => {
+    vi.clearAllMocks()
+  })
+
+  const input = (name: string) => ({
+    workspaceId: "ws-1",
+    name,
+    active: true,
+    enableInInbox: true,
+    startNodeId: "1",
+    nodes: [] as never,
+    edges: [] as never,
+    customFields: {},
+  })
+
+  test("imports every flow inside one transaction, in order", async () => {
+    mockDbTransaction.mockImplementation(async (callback) =>
+      callback(transaction),
+    )
+    mockResolveByNameAndType.mockResolvedValue({
+      idMap: new Map(),
+      createdIds: [],
+    })
+    mockRemapCustomFieldReferences.mockImplementation((flow) => flow)
+    mockCreateId.mockImplementation(
+      () => `id-${mockCreateId.mock.calls.length}`,
+    )
+
+    const flowIds = await flowService.importFlowExports(async (importOne) => {
+      const first = await importOne(input("Common"))
+      const second = await importOne(input(`Entry -> ${first.flowId}`))
+      return [first.flowId, second.flowId]
+    })
+
+    expect(mockDbTransaction).toHaveBeenCalledTimes(1)
+    expect(flowIds).toHaveLength(2)
+    expect(new Set(flowIds).size).toBe(2)
+    for (const call of mockResolveByNameAndType.mock.calls) {
+      expect(call[0].tx).toBe(transaction)
+    }
+    const flowRows = mockInsertValues.mock.calls
+      .map(([row]) => row as { name?: string })
+      .filter((row) => row.name)
+    expect(flowRows.map((row) => row.name)).toEqual([
+      "Common",
+      `Entry -> ${flowIds[0]}`,
+    ])
+  })
+
+  test("a failing later import rejects the whole batch", async () => {
+    mockDbTransaction.mockImplementation(async (callback) =>
+      callback(transaction),
+    )
+    mockResolveByNameAndType.mockResolvedValue({
+      idMap: new Map(),
+      createdIds: [],
+    })
+    mockRemapCustomFieldReferences.mockImplementation((flow) => flow)
+    mockCreateId.mockReturnValue("some-id")
+
+    await expect(
+      flowService.importFlowExports(async (importOne) => {
+        await importOne(input("Common"))
+        mockInsertValues.mockRejectedValueOnce(new Error("insert failed"))
+        await importOne(input("Entry"))
+      }),
+    ).rejects.toThrow("insert failed")
+    expect(mockDbTransaction).toHaveBeenCalledTimes(1)
+  })
+})

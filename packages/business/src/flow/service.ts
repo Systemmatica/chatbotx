@@ -20,6 +20,23 @@ import { notFoundException } from "../errors"
 import { flowVersionService } from "../flow-version"
 import { folderService } from "../folder/service"
 
+type ImportFlowExportInput = {
+  workspaceId: string
+  name: string
+  active: boolean
+  enableInInbox: boolean
+  startNodeId: string
+  nodes: FlowVersionSchema[]
+  edges: EdgeSchema[]
+  customFields: Record<string, FlowExportCustomField>
+  folderId?: string | null
+}
+
+type ImportFlowExportResult = {
+  flowId: string
+  createdCustomFieldIds: string[]
+}
+
 class FlowService extends BaseService {
   async findBy(
     input: { workspaceId: string; id: string },
@@ -158,7 +175,15 @@ class FlowService extends BaseService {
     return { flowId, draftVersionId, publishedVersionId }
   }
 
-  duplicate(input: { workspaceId: string; id: string }): Promise<string> {
+  /**
+   * Copies the flow's draft into a new, never-published flow. `name` defaults
+   * to "<name> _copy"; the builder passes a localized name instead.
+   */
+  duplicate(input: {
+    workspaceId: string
+    id: string
+    name?: string
+  }): Promise<string> {
     return db.transaction(async (tx) => {
       const flow = await this.findBy(input, tx)
       if (!flow) {
@@ -177,7 +202,7 @@ class FlowService extends BaseService {
       }
 
       return this.insertFlowWithDraft(tx, {
-        name: `${flow.name} _copy`,
+        name: input.name ?? `${flow.name} _copy`,
         active: flow.active,
         enableInInbox: flow.enableInInbox,
         workspaceId: flow.workspaceId,
@@ -236,69 +261,82 @@ class FlowService extends BaseService {
    * uncommitted read) — the caller must invalidate once, after this resolves,
    * using the returned `createdCustomFieldIds`.
    */
-  async importFlowExport(input: {
-    workspaceId: string
-    name: string
-    active: boolean
-    enableInInbox: boolean
-    startNodeId: string
-    nodes: FlowVersionSchema[]
-    edges: EdgeSchema[]
-    customFields: Record<string, FlowExportCustomField>
-    folderId?: string | null
-  }): Promise<{
-    flowId: string
-    createdCustomFieldIds: string[]
-  }> {
-    return await db.transaction(async (tx) => {
-      const manifestEntries = Object.entries(input.customFields)
-      const { idMap: resolvedByKey, createdIds } =
-        await customFieldService.resolveByNameAndType({
-          workspaceId: input.workspaceId,
-          fields: manifestEntries.map(([, field]) => field),
-          tx,
-        })
+  importFlowExport(
+    input: ImportFlowExportInput,
+  ): Promise<ImportFlowExportResult> {
+    return db.transaction((tx) => this.importFlowExportInTx(tx, input))
+  }
 
-      const idMap = new Map(
-        manifestEntries.flatMap(([sourceId, field]) => {
-          const targetId = resolvedByKey.get(customFieldResolutionKey(field))
-          return targetId ? [[sourceId, targetId] as const] : []
-        }),
-      )
+  /**
+   * Imports several flows atomically: `run` receives an importer bound to one
+   * transaction, so either every flow lands or none does. A flow imported
+   * earlier in `run` can be referenced by a later one (e.g. a "start flow"
+   * step pointing at the id an earlier import returned).
+   *
+   * Same contract as `importFlowExport`: the caller invalidates the custom
+   * field cache once this resolves.
+   */
+  importFlowExports<T>(
+    run: (
+      importOne: (
+        input: ImportFlowExportInput,
+      ) => Promise<ImportFlowExportResult>,
+    ) => Promise<T>,
+  ): Promise<T> {
+    return db.transaction((tx) =>
+      run((input) => this.importFlowExportInTx(tx, input)),
+    )
+  }
 
-      const remapped = remapCustomFieldReferences(
-        { nodes: input.nodes, edges: input.edges },
-        idMap,
-      )
-
-      const requestedFolderId =
-        !input.folderId || input.folderId === rootFolderId
-          ? null
-          : input.folderId
-      const folder = requestedFolderId
-        ? await folderService.find({
-            id: requestedFolderId,
-            workspaceId: input.workspaceId,
-            folderType: "flow",
-            tx,
-          })
-        : undefined
-      const resolvedFolderId = folder?.id ?? null
-
-      const flowId = await this.createFromImport({
+  private async importFlowExportInTx(
+    tx: DatabaseClient,
+    input: ImportFlowExportInput,
+  ): Promise<ImportFlowExportResult> {
+    const manifestEntries = Object.entries(input.customFields)
+    const { idMap: resolvedByKey, createdIds } =
+      await customFieldService.resolveByNameAndType({
         workspaceId: input.workspaceId,
-        name: input.name,
-        active: input.active,
-        enableInInbox: input.enableInInbox,
-        startNodeId: input.startNodeId,
-        nodes: remapped.nodes,
-        edges: remapped.edges,
-        folderId: resolvedFolderId,
+        fields: manifestEntries.map(([, field]) => field),
         tx,
       })
 
-      return { flowId, createdCustomFieldIds: createdIds }
+    const idMap = new Map(
+      manifestEntries.flatMap(([sourceId, field]) => {
+        const targetId = resolvedByKey.get(customFieldResolutionKey(field))
+        return targetId ? [[sourceId, targetId] as const] : []
+      }),
+    )
+
+    const remapped = remapCustomFieldReferences(
+      { nodes: input.nodes, edges: input.edges },
+      idMap,
+    )
+
+    const requestedFolderId =
+      !input.folderId || input.folderId === rootFolderId ? null : input.folderId
+    const folder = requestedFolderId
+      ? await folderService.find({
+          id: requestedFolderId,
+          workspaceId: input.workspaceId,
+          folderType: "flow",
+          tx,
+        })
+      : undefined
+    const resolvedFolderId = folder?.id ?? null
+
+    const flowId = await this.createFromImport({
+      workspaceId: input.workspaceId,
+      name: input.name,
+      active: input.active,
+      enableInInbox: input.enableInInbox,
+      startNodeId: input.startNodeId,
+      nodes: remapped.nodes,
+      edges: remapped.edges,
+      folderId: resolvedFolderId,
+      tx,
     })
+
+    return { flowId, createdCustomFieldIds: createdIds }
   }
 }
 

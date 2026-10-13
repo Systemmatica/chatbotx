@@ -236,7 +236,7 @@ export function getFlowColumns({
               onClick={() => setRowAction({ row, variant: "duplicate" })}
             >
               <CopyPlus />
-              {t("actions.duplicate")}
+              {t("flows.duplicateFlow")}
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => {
