@@ -317,11 +317,16 @@ export async function runStepsAndQuickReplies(
     // any step runs so a contact stuck on this node (waiting for input, or a
     // step that keeps failing) still shows it. Never throws.
     if (targetType === "node") {
+      const targetNodeId = props.targetNodeId
       await recordCurrentFlowNode({
         conversation: props.conversation,
         contactInbox: props.contactInbox,
         flowId: flowVersion.flowId,
-        nodeId: props.targetNodeId,
+        nodeId: targetNodeId,
+        isStartNode:
+          (flowVersion.nodes as unknown as FlowNode[]).find(
+            (node) => node.id === targetNodeId,
+          )?.data.isStartNode === true,
       })
     }
   }

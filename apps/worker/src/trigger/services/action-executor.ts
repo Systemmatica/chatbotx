@@ -1,5 +1,6 @@
 import {
   adsConversionService,
+  contactActivityService,
   contactCustomFieldService,
   conversationService,
   metaConversionsService,
@@ -110,6 +111,17 @@ export class ActionExecutor {
               tagId: link.tagId,
             })
           }
+          // Trigger actions do not emit tag events (loop guard), so the
+          // contact history is written here. Best-effort, never throws.
+          if (newlyLinked.length > 0) {
+            await contactActivityService.recordTagEvents({
+              workspaceId,
+              contactId: conversation.contactId,
+              tagIds: newlyLinked.map((link) => link.tagId),
+              type: "tagAdded",
+              actor: { type: "bot" },
+            })
+          }
         }
         break
       }
@@ -133,6 +145,13 @@ export class ActionExecutor {
               tagId,
             })
           }
+          await contactActivityService.recordTagEvents({
+            workspaceId,
+            contactId: conversation.contactId,
+            tagIds,
+            type: "tagRemoved",
+            actor: { type: "bot" },
+          })
         }
         break
       }

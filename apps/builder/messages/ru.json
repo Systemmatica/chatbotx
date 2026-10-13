@@ -4010,6 +4010,43 @@
     "openFlow": "Открыть цепочку",
     "line": "{flow} › {step} · {time}"
   },
+  "contactActivity": {
+    "title": "История",
+    "empty": "Событий пока нет",
+    "loading": "Загрузка…",
+    "loadMore": "Показать ещё",
+    "loadError": "Не удалось загрузить историю",
+    "refresh": "Обновить",
+    "emptyValue": "пусто",
+    "deletedTag": "удалённый тег",
+    "deletedFlow": "удалённый сценарий",
+    "assigneeTeam": "Команда",
+    "actors": {
+      "bot": "Бот",
+      "api": "API",
+      "teamMember": "Участник команды"
+    },
+    "events": {
+      "contactCreated": "Контакт появился",
+      "channelConnected": "Подключился через {channel}",
+      "tagAdded": "Добавлен тег: {tag}",
+      "tagRemoved": "Снят тег: {tag}",
+      "leadMagnetReceived": "Получен лид-магнит: {name}",
+      "customFieldChanged": "Изменено поле «{field}»",
+      "flowStarted": "Запущен сценарий: {flow}",
+      "stepReached": "Дошёл до шага: {step}",
+      "noteAdded": "Добавлена заметка",
+      "assigned": "Назначен: {name}",
+      "unassigned": "Назначение снято",
+      "conversationClosed": "Диалог закрыт"
+    }
+  },
+  "noteMentions": {
+    "placeholder": "Введите @, чтобы упомянуть коллегу",
+    "loading": "Загрузка…",
+    "noMatches": "Нет подходящих участников",
+    "mentioned": "Упомянуты:"
+  },
   "auditLogs": {
     "title": "Журнал действий"
   },
