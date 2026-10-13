@@ -19,10 +19,12 @@ import {
   Panel,
   ReactFlow,
   useEdgesState,
+  useNodesInitialized,
   useNodesState,
   useReactFlow,
   type XYPosition,
 } from "@xyflow/react"
+import { useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { useOptimisticAction } from "next-safe-action/hooks"
 import {
@@ -374,6 +376,42 @@ export function ReactFlowWrapper({
     },
     [releaseSnapshotSession],
   )
+
+  // `?node=<id>` (from the quick search) selects that step and centers it
+  // once the nodes are measured. Selection is not part of the saved content,
+  // so this never marks the draft dirty.
+  const focusNodeId = useSearchParams().get("node")
+  const nodesInitialized = useNodesInitialized()
+  const focusedNodeIdRef = useRef<string | null>(null)
+  useEffect(() => {
+    if (
+      !(focusNodeId && nodesInitialized) ||
+      focusedNodeIdRef.current === focusNodeId
+    ) {
+      return
+    }
+    const target = reactFlow.getInternalNode(focusNodeId)
+    if (!target) {
+      return
+    }
+    focusedNodeIdRef.current = focusNodeId
+    setNodes((currentNodes) =>
+      currentNodes.map((node) =>
+        Boolean(node.selected) === (node.id === focusNodeId)
+          ? node
+          : { ...node, selected: node.id === focusNodeId },
+      ),
+    )
+    const { x, y } = target.internals.positionAbsolute
+    const width = target.measured.width ?? NODE_CARD_WIDTH_PX
+    const height = target.measured.height ?? 0
+    reactFlow
+      .setCenter(x + width / 2, y + height / 2, {
+        zoom: Math.max(reactFlow.getZoom(), 1),
+        duration: 300,
+      })
+      .catch(() => undefined)
+  }, [focusNodeId, nodesInitialized, reactFlow, setNodes])
 
   const handleNodeClick = useCallback(() => {
     setOpenNodeDetailSheet(true)

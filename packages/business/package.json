@@ -23,7 +23,8 @@
     "./system-field": "./src/system-field/index.ts",
     "./utils": "./src/utils.ts",
     "./workspace-lifecycle/predicates": "./src/workspace-lifecycle/predicates.ts",
-    "./pinned-flow/ordering": "./src/pinned-flow/ordering.ts"
+    "./pinned-flow/ordering": "./src/pinned-flow/ordering.ts",
+    "./workspace-search/matching": "./src/workspace-search/matching.ts"
   },
   "dependencies": {
     "@chatbotx.io/analytics": "workspace:*",

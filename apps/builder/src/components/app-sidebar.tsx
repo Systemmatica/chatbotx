@@ -37,6 +37,7 @@ import { NavUser } from "@/components/nav-user"
 import { SidebarToggleButton } from "@/components/sidebar-toggle-button"
 import { WorkspaceSwitcher } from "@/components/workspace-switcher"
 import { usePinnedFlows } from "@/features/flows/hooks/use-pinned-flows"
+import { SidebarSearchTrigger } from "@/features/workspace-search/components/search-trigger"
 import type { WorkspaceResource } from "@/features/workspaces/schema/resource"
 import { authClient } from "@/lib/auth/auth-client"
 import {
@@ -235,6 +236,11 @@ export function AppSidebar({
         <div className="border-b px-1">
           <WorkspaceSwitcher workspaces={allWorkspaces} />
         </div>
+        {!scheduledForDeletion && (
+          <div className="px-2 pt-2">
+            <SidebarSearchTrigger />
+          </div>
+        )}
       </SidebarHeader>
       <SidebarContent>
         <NavMain

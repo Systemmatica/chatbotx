@@ -5599,6 +5599,26 @@
     "createBlock": "Create block",
     "createCondition": "Create condition"
   },
+  "globalSearch": {
+    "open": "Search",
+    "title": "Quick search",
+    "description": "Find contacts, flows, flow steps and lead magnets",
+    "placeholder": "Find a contact, flow, step or section…",
+    "searching": "Searching…",
+    "empty": "Nothing found",
+    "unnamedContact": "No name",
+    "hintNavigate": "↑↓ to navigate",
+    "hintOpen": "Enter to open",
+    "hintClose": "Esc to close",
+    "groups": {
+      "recent": "Recent",
+      "navigation": "Sections",
+      "flows": "Flows",
+      "flowNodes": "Flow steps",
+      "contacts": "Contacts",
+      "leadMagnets": "Lead magnets"
+    }
+  },
   "pinnedFlows": {
     "pin": "Pin to sidebar",
     "unpin": "Unpin from sidebar",

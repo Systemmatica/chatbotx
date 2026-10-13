@@ -5599,6 +5599,26 @@
     "createBlock": "Создать блок",
     "createCondition": "Создать условие"
   },
+  "globalSearch": {
+    "open": "Поиск",
+    "title": "Быстрый поиск",
+    "description": "Ищите контакты, цепочки, шаги цепочек и лид-магниты",
+    "placeholder": "Найти контакт, цепочку, шаг или раздел…",
+    "searching": "Ищем…",
+    "empty": "Ничего не найдено",
+    "unnamedContact": "Без имени",
+    "hintNavigate": "↑↓ выбрать",
+    "hintOpen": "Enter открыть",
+    "hintClose": "Esc закрыть",
+    "groups": {
+      "recent": "Недавние",
+      "navigation": "Разделы",
+      "flows": "Цепочки",
+      "flowNodes": "Шаги цепочек",
+      "contacts": "Контакты",
+      "leadMagnets": "Лид-магниты"
+    }
+  },
   "pinnedFlows": {
     "pin": "Закрепить в меню",
     "unpin": "Открепить из меню",

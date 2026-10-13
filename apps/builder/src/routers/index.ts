@@ -298,6 +298,11 @@ export const router = {
   webhooksAPI: lazy(() =>
     import("@/features/webhooks/api").then((m) => ({ default: m.webhooksAPI })),
   ),
+  workspaceSearchAPI: lazy(() =>
+    import("@/features/workspace-search/api").then((m) => ({
+      default: m.workspaceSearchAPI,
+    })),
+  ),
   analyticsRoutes: authorizedAPI
     // @ts-expect-error
     .use(workspaceAuthorizedMidddleware, (input) => input.workspaceId)
