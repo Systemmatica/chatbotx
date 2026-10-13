@@ -2,7 +2,7 @@
   "version": "8",
   "dialect": "postgres",
   "id": "078786ce-cb14-4ea1-9d88-5b8525afcc85",
-  "prevIds": ["57ac7234-3a49-4d15-abbd-98bf11e06e7d"],
+  "prevIds": ["a99be0ef-1c00-4cee-b943-0f7134a39b01"],
   "ddl": [
     {
       "values": [
@@ -7277,6 +7277,19 @@
       "generated": null,
       "identity": null,
       "name": "avatar",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "Contact"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "bio",
       "entityType": "columns",
       "schema": "public",
       "table": "Contact"
