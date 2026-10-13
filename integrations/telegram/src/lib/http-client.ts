@@ -2,6 +2,12 @@ import ky, { isHTTPError, type KyInstance } from "ky"
 import { parseOriginError, TelegramAPIException } from "../exception"
 import { logger } from "./logger"
 
+const BOT_TOKEN_IN_URL_RE = /\/bot[^/\s]+\//g
+
+/** Strips the bot token from any Bot API / file URL before it is logged. */
+export const redactTelegramToken = (value: string): string =>
+  value.replace(BOT_TOKEN_IN_URL_RE, "/bot<redacted>/")
+
 type GetOptions = {
   searchParams?: Record<string, string>
 }
@@ -26,10 +32,13 @@ class TelegramHttpClient {
       hooks: {
         beforeError: [
           ({ error, request }) => {
+            // ky's error message embeds the request URL, which carries the
+            // bot token — redact it before anything downstream logs it.
+            error.message = redactTelegramToken(error.message)
             if (isHTTPError(error)) {
               logger.error(
                 {
-                  url: request.url,
+                  url: redactTelegramToken(request.url),
                   method: request.method,
                 },
                 `HTTP ${error.response.status}: ${error.response.statusText}`,
@@ -59,6 +68,10 @@ class TelegramHttpClient {
     try {
       return await call()
     } catch (error) {
+      // Timeouts/network errors bypass `beforeError` but still carry the URL.
+      if (error instanceof Error) {
+        error.message = redactTelegramToken(error.message)
+      }
       throw this.toException(error)
     }
   }

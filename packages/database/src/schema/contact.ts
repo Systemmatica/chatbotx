@@ -26,6 +26,8 @@ export const contactModel = pgTable(
   {
     ...sharedColumns,
     avatar: text(),
+    /** Channel profile bio/about text (e.g. Telegram `bio`). */
+    bio: text(),
     phoneNumber: text(),
     email: text(),
     emailVerified: boolean().default(false).notNull(),

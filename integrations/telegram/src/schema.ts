@@ -41,6 +41,17 @@ export const telegramChatSchema = z.object({
   username: z.string().optional(),
   first_name: z.string().optional(),
   last_name: z.string().optional(),
+  /** Only present on `getChat` (ChatFullInfo) for private chats. */
+  bio: z.string().optional(),
+  /** Only present on `getChat` (ChatFullInfo); respects the user's privacy. */
+  photo: z
+    .object({
+      small_file_id: z.string(),
+      small_file_unique_id: z.string().optional(),
+      big_file_id: z.string(),
+      big_file_unique_id: z.string().optional(),
+    })
+    .optional(),
 })
 export type TelegramChat = z.infer<typeof telegramChatSchema>
 

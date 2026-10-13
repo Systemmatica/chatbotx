@@ -374,6 +374,34 @@ describe("getUserData — validation logic", () => {
     })
   })
 
+  describe("bot commands are never stored as the answer", () => {
+    test.each([
+      "/start",
+      "/start ref_42",
+      "/help@my_bot",
+    ])("%s → keeps waiting without storing, retrying or clearing", async (text) => {
+      lastMessage.current = makeIncomingMessage({ text })
+
+      const result = await getUserData(makeProps(ReplyFormat.text))
+
+      expect(result.status).toBe("wait")
+      expect(contactCustomFieldSetValueByKey).not.toHaveBeenCalled()
+      expect(chatQueueAdd).not.toHaveBeenCalled()
+      expect(conversationConsumeChallenge).not.toHaveBeenCalled()
+      expect(challengeClearCalls()).toHaveLength(0)
+      expectNoLastInputFailureUpdate()
+    })
+
+    test("text merely containing a slash is still a valid answer", async () => {
+      lastMessage.current = makeIncomingMessage({ text: "1/2 cup" })
+
+      const result = await getUserData(makeProps(ReplyFormat.text))
+
+      expect(result.status).toBe("success")
+      expectCustomFieldWrite("1/2 cup")
+    })
+  })
+
   describe("attachment formats", () => {
     test("image attachment with image format → returns success", async () => {
       lastMessage.current = makeIncomingMessage({

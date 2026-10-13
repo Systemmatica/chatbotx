@@ -37,6 +37,7 @@ import { createId } from "@chatbotx.io/utils"
 import { ChatJobAction, chatQueue } from "@chatbotx.io/worker-config"
 import { add, isBefore } from "date-fns"
 import { logger } from "../../lib/logger"
+import { isBotCommand } from "../routing"
 import type { ExecuteStepProps } from "./flow"
 import { enqueueFlowStepMessage } from "./flow-utils"
 import type { ExecuteStepResult } from "./step"
@@ -247,7 +248,23 @@ async function handleSkipOrError(
   props: ExecuteStepProps<GetUserDataStepSchema>,
 ): Promise<ExecuteStepResult> {
   const { step, ctx } = props
-  const validUserData = await validateUserData(props)
+  const lastUserMessage = await findLastUserMessage(props)
+
+  // A bot command ("/start", "/help@bot") is never an answer. Routing
+  // normally diverts it before it reaches a pending challenge, but this step
+  // re-reads the conversation's LAST incoming message, so a command that
+  // lands in a race (or via another resume path) would otherwise be stored
+  // in the output field. Keep waiting: no store, no retry prompt, no attempt
+  // counted, challenge untouched.
+  if (isBotCommand(lastUserMessage?.text)) {
+    logger.info(
+      { conversationId: props.conversation.id, stepId: step.id },
+      "getUserData: ignoring bot command as input, still waiting",
+    )
+    return { result: undefined, status: "wait" }
+  }
+
+  const validUserData = validateUserData(props, lastUserMessage)
 
   if (!ctx?.variables.conversation.challengeAttempts) {
     throw new IntegrationException(
@@ -355,9 +372,9 @@ function resolveRetryPromptText(step: GetUserDataStepSchema): string {
     : step.retryMessage
 }
 
-async function validateUserData(
+async function findLastUserMessage(
   props: ExecuteStepProps<GetUserDataStepSchema>,
-): Promise<ReplyValidationResult> {
+) {
   const messageRepository = await createMessageRepository()
   const lastMessages = await messageRepository.findLastByConversation(
     props.conversation.id,
@@ -379,8 +396,13 @@ async function validateUserData(
       workspaceId: props.conversation.workspaceId,
     },
   )
-  const lastUserMessage = lastMessages[0]
+  return lastMessages[0]
+}
 
+function validateUserData(
+  props: ExecuteStepProps<GetUserDataStepSchema>,
+  lastUserMessage: Awaited<ReturnType<typeof findLastUserMessage>>,
+): ReplyValidationResult {
   if (!lastUserMessage) {
     return {
       ok: false,
