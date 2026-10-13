@@ -1,4 +1,7 @@
+import { buttonVariants } from "@chatbotx.io/ui/components/ui/button"
 import { getIdFromParams } from "@chatbotx.io/utils"
+import { CloudUploadIcon } from "lucide-react"
+import Link from "next/link"
 import { notFound } from "next/navigation"
 import { getTranslations } from "next-intl/server"
 import type { SearchParams } from "nuqs/server"
@@ -47,7 +50,16 @@ export default async function ContactsPage(props: {
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-2">
         <h4 className="font-bold text-xl">{t("contacts.title")}</h4>
-        <CreateContactDialog workspaceId={workspaceId} />
+        <div className="flex items-center gap-2">
+          <Link
+            className={buttonVariants({ variant: "outline" })}
+            href={`/space/${workspaceId}/contacts/import`}
+          >
+            <CloudUploadIcon />
+            {t("actions.import")}
+          </Link>
+          <CreateContactDialog workspaceId={workspaceId} />
+        </div>
       </div>
 
       <Suspense>
