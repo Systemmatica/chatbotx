@@ -5598,5 +5598,22 @@
     "nextStep": "Next step",
     "createBlock": "Create block",
     "createCondition": "Create condition"
+  },
+  "slashCommands": {
+    "menuLabel": "Commands",
+    "groups": {
+      "variables": "Variables",
+      "formatting": "Formatting",
+      "insert": "Insert"
+    },
+    "items": {
+      "bold": "Bold",
+      "italic": "Italic",
+      "strike": "Strikethrough",
+      "code": "Code",
+      "link": "Link",
+      "emoji": "Emoji",
+      "lineBreak": "Line break"
+    }
   }
 }

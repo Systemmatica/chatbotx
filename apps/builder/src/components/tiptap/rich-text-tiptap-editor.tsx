@@ -11,6 +11,12 @@ import { EditorContent, useEditor } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
 import emojiSuggestion from "./extensions/emoij/suggestion"
 import {
+  buildSlashCommandItems,
+  type SlashCommandHandlers,
+} from "./extensions/slash-command/items"
+import { renderSlashCommandMenu } from "./extensions/slash-command/render"
+import { SlashCommand } from "./extensions/slash-command/slash-command"
+import {
   plainTextToParagraphHtmlWithVariableMentions,
   renderVariableMentionHTML,
   renderVariableMentionText,
@@ -31,7 +37,8 @@ import {
 } from "@chatbotx.io/ui/components/ui/popover"
 import EmojiPicker, { type EmojiClickData } from "emoji-picker-react"
 import { CodeXml, Smile } from "lucide-react"
-import { useEffect, useRef, useState } from "react"
+import { useTranslations } from "next-intl"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { usePromptVariableOptions } from "./use-prompt-variable-options"
 
 type RichTextTiptapEditorProps = {
@@ -63,6 +70,8 @@ export const RichTextTiptapEditor = ({
   const [isOpenEmoji, setIsOpenEmoji] = useState(false)
   const [isEditorFocused, setIsEditorFocused] = useState(false)
   const [isOpenCustomField, setIsOpenCustomField] = useState(false)
+  const [isOpenLink, setIsOpenLink] = useState(false)
+  const tSlash = useTranslations("slashCommands.items")
   const promptVariableOptions = usePromptVariableOptions({
     channels,
     includeCouponVariables,
@@ -72,6 +81,38 @@ export const RichTextTiptapEditor = ({
   useEffect(() => {
     promptVariableOptionsRef.current = promptVariableOptions
   }, [promptVariableOptions])
+
+  // The `/` menu reuses the exact variable list of the `{{` picker so both
+  // insert the same mention chip / `{{token}}`. Read through refs because
+  // `useEditor` captures its extensions once.
+  const slashCommandItems = useMemo(
+    () =>
+      buildSlashCommandItems({
+        variables: promptVariableOptions,
+        labels: {
+          bold: tSlash("bold"),
+          italic: tSlash("italic"),
+          strike: tSlash("strike"),
+          code: tSlash("code"),
+          link: tSlash("link"),
+          emoji: tSlash("emoji"),
+          lineBreak: tSlash("lineBreak"),
+        },
+      }),
+    [promptVariableOptions, tSlash],
+  )
+  const slashCommandItemsRef = useRef(slashCommandItems)
+  useEffect(() => {
+    slashCommandItemsRef.current = slashCommandItems
+  }, [slashCommandItems])
+
+  const slashCommandHandlersRef = useRef<SlashCommandHandlers>({
+    openLink: () => setIsOpenLink(true),
+    openEmojiPicker: () => {
+      setIsEditorFocused(true)
+      setIsOpenEmoji(true)
+    },
+  })
 
   const tiptapEditor = useEditor({
     extensions: [
@@ -104,6 +145,11 @@ export const RichTextTiptapEditor = ({
         emojis: gitHubEmojis,
         enableEmoticons: true,
         suggestion: emojiSuggestion,
+      }),
+      SlashCommand.configure({
+        getItems: () => slashCommandItemsRef.current,
+        getHandlers: () => slashCommandHandlersRef.current,
+        render: renderSlashCommandMenu,
       }),
       Placeholder.configure({
         placeholder,
@@ -176,7 +222,11 @@ export const RichTextTiptapEditor = ({
 
   return (
     <div className="relative">
-      <RichTextToolbar editor={tiptapEditor} />
+      <RichTextToolbar
+        editor={tiptapEditor}
+        linkOpen={isOpenLink}
+        onLinkOpenChange={setIsOpenLink}
+      />
       <EditorContent editor={tiptapEditor} />
 
       <div

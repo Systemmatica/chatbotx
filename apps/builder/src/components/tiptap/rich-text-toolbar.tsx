@@ -13,6 +13,9 @@ import { useEffect, useState } from "react"
 
 type RichTextToolbarProps = {
   editor: Editor | null
+  /** Controlled link popover state — lets the `/` menu open the URL prompt. */
+  linkOpen?: boolean
+  onLinkOpenChange?: (open: boolean) => void
 }
 
 const MarkButton = ({
@@ -54,8 +57,21 @@ const MarkButton = ({
 
 const HREF_SCHEME_REGEX = /^(https?:|mailto:|tel:)/i
 
-const LinkButton = ({ editor }: { editor: Editor }) => {
-  const [open, setOpen] = useState(false)
+const LinkButton = ({
+  editor,
+  open: controlledOpen,
+  onOpenChange,
+}: {
+  editor: Editor
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
+}) => {
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false)
+  const open = controlledOpen ?? uncontrolledOpen
+  const setOpen = (next: boolean) => {
+    setUncontrolledOpen(next)
+    onOpenChange?.(next)
+  }
   const [href, setHref] = useState("")
   const isActive = useEditorState({
     editor,
@@ -78,6 +94,23 @@ const LinkButton = ({ editor }: { editor: Editor }) => {
     const withScheme = HREF_SCHEME_REGEX.test(trimmed)
       ? trimmed
       : `https://${trimmed}`
+    // Nothing selected and not inside an existing link (e.g. opened from the
+    // `/` menu): insert the URL itself as the linked text instead of
+    // leaving an invisible stored mark behind.
+    if (editor.state.selection.empty && !editor.isActive("link")) {
+      editor
+        .chain()
+        .focus()
+        .insertContent({
+          type: "text",
+          text: trimmed,
+          marks: [{ type: "link", attrs: { href: withScheme } }],
+        })
+        .unsetMark("link")
+        .run()
+      setOpen(false)
+      return
+    }
     editor
       .chain()
       .focus()
@@ -134,7 +167,11 @@ const LinkButton = ({ editor }: { editor: Editor }) => {
  * complete surface, on purpose: there is nowhere else in the UI a mark can
  * originate from other than typing/pasting plain characters.
  */
-export const RichTextToolbar = ({ editor }: RichTextToolbarProps) => {
+export const RichTextToolbar = ({
+  editor,
+  linkOpen,
+  onLinkOpenChange,
+}: RichTextToolbarProps) => {
   if (!editor) {
     return null
   }
@@ -169,7 +206,11 @@ export const RichTextToolbar = ({ editor }: RichTextToolbarProps) => {
         mark="code"
         onToggle={() => editor.chain().focus().toggleCode().run()}
       />
-      <LinkButton editor={editor} />
+      <LinkButton
+        editor={editor}
+        onOpenChange={onLinkOpenChange}
+        open={linkOpen}
+      />
     </div>
   )
 }
