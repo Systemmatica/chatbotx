@@ -3883,7 +3883,8 @@
     },
     "loadFailed": "Could not load boards.",
     "loadTimedOut": "The server is taking too long to respond.",
-    "retry": "Retry"
+    "retry": "Retry",
+    "openContact": "Open the contact card"
   },
   "currentStep": {
     "title": "Current step",
@@ -5602,5 +5603,18 @@
     "nextStep": "Next step",
     "createBlock": "Create block",
     "createCondition": "Create condition"
+  },
+  "contactPeek": {
+    "title": "Contact",
+    "description": "Contact card with fields, tags, lead magnets, notes and recent messages.",
+    "previous": "Previous contact (↑)",
+    "next": "Next contact (↓)",
+    "fullScreen": "Full screen",
+    "collapse": "Side panel",
+    "openChat": "Open chat",
+    "recentMessages": "Recent messages",
+    "noMessages": "No messages yet",
+    "noConversation": "The contact has no chat yet",
+    "attachments": "{count, plural, one {# attachment} other {# attachments}}"
   }
 }

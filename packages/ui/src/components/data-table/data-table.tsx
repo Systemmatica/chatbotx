@@ -1,4 +1,8 @@
-import { flexRender, type Table as TanstackTable } from "@tanstack/react-table"
+import {
+  flexRender,
+  type Row,
+  type Table as TanstackTable,
+} from "@tanstack/react-table"
 import type * as React from "react"
 
 import { DataTablePagination } from "@chatbotx.io/ui/components/data-table/data-table-pagination"
@@ -22,6 +26,13 @@ interface DataTableProps<TData> extends React.ComponentProps<"div"> {
     noResults?: string
   }
   scrollable?: boolean
+  /**
+   * Called on a click anywhere in a row (e.g. open a side peek). Rows get a
+   * pointer cursor; the handler decides which inner targets to ignore.
+   */
+  onRowClick?: (row: Row<TData>, event: React.MouseEvent<HTMLElement>) => void
+  /** Highlights a row (e.g. the one open in a side peek). */
+  isRowActive?: (row: Row<TData>) => boolean
 }
 
 export function DataTable<TData>({
@@ -29,6 +40,8 @@ export function DataTable<TData>({
   actionBar,
   labels,
   scrollable = false,
+  onRowClick,
+  isRowActive,
   children,
   className,
   ...props
@@ -79,6 +92,12 @@ export function DataTable<TData>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
+                  data-active={isRowActive?.(row) ? "true" : undefined}
+                  className={cn(
+                    onRowClick && "cursor-pointer",
+                    "data-[active=true]:bg-muted",
+                  )}
+                  onClick={onRowClick ? (event) => onRowClick(row, event) : undefined}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell

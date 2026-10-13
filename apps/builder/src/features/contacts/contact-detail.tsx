@@ -36,7 +36,6 @@ import {
 import { useTranslations } from "next-intl"
 import { useEffect, useMemo, useState } from "react"
 import { useWorkspaceId } from "@/hooks/routing"
-import { useChatStore } from "../chat/store/chat-store-provider"
 import { getBrowserTimezone } from "../contact-filter/lib/timezone"
 import type { ContactInboxResource } from "../contact-inboxes/schema/resource"
 import { ContactCustomFieldManage } from "../custom-fields/contact-custom-field-manage"
@@ -44,7 +43,7 @@ import { resolveCustomFieldIcon } from "../custom-fields/lib/custom-field-icons"
 import { useCustomFieldStore } from "../custom-fields/provider/custom-field-store-context"
 import { EditContactField } from "./edit-contact-field"
 import type { GetContactResponse } from "./schemas/query"
-import type { ContactEditableField } from "./schemas/resource"
+import type { ContactEditableField, ContactResource } from "./schemas/resource"
 import { useAvatarUrl } from "./utils"
 
 const formatGender = (
@@ -185,16 +184,23 @@ const ContactBio = ({ bio }: { bio: string }) => {
 }
 
 export const ContactDetail = ({
-  activeConversationId,
   contact,
+  baseContact,
+  contactInbox,
 }: {
-  activeConversationId: string | null
   contact: GetContactResponse | null
+  /**
+   * Live contact row (the inbox passes the chat store's copy so realtime
+   * updates show); defaults to `contact`.
+   */
+  baseContact?: ContactResource | null
+  /** Channel row shown first (the inbox passes the active chat's). */
+  contactInbox?: ContactInboxResource | null
 }) => {
   const t = useTranslations()
 
   const workspaceId = useWorkspaceId()
-  const { conversations } = useChatStore((state) => state)
+  const sourceContact = baseContact ?? contact
   const avatarUrl = useAvatarUrl(contact)
   const [timezone, setTimezone] = useState("UTC")
 
@@ -300,13 +306,10 @@ export const ContactDetail = ({
   }, [customFields])
 
   useEffect(() => {
-    if (activeConversationId && initializedCustomFields) {
-      const conversation = conversations.find(
-        (item) => item.id === activeConversationId,
-      )
-
-      if (conversation?.contact) {
-        const activeContactInbox = conversation.contactInboxes[0]
+    if (initializedCustomFields) {
+      if (sourceContact) {
+        const activeContactInbox =
+          contactInbox ?? contact?.contactInboxes?.[0] ?? undefined
         const channelContactId = activeContactInbox?.sourceId
         const tmpContactFields: ContactEditableField[] = [
           {
@@ -332,8 +335,8 @@ export const ContactDetail = ({
             key: "gender",
             icon: UserRoundIcon,
             label: t("fields.gender.label"),
-            value: formatGender(conversation.contact.gender, t),
-            formValue: conversation.contact.gender,
+            value: formatGender(sourceContact.gender, t),
+            formValue: sourceContact.gender,
             options: genderOptions,
             type: "shortText",
           },
@@ -341,10 +344,10 @@ export const ContactDetail = ({
             key: "timezone",
             icon: ClockIcon,
             label: t("fields.timezone.label"),
-            value: formatTimezoneLabel(conversation.contact.timezone),
+            value: formatTimezoneLabel(sourceContact.timezone),
             formValue:
-              normalizeStoredTimezone(conversation.contact.timezone) ??
-              conversation.contact.timezone,
+              normalizeStoredTimezone(sourceContact.timezone) ??
+              sourceContact.timezone,
             options: timezoneOptions,
             type: "shortText",
           },
@@ -352,28 +355,28 @@ export const ContactDetail = ({
             key: "email",
             icon: AtSignIcon,
             label: t("fields.email.label"),
-            value: conversation.contact.email,
+            value: sourceContact.email,
             type: "shortText",
           },
           {
             key: "firstName",
             icon: TextIcon,
             label: t("fields.firstName.label"),
-            value: conversation.contact.firstName,
+            value: sourceContact.firstName,
             type: "shortText",
           },
           {
             key: "lastName",
             icon: TextIcon,
             label: t("fields.lastName.label"),
-            value: conversation.contact.lastName,
+            value: sourceContact.lastName,
             type: "shortText",
           },
           {
             key: "phoneNumber",
             icon: PhoneIcon,
             label: t("fields.phoneNumber.label"),
-            value: conversation.contact.phoneNumber,
+            value: sourceContact.phoneNumber,
             type: "shortText",
           },
         ]
@@ -409,8 +412,8 @@ export const ContactDetail = ({
       setContactFields([])
     }
   }, [
-    activeConversationId,
-    conversations,
+    sourceContact,
+    contactInbox,
     initializedCustomFields,
     contact,
     customFieldMap,

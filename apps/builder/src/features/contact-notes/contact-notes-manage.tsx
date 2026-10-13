@@ -6,8 +6,6 @@ import { useTranslations } from "next-intl"
 import { useEffect, useState } from "react"
 import { z } from "zod"
 import { useWorkspaceId } from "@/hooks/routing"
-import { useChatStore } from "../chat/store/chat-store-provider"
-import type { ContactResource } from "../contacts/schemas/resource"
 import { AddContactForm } from "./add-contact-note-form"
 import { ContactNoteList } from "./contact-notes-list"
 import { DeleteContactNoteDialog } from "./delete-contact-note-dialog"
@@ -18,9 +16,12 @@ const contactNoteModes = z.enum(["list", "add", "edit", "delete"])
 type ContactNoteMode = z.infer<typeof contactNoteModes>
 
 export function ContactNotesManage({
+  contactId,
   contactNotes,
   onNotesChange,
 }: {
+  /** The contact the notes belong to (`null` while it loads). */
+  contactId: string | null
   contactNotes: ContactNoteResource[]
   onNotesChange?: (notes: ContactNoteResource[]) => void
 }) {
@@ -29,10 +30,9 @@ export function ContactNotesManage({
 
   const [mode, setMode] = useState<ContactNoteMode>(contactNoteModes.enum.list)
 
-  const { activeConversationId, conversations } = useChatStore((state) => state)
   const [allContactNotes, setAllContactNotes] =
     useState<ContactNoteResource[]>(contactNotes)
-  const [contact, setContact] = useState<ContactResource | null>(null)
+  const contact = contactId ? { id: contactId } : null
   const [contactNote, setContactNote] = useState<ContactNoteResource | null>(
     null,
   )
@@ -41,22 +41,6 @@ export function ContactNotesManage({
     setAllContactNotes(contactNotes)
     setMode(contactNoteModes.enum.list)
   }, [contactNotes])
-
-  useEffect(() => {
-    if (activeConversationId) {
-      const conversation = conversations.find(
-        (item) => item.id === activeConversationId,
-      )
-
-      if (conversation?.contact) {
-        setContact(conversation.contact)
-      } else {
-        setContact(null)
-      }
-    } else {
-      setContact(null)
-    }
-  }, [activeConversationId, conversations])
 
   const updateNotes = (notes: ContactNoteResource[]) => {
     setAllContactNotes(notes)

@@ -10,18 +10,18 @@ import type { KanbanColumnResource } from "../schemas/resource"
 import { KanbanCard } from "./kanban-card"
 
 type KanbanColumnProps = {
-  workspaceId: string
   column: KanbanColumnResource
-  /** Set on a flow's board; see {@link KanbanCard}. */
-  flowId?: string
+  /** Contact open in the side peek. */
+  activeContactId?: string | null
+  onOpenCard: (contactId: string) => void
   loadingMore: boolean
   onLoadMore: (columnId: string) => void
 }
 
 export function KanbanColumn({
-  workspaceId,
   column,
-  flowId,
+  activeContactId,
+  onOpenCard,
   loadingMore,
   onLoadMore,
 }: KanbanColumnProps) {
@@ -77,10 +77,10 @@ export function KanbanColumn({
         ) : (
           column.cards.map((card) => (
             <KanbanCard
+              active={card.contactId === activeContactId}
               card={card}
-              flowId={flowId}
               key={card.contactId}
-              workspaceId={workspaceId}
+              onOpen={onOpenCard}
             />
           ))
         )}

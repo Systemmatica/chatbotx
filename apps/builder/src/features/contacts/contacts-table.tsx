@@ -34,8 +34,14 @@ import { EMAIL_PHONE_RESTRICTED_FILTER_FIELDS } from "@/features/contact-filter/
 import { client } from "@/lib/orpc/orpc"
 import { InboxIcon } from "../inboxes/components/inbox-icon"
 import { getUserName } from "../users/schemas/resource"
+import { ContactPeek } from "./components/contact-peek"
 import { CONTACTS_DEFAULT_PER_PAGE } from "./constants"
 import { ContactListAction } from "./contacts-list-action"
+import { useContactPeek } from "./hooks/use-contact-peek"
+import {
+  CONTACT_PEEK_PARAM,
+  isInteractiveClickTarget,
+} from "./lib/peek-navigation"
 import {
   getSingleTagFilterId,
   TAG_RECEIVED_AT_COLUMN_ID,
@@ -115,16 +121,8 @@ function NameCell({
     avatarVisual
   )
 
-  const nameNode = inboxHref ? (
-    <Link
-      className="truncate font-medium leading-5"
-      href={inboxHref}
-      prefetch={false}
-      target="_blank"
-    >
-      {contact.fullName}
-    </Link>
-  ) : (
+  // The name opens the side peek (row click); the avatar still opens the chat.
+  const nameNode = (
     <span className="truncate font-medium leading-5">{contact.fullName}</span>
   )
 
@@ -157,7 +155,13 @@ export function ContactsTable({
   const t = useTranslations()
   const formatter = useFormatter()
   const searchParams = useSearchParams()
-  const searchParamsKey = searchParams.toString()
+  // The peek param only opens a panel: it must not refetch the list.
+  const searchParamsKey = useMemo(() => {
+    const params = new URLSearchParams(searchParams.toString())
+    params.delete(CONTACT_PEEK_PARAM)
+    return params.toString()
+  }, [searchParams])
+  const { contactId: peekContactId, openContact } = useContactPeek()
   const [
     {
       data: initialData,
@@ -494,34 +498,61 @@ export function ContactsTable({
     [contactFilter, setContactFilter, table],
   )
 
+  const peekContactIds = useMemo(
+    () => tableData.map((contact) => contact.id),
+    [tableData],
+  )
+  const chatHref = useCallback(
+    (conversationId: string) =>
+      `/space/${workspaceId}/inbox?conversationId=${conversationId}`,
+    [workspaceId],
+  )
+
   return (
-    <DataTable
-      className="[&_tbody_td]:py-3 [&_tbody_td]:text-[15px] [&_tbody_tr]:h-16"
-      table={table}
-    >
-      {showContactFilterPanel && (
-        <ContactListFilterPanel
-          excludeFields={excludedFilterFields}
-          filter={optimisticContactFilter}
-          onFilterChange={handleContactFilterChange}
-        />
-      )}
-      <DataTableToolbar table={table}>
-        <span className="whitespace-nowrap text-muted-foreground text-sm">
-          {totalCountLabel}
-        </span>
-        <ContactListFilterButton
-          active={isOptimisticContactFilterActive}
-          filter={optimisticContactFilter}
-          onToggle={() => setShowContactFilterPanel((current) => !current)}
-          open={showContactFilterPanel}
-        />
-        <ContactListAction
-          filter={exportFilter}
-          table={table}
-          workspaceId={workspaceId}
-        />
-      </DataTableToolbar>
-    </DataTable>
+    <>
+      <DataTable
+        className="[&_tbody_td]:py-3 [&_tbody_td]:text-[15px] [&_tbody_tr]:h-16"
+        isRowActive={(row) => row.original.id === peekContactId}
+        onRowClick={(row, event) => {
+          if (
+            isInteractiveClickTarget(event.target, event.currentTarget) ||
+            window.getSelection()?.toString()
+          ) {
+            return
+          }
+          openContact(row.original.id)
+        }}
+        table={table}
+      >
+        {showContactFilterPanel && (
+          <ContactListFilterPanel
+            excludeFields={excludedFilterFields}
+            filter={optimisticContactFilter}
+            onFilterChange={handleContactFilterChange}
+          />
+        )}
+        <DataTableToolbar table={table}>
+          <span className="whitespace-nowrap text-muted-foreground text-sm">
+            {totalCountLabel}
+          </span>
+          <ContactListFilterButton
+            active={isOptimisticContactFilterActive}
+            filter={optimisticContactFilter}
+            onToggle={() => setShowContactFilterPanel((current) => !current)}
+            open={showContactFilterPanel}
+          />
+          <ContactListAction
+            filter={exportFilter}
+            table={table}
+            workspaceId={workspaceId}
+          />
+        </DataTableToolbar>
+      </DataTable>
+      <ContactPeek
+        chatHref={chatHref}
+        contactIds={peekContactIds}
+        workspaceId={workspaceId}
+      />
+    </>
   )
 }
