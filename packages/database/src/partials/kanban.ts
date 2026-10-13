@@ -86,3 +86,79 @@ export const kanbanStagesSchema = z
       }
     })
   })
+
+export const KANBAN_MAX_CARD_PROPERTIES = 12
+
+/**
+ * A line or chip shown on a board card. `lastActivity` (when the contact last
+ * wrote) and `currentStep` (where they are in the flow) are today's card.
+ */
+export const kanbanCardPropertySchema = z.discriminatedUnion("type", [
+  z.object({ type: z.literal("lastActivity") }),
+  z.object({ type: z.literal("currentStep") }),
+  z.object({ type: z.literal("lastMessage") }),
+  z.object({ type: z.literal("timeInStage") }),
+  z.object({ type: z.literal("phone") }),
+  z.object({ type: z.literal("tags") }),
+  z.object({ type: z.literal("leadMagnets") }),
+  z.object({
+    type: z.literal("customField"),
+    customFieldId: z.string().regex(/^\d+$/),
+  }),
+])
+export type KanbanCardProperty = z.infer<typeof kanbanCardPropertySchema>
+export type KanbanCardPropertyType = KanbanCardProperty["type"]
+
+/** Stable identity of a property (a custom field can be shown once). */
+export const kanbanCardPropertyKey = (property: KanbanCardProperty): string =>
+  property.type === "customField"
+    ? `customField:${property.customFieldId}`
+    : property.type
+
+/** Ordered card properties; each at most once. */
+export const kanbanCardPropertiesSchema = z
+  .array(kanbanCardPropertySchema)
+  .max(KANBAN_MAX_CARD_PROPERTIES)
+  .superRefine((properties, ctx) => {
+    const seen = new Set<string>()
+    properties.forEach((property, index) => {
+      const key = kanbanCardPropertyKey(property)
+      if (seen.has(key)) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Card properties must be unique",
+          path: [index],
+        })
+      }
+      seen.add(key)
+    })
+  })
+
+/** A board that never chose its card properties shows today's card. */
+export const DEFAULT_KANBAN_CARD_PROPERTIES: readonly KanbanCardProperty[] = [
+  { type: "lastActivity" },
+  { type: "currentStep" },
+]
+
+/** The board's card properties, or the defaults when it has none saved. */
+export function resolveKanbanCardProperties(
+  stored: readonly KanbanCardProperty[] | null | undefined,
+): readonly KanbanCardProperty[] {
+  return stored ?? DEFAULT_KANBAN_CARD_PROPERTIES
+}
+
+/** What the card query must load for the given properties. */
+export function kanbanCardDataNeeds(properties: readonly KanbanCardProperty[]) {
+  const types = new Set(properties.map((property) => property.type))
+  return {
+    customFieldIds: properties.flatMap((property) =>
+      property.type === "customField" ? [property.customFieldId] : [],
+    ),
+    tags: types.has("tags"),
+    leadMagnets: types.has("leadMagnets"),
+    phone: types.has("phone"),
+    lastMessage: types.has("lastMessage"),
+    timeInStage: types.has("timeInStage"),
+    currentStep: types.has("currentStep"),
+  }
+}

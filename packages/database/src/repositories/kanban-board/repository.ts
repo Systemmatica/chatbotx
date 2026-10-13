@@ -7,7 +7,7 @@ import {
   type SQL,
   sql,
 } from "../../client"
-import type { KanbanStage } from "../../partials/kanban"
+import type { KanbanCardProperty, KanbanStage } from "../../partials/kanban"
 import { contactCustomFieldModel, kanbanBoardModel } from "../../schema"
 import type { KanbanBoardModel } from "../../types"
 import { likeContains } from "../../utils"
@@ -43,6 +43,11 @@ export type KanbanCardRow = {
   channel: string | null
   lastMessageAt: Date | null
   conversationId: string | null
+  /** Last activity of that conversation (anchors last-message lookups). */
+  conversationLastActivityAt: Date | null
+  phoneNumber: string | null
+  /** When the status field was last written (time in the stage). */
+  statusUpdatedAt: Date | null
   /** Most recently entered flow node across the contact's inboxes. */
   currentFlowId: string | null
   currentNodeId: string | null
@@ -62,6 +67,9 @@ type RawCardRow = {
   channel: string | null
   lastMessageAt: Date | string | null
   conversationId: string | number | null
+  conversationLastActivityAt: Date | string | null
+  phoneNumber: string | null
+  statusUpdatedAt: Date | string | null
   currentFlowId: string | number | null
   currentNodeId: string | null
   currentNodeAt: Date | string | null
@@ -177,6 +185,7 @@ class KanbanBoardRepository {
     customFieldId: string
     stages: KanbanStage[]
     flowId?: string | null
+    cardProperties?: KanbanCardProperty[] | null
     tx?: DatabaseClient
   }): Promise<KanbanBoardModel> {
     const { tx = db, ...values } = input
@@ -187,7 +196,12 @@ class KanbanBoardRepository {
   async update(input: {
     workspaceId: string
     id: string
-    data: Partial<Pick<KanbanBoardModel, "name" | "customFieldId" | "stages">>
+    data: Partial<
+      Pick<
+        KanbanBoardModel,
+        "name" | "customFieldId" | "stages" | "cardProperties"
+      >
+    >
     tx?: DatabaseClient
   }): Promise<KanbanBoardModel | undefined> {
     const { workspaceId, id, data, tx = db } = input
@@ -253,6 +267,9 @@ class KanbanBoardRepository {
         ranked."channel",
         ranked."lastMessageAt",
         conv."id" AS "conversationId",
+        conv."lastActivityAt" AS "conversationLastActivityAt",
+        ranked."phoneNumber",
+        ranked."statusUpdatedAt",
         cur."currentFlowId",
         cur."currentNodeId",
         cur."currentNodeAt"
@@ -261,6 +278,8 @@ class KanbanBoardRepository {
           c."id" AS "contactId",
           c."fullName" AS "fullName",
           c."avatar" AS "avatar",
+          c."phoneNumber" AS "phoneNumber",
+          ccf."updatedAt" AS "statusUpdatedAt",
           ${bucket} AS "bucket",
           lm."channel" AS "channel",
           lm."lastMessageAt" AS "lastMessageAt",
@@ -282,7 +301,7 @@ class KanbanBoardRepository {
         WHERE ${sql.join(conditions, sql` AND `)}
       ) ranked
       LEFT JOIN LATERAL (
-        SELECT cv."id"
+        SELECT cv."id", cv."lastActivityAt"
         FROM "Conversation" cv
         WHERE cv."contactId" = ranked."contactId"
         ORDER BY (cv."sourceId" IS NULL) DESC, cv."lastActivityAt" DESC NULLS LAST
@@ -310,6 +329,9 @@ class KanbanBoardRepository {
       lastMessageAt: toDate(row.lastMessageAt),
       conversationId:
         row.conversationId === null ? null : String(row.conversationId),
+      conversationLastActivityAt: toDate(row.conversationLastActivityAt),
+      phoneNumber: row.phoneNumber,
+      statusUpdatedAt: toDate(row.statusUpdatedAt),
       currentFlowId:
         row.currentFlowId === null ? null : String(row.currentFlowId),
       currentNodeId: row.currentNodeId,
@@ -340,6 +362,72 @@ class KanbanBoardRepository {
           inArray(contactCustomFieldModel.contactId, contactIds),
         ),
       )
+  }
+
+  /** Live tags of the given contacts (card chips), by tag name. */
+  async listCardTags(input: {
+    workspaceId: string
+    contactIds: string[]
+    tx?: DatabaseClient
+  }): Promise<{ contactId: string; id: string; name: string }[]> {
+    const { workspaceId, contactIds, tx = db } = input
+    if (contactIds.length === 0) {
+      return []
+    }
+    const result = await tx.execute<{
+      contactId: string | number
+      id: string | number
+      name: string
+    }>(sql`
+      SELECT ctt."contactId", t."id", t."name"
+      FROM "ContactToTag" ctt
+      JOIN "Tag" t ON t."id" = ctt."tagId"
+      WHERE ctt."contactId" IN (${sql.join(
+        contactIds.map((id) => sql`${id}`),
+        sql`, `,
+      )})
+        AND t."workspaceId" = ${workspaceId}
+        AND t."deletedAt" IS NULL
+      ORDER BY t."name"
+    `)
+    return result.rows.map((row) => ({
+      contactId: String(row.contactId),
+      id: String(row.id),
+      name: row.name,
+    }))
+  }
+
+  /** Lead magnets the given contacts received (hold the live tag of). */
+  async listCardLeadMagnets(input: {
+    workspaceId: string
+    contactIds: string[]
+    tx?: DatabaseClient
+  }): Promise<{ contactId: string; id: string; name: string }[]> {
+    const { workspaceId, contactIds, tx = db } = input
+    if (contactIds.length === 0) {
+      return []
+    }
+    const result = await tx.execute<{
+      contactId: string | number
+      id: string | number
+      name: string
+    }>(sql`
+      SELECT ctt."contactId", lm."id", lm."name"
+      FROM "LeadMagnet" lm
+      JOIN "Tag" t ON t."id" = lm."tagId" AND t."deletedAt" IS NULL
+      JOIN "ContactToTag" ctt ON ctt."tagId" = lm."tagId"
+      WHERE lm."workspaceId" = ${workspaceId}
+        AND ctt."contactId" IN (${sql.join(
+          contactIds.map((id) => sql`${id}`),
+          sql`, `,
+        )})
+      ORDER BY ctt."createdAt" DESC NULLS LAST, lm."name"
+    `)
+    return result.rows.map((row) => ({
+      contactId: String(row.contactId),
+      id: String(row.id),
+      name: row.name,
+    }))
   }
 
   /** Number of contacts per bucket (`null` = the "no status" column). */

@@ -124,6 +124,7 @@ export const kanbanAuthenticatedAPI = {
         boardId,
         ...filters,
         accessScope,
+        canViewPhone: accessScope.canViewEmailAndPhone,
       })
     }),
 

@@ -1,4 +1,5 @@
 import {
+  kanbanCardPropertySchema,
   kanbanStageOutcomes,
   kanbanStageSchema,
 } from "@chatbotx.io/database/partials"
@@ -11,11 +12,36 @@ export const kanbanBoardResource = z.object({
   customFieldId: z.string(),
   flowId: z.string().nullable(),
   stages: z.array(kanbanStageSchema),
+  /** `null` = the default card (see `resolveKanbanCardProperties`). */
+  cardProperties: z.array(kanbanCardPropertySchema).nullish(),
   createdAt: z.date(),
   updatedAt: z.date(),
 })
 
 export type KanbanBoardResource = z.infer<typeof kanbanBoardResource>
+
+const namedItem = z.object({ id: z.string(), name: z.string() })
+
+/** Data for the board's card properties; only the configured ones are set. */
+export const kanbanCardPropertiesDataResource = z.object({
+  customFields: z.record(z.string(), z.string()).optional(),
+  tags: z.array(namedItem).optional(),
+  leadMagnets: z.array(namedItem).optional(),
+  phone: z.string().nullish(),
+  lastMessage: z
+    .object({
+      text: z.string().nullable(),
+      messageType: z.string(),
+      attachmentCount: z.number(),
+      createdAt: z.coerce.date(),
+    })
+    .nullish(),
+  stageSince: z.coerce.date().nullish(),
+})
+
+export type KanbanCardPropertiesData = z.infer<
+  typeof kanbanCardPropertiesDataResource
+>
 
 export const kanbanCardResource = z.object({
   contactId: z.string(),
@@ -25,6 +51,7 @@ export const kanbanCardResource = z.object({
   lastMessageAt: z.date().nullable(),
   conversationId: z.string().nullable(),
   currentFlowStep: currentFlowStepResource.nullable().optional(),
+  properties: kanbanCardPropertiesDataResource.optional(),
 })
 
 export type KanbanCardResource = z.infer<typeof kanbanCardResource>

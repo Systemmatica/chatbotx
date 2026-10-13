@@ -7,13 +7,14 @@ import { useDroppable } from "@dnd-kit/core"
 import { Loader2Icon } from "lucide-react"
 import { useTranslations } from "next-intl"
 import type { KanbanColumnResource } from "../schemas/resource"
-import { KanbanCard } from "./kanban-card"
+import { KanbanCard, type KanbanCardDisplay } from "./kanban-card"
 
 type KanbanColumnProps = {
   column: KanbanColumnResource
   /** Contact open in the side peek. */
   activeContactId?: string | null
   onOpenCard: (contactId: string) => void
+  display: KanbanCardDisplay
   loadingMore: boolean
   onLoadMore: (columnId: string) => void
 }
@@ -22,6 +23,7 @@ export function KanbanColumn({
   column,
   activeContactId,
   onOpenCard,
+  display,
   loadingMore,
   onLoadMore,
 }: KanbanColumnProps) {
@@ -79,6 +81,7 @@ export function KanbanColumn({
             <KanbanCard
               active={card.contactId === activeContactId}
               card={card}
+              display={display}
               key={card.contactId}
               onOpen={onOpenCard}
             />

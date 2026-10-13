@@ -1,5 +1,6 @@
 "use client"
 
+import { resolveKanbanCardProperties } from "@chatbotx.io/database/partials"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -47,6 +48,7 @@ import { toast } from "sonner"
 import { ContactPeek } from "@/features/contacts/components/contact-peek"
 import { useContactPeek } from "@/features/contacts/hooks/use-contact-peek"
 import { uniqueInOrder } from "@/features/contacts/lib/peek-navigation"
+import { useCustomFieldStore } from "@/features/custom-fields/provider/custom-field-store-context"
 import { flowChatsHref } from "@/features/flows/components/flow-hub-tabs"
 import { useTagSelectOptions } from "@/features/tags/provider/tag-hook"
 import { client } from "@/lib/orpc/orpc"
@@ -63,7 +65,7 @@ import type {
   KanbanColumnResource,
 } from "../schemas/resource"
 import { KanbanBoardDialog } from "./kanban-board-dialog"
-import { KanbanCard } from "./kanban-card"
+import { KanbanCard, type KanbanCardDisplay } from "./kanban-card"
 import { KanbanColumn } from "./kanban-column"
 
 const CARDS_PER_COLUMN = 50
@@ -129,6 +131,19 @@ export function KanbanView({
   const selectedBoard = useMemo(
     () => boards.find((board) => board.id === selectedBoardId) ?? null,
     [boards, selectedBoardId],
+  )
+  const customFields = useCustomFieldStore((state) => state.customFields)
+  const cardDisplay = useMemo<KanbanCardDisplay>(
+    () => ({
+      properties: resolveKanbanCardProperties(selectedBoard?.cardProperties),
+      customFieldsById: new Map(
+        customFields.map((field) => [
+          field.id,
+          { id: field.id, name: field.name, type: field.type },
+        ]),
+      ),
+    }),
+    [selectedBoard?.cardProperties, customFields],
   )
 
   const applySearch = useDebouncedCallback((value: string) => {
@@ -541,6 +556,7 @@ export function KanbanView({
                 <KanbanColumn
                   activeContactId={peekContactId}
                   column={column}
+                  display={cardDisplay}
                   key={column.id}
                   loadingMore={loadingMoreColumnId === column.id}
                   onLoadMore={handleLoadMore}
@@ -549,7 +565,9 @@ export function KanbanView({
               ))}
             </div>
             <DragOverlay>
-              {activeCard ? <KanbanCard card={activeCard} overlay /> : null}
+              {activeCard ? (
+                <KanbanCard card={activeCard} display={cardDisplay} overlay />
+              ) : null}
             </DragOverlay>
           </DndContext>
         </>

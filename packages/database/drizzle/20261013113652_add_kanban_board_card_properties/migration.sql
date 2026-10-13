@@ -1,0 +1,1 @@
+ALTER TABLE "KanbanBoard" ADD COLUMN "cardProperties" jsonb;

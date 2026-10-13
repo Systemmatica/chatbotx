@@ -3910,7 +3910,24 @@
     "loadFailed": "Could not load boards.",
     "loadTimedOut": "The server is taking too long to respond.",
     "retry": "Retry",
-    "openContact": "Open the contact card"
+    "openContact": "Open the contact card",
+    "cardProperties": {
+      "title": "Card properties",
+      "description": "Pick what each card shows under the name and drag to reorder. Fields with no value are skipped.",
+      "add": "Add a property",
+      "deletedField": "Deleted field",
+      "you": "You",
+      "inStageSince": "In this stage since {time}",
+      "types": {
+        "lastActivity": "Last message time",
+        "currentStep": "Step in the flow",
+        "lastMessage": "Last message",
+        "timeInStage": "Time in stage",
+        "phone": "Phone",
+        "tags": "Tags",
+        "leadMagnets": "Lead magnets"
+      }
+    }
   },
   "currentStep": {
     "title": "Current step",
