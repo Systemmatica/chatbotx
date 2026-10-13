@@ -56,6 +56,12 @@ export type ChatState = {
 
   // active facebook post (for comment conversations)
   activePost: PostDetails | null
+
+  /**
+   * Last realtime "tags changed" signal. `seq` grows on every signal so the
+   * same contact changing twice still re-triggers subscribers.
+   */
+  contactTagsChange: { contactId: string; seq: number } | null
 }
 
 export type ChatActions = {
@@ -120,6 +126,7 @@ export type ChatActions = {
 
   // Contact actions
   updateContact: (contactId: string, data: Partial<ContactResource>) => void
+  notifyContactTagsChanged: (contactId: string) => void
 }
 
 export type ChatStore = ChatState & ChatActions
@@ -171,6 +178,7 @@ export const createChatStore = (initialFilters: ConversationFilters = {}) => {
     hasNextMessagePage: true,
     replyToMessage: null,
     activePost: null,
+    contactTagsChange: null,
 
     prependConversation: (newConversation: ListConversationItemResource) =>
       set((state) => ({
@@ -761,6 +769,14 @@ export const createChatStore = (initialFilters: ConversationFilters = {}) => {
         set({ activePost: null })
       }
     },
+
+    notifyContactTagsChanged: (contactId: string) =>
+      set((state) => ({
+        contactTagsChange: {
+          contactId,
+          seq: (state.contactTagsChange?.seq ?? 0) + 1,
+        },
+      })),
 
     updateContact: (contactId: string, data: Partial<ContactResource>) => {
       const { conversations } = get()

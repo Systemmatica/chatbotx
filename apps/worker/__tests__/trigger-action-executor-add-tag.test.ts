@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => ({
   enqueueTagAppliedEvaluations: vi.fn(),
   enqueueLeadEvent: vi.fn(),
   buildLeadSourceKey: vi.fn(),
+  publishContactTagsChanged: vi.fn(),
 }))
 
 vi.mock("@chatbotx.io/database/client", () => ({
@@ -48,6 +49,8 @@ vi.mock("@chatbotx.io/database/schema", () => ({
 vi.mock("@chatbotx.io/business", () => ({
   contactCustomFieldService: {},
   conversationService: {},
+  publishContactTagsChanged: (...args: unknown[]) =>
+    mocks.publishContactTagsChanged(...args),
   tagSyncService: {
     enqueueAttach: (...args: unknown[]) => mocks.enqueueAttach(...args),
   },
@@ -126,6 +129,11 @@ describe("ActionExecutor addTag", () => {
       workspaceId: "ws-1",
       contactId: "contact-1",
       tagId: "tag-1",
+    })
+    expect(mocks.publishContactTagsChanged).toHaveBeenCalledWith({
+      workspaceId: "ws-1",
+      contactId: "contact-1",
+      tagIds: ["tag-1"],
     })
   })
 

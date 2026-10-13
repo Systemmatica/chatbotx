@@ -8,6 +8,7 @@ export const RealtimeEventType = {
   contactBlocked: "contactBlocked",
   contactUnblocked: "contactUnblocked",
   conversationAssigned: "conversationAssigned",
+  contactTagsChanged: "contactTagsChanged",
   notifyExportResult: "notifyExportResult",
 } as const
 
@@ -81,6 +82,18 @@ export type RealtimeEventConversationAssigned = {
   }
 }
 
+/**
+ * Tags were attached to or detached from a contact outside the builder UI
+ * (flow step, trigger, API). Open contact panels refetch tag-derived data.
+ */
+export type RealtimeEventContactTagsChanged = {
+  eventType: typeof RealtimeEventType.contactTagsChanged
+  data: {
+    contactId: string
+    tagIds: string[]
+  }
+}
+
 export type RealtimeEventNotifyExportResult = {
   eventType: typeof RealtimeEventType.notifyExportResult
   data: {
@@ -98,4 +111,5 @@ export type RealtimeEventData =
   | RealtimeEventMessageFailed
   | RealtimeEventContactCommon
   | RealtimeEventConversationAssigned
+  | RealtimeEventContactTagsChanged
   | RealtimeEventTyping
