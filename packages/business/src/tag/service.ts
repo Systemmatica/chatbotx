@@ -9,6 +9,7 @@ import {
   notExists,
   sql,
 } from "@chatbotx.io/database/client"
+import { labelColorForName } from "@chatbotx.io/database/partials"
 import {
   contactInboxModel,
   contactModel,
@@ -137,6 +138,7 @@ class TagService extends BaseService {
         uniqueNames.map((name) => ({
           id: createId(),
           name,
+          color: labelColorForName(name),
           workspaceId,
         })),
       )

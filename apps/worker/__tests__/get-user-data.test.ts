@@ -32,6 +32,15 @@ const conversationUpdateChallenge = vi.fn(async () => undefined)
 const conversationConsumeChallenge = vi.fn(async () => true)
 const conversationRestoreChallengeIfAbsent = vi.fn(async () => true)
 const workspaceFindById = vi.fn(async () => ({ language: "en" }))
+const customFieldFindByKey = vi.fn(
+  async (): Promise<
+    | {
+        type: string
+        options: { id: string; label: string; color: string }[] | null
+      }
+    | undefined
+  > => undefined,
+)
 const resolveTenantSettings = vi.fn(async () => ({
   storageUrl: "https://cdn.example.com/",
   appUrl: "https://app.example.com",
@@ -42,6 +51,7 @@ vi.mock("@chatbotx.io/business", () => ({
     setValueByKey: contactCustomFieldSetValueByKey,
   },
   contactInboxService: { updateTracking: contactInboxUpdateTracking },
+  customFieldService: { findByKey: customFieldFindByKey },
   conversationService: {
     updateChallenge: conversationUpdateChallenge,
     consumeChallenge: conversationConsumeChallenge,
@@ -371,6 +381,57 @@ describe("getUserData — validation logic", () => {
       lastMessage.current = makeIncomingMessage({ text: "anything goes" })
       const result = await getUserData(makeProps(ReplyFormat.text))
       expect(result.status).toBe("success")
+    })
+  })
+
+  describe("select output field", () => {
+    const selectField = (type: "select" | "multiSelect") => ({
+      type,
+      options: [
+        { id: "1", label: "Hot", color: "red" },
+        { id: "2", label: "Cold", color: "blue" },
+      ],
+    })
+
+    beforeEach(() => {
+      contactCustomFieldSetValueByKey.mockClear()
+      customFieldFindByKey.mockReset()
+      customFieldFindByKey.mockResolvedValue(undefined)
+    })
+
+    test("answer matching an option → success, stored as the option label", async () => {
+      customFieldFindByKey.mockResolvedValue(selectField("select"))
+      lastMessage.current = makeIncomingMessage({ text: " hot " })
+      const result = await getUserData(makeProps(ReplyFormat.text))
+      expect(result.status).toBe("success")
+      expectCustomFieldWrite("Hot")
+    })
+
+    test("answer matching no option → retry, nothing stored", async () => {
+      customFieldFindByKey.mockResolvedValue(selectField("select"))
+      lastMessage.current = makeIncomingMessage({ text: "warm" })
+      const result = await getUserData(makeProps(ReplyFormat.text))
+      expect(result.status).toBe("retry")
+      expect(contactCustomFieldSetValueByKey).not.toHaveBeenCalled()
+    })
+
+    test("multi-select answer with comma-separated options → canonical labels", async () => {
+      customFieldFindByKey.mockResolvedValue(selectField("multiSelect"))
+      lastMessage.current = makeIncomingMessage({ text: "cold, HOT" })
+      const result = await getUserData(makeProps(ReplyFormat.text))
+      expect(result.status).toBe("success")
+      expectCustomFieldWrite("Cold, Hot")
+    })
+
+    test("non-select output field keeps the raw answer", async () => {
+      customFieldFindByKey.mockResolvedValue({
+        type: "shortText",
+        options: null,
+      })
+      lastMessage.current = makeIncomingMessage({ text: "warm" })
+      const result = await getUserData(makeProps(ReplyFormat.text))
+      expect(result.status).toBe("success")
+      expectCustomFieldWrite("warm")
     })
   })
 

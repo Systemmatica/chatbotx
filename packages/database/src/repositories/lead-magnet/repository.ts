@@ -8,6 +8,7 @@ import {
   type SQL,
   sql,
 } from "../../client"
+import { labelColorForName } from "../../partials/label-color"
 import type { LeadMagnetKind } from "../../partials/lead-magnet"
 import {
   contactsToTagsModel,
@@ -20,6 +21,8 @@ import type { LeadMagnetModel } from "../../types"
 export type LeadMagnetWithStats = LeadMagnetModel & {
   /** Name of the live tag, `null` when the tag was deleted. */
   tagName: string | null
+  /** Palette token of the live tag (`null` = derive from the name). */
+  tagColor: string | null
   /** Contacts that hold the lead magnet's tag. */
   recipients: number
 }
@@ -70,6 +73,7 @@ class LeadMagnetRepository {
         tagId: leadMagnetModel.tagId,
         workspaceId: leadMagnetModel.workspaceId,
         tagName: tagModel.name,
+        tagColor: tagModel.color,
         recipients: sql<number>`COALESCE(${recipientsExpression(
           restrictToAssignedUserId,
         )}, 0)`.mapWith(Number),
@@ -239,7 +243,7 @@ class LeadMagnetRepository {
     const { workspaceId, name, folderId, tx = db } = input
     const [inserted] = await tx
       .insert(tagModel)
-      .values({ workspaceId, name, folderId })
+      .values({ workspaceId, name, folderId, color: labelColorForName(name) })
       .onConflictDoNothing({
         target: [tagModel.workspaceId, tagModel.name],
         where: isNull(tagModel.deletedAt),

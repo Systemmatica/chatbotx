@@ -4,7 +4,10 @@ import {
   db,
   eq,
   inArray,
+  type SQL,
+  sql,
 } from "@chatbotx.io/database/client"
+import { isSelectCustomFieldType } from "@chatbotx.io/database/partials"
 import { contactCustomFieldModel } from "@chatbotx.io/database/schema"
 import { emitCustomFieldChanged } from "@chatbotx.io/events"
 import { createId, isNumericId } from "@chatbotx.io/utils"
@@ -179,7 +182,7 @@ class ContactCustomFieldService extends BaseService {
 
     const customFields = await client.query.customFieldModel.findMany({
       where: { workspaceId, id: { in: customFieldIds } },
-      columns: { id: true, name: true, type: true },
+      columns: { id: true, name: true, type: true, options: true },
     })
 
     if (customFields.length === 0) {
@@ -210,14 +213,26 @@ class ContactCustomFieldService extends BaseService {
         const normalizedValue = await normalizeCustomFieldValueForStorage({
           type: customField.type,
           value: field.value,
+          options: customField.options,
           resolveSourceTimezone,
           explicitTimezone: sourceTimezone,
           temporalInputParsing,
           fillEmptyTemporalWithNow,
         })
-        // Un-normalizable temporal value: skip rather than persist garbage.
+        // Un-normalizable temporal value or a value that is not an option of
+        // a select field: skip rather than persist garbage.
         if (normalizedValue === null) {
-          if (temporalInputParsing === TemporalInputParsing.Lenient) {
+          if (isSelectCustomFieldType(customField.type)) {
+            logger.warn(
+              {
+                workspaceId,
+                contactId,
+                customFieldId: customField.id,
+                type: customField.type,
+              },
+              "Skipped a select custom-field value that matches no option",
+            )
+          } else if (temporalInputParsing === TemporalInputParsing.Lenient) {
             logger.warn(
               {
                 workspaceId,
@@ -390,6 +405,63 @@ class ContactCustomFieldService extends BaseService {
     // single-contact clear (deleteByKey / flow-step clearContactCustomField) is
     // the only delete that emits. Cache is invalidated in one batched call.
     await this.invalidateCacheTags(contactCacheTags(workspaceId, contactIds))
+  }
+
+  /**
+   * Rewrites stored values after select / multiSelect options were renamed so
+   * contacts keep their choice. All renames run as ONE statement through an
+   * index lookup (`from[i] -> to[i]`), so swapping two labels cannot cascade.
+   * Event-free like the other bulk writes; affected contacts' caches are
+   * invalidated in one batched call.
+   */
+  async renameSelectOptionValues(input: {
+    workspaceId: string
+    customFieldId: string
+    type: string
+    renames: { from: string; to: string }[]
+    tx?: DatabaseClient
+  }): Promise<void> {
+    const { workspaceId, customFieldId, type, renames, tx = db } = input
+    if (renames.length === 0 || !isSelectCustomFieldType(type)) {
+      return
+    }
+
+    const toArray = (values: string[]) =>
+      sql`ARRAY[${sql.join(
+        values.map((value) => sql`${value}`),
+        sql`, `,
+      )}]::text[]`
+    const from = toArray(renames.map((rename) => rename.from))
+    const to = toArray(renames.map((rename) => rename.to))
+    const column = contactCustomFieldModel.value
+    const renamePart = (part: SQL) =>
+      sql`COALESCE((${to})[array_position(${from}, ${part})], ${part})`
+
+    const nextValue =
+      type === "select"
+        ? renamePart(sql`${column}`)
+        : sql`(SELECT string_agg(${renamePart(sql`btrim(part)`)}, ', ' ORDER BY ord) FROM unnest(string_to_array(${column}, ',')) WITH ORDINALITY AS parts(part, ord) WHERE btrim(part) <> '')`
+    const matches =
+      type === "select"
+        ? sql`${column} = ANY(${from})`
+        : sql`EXISTS (SELECT 1 FROM unnest(string_to_array(${column}, ',')) AS parts(part) WHERE btrim(part) = ANY(${from}))`
+
+    const updated = await tx
+      .update(contactCustomFieldModel)
+      .set({ value: nextValue })
+      .where(
+        and(eq(contactCustomFieldModel.customFieldId, customFieldId), matches),
+      )
+      .returning({ contactId: contactCustomFieldModel.contactId })
+
+    if (updated.length > 0) {
+      await this.invalidateCacheTags(
+        contactCacheTags(
+          workspaceId,
+          updated.map((row) => row.contactId),
+        ),
+      )
+    }
   }
 
   async insertNormalizedValuesForNewContacts(

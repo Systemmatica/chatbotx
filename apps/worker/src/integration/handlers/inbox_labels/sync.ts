@@ -1,5 +1,6 @@
 import { tagSyncService } from "@chatbotx.io/business"
 import { and, db, eq, inArray, isNull } from "@chatbotx.io/database/client"
+import { labelColorForName } from "@chatbotx.io/database/partials"
 import {
   contactsToTagsModel,
   contactToTagChannelModel,
@@ -230,7 +231,12 @@ async function ensureTag(
 
   const [created] = await db
     .insert(tagModel)
-    .values({ id: createId(), workspaceId, name })
+    .values({
+      id: createId(),
+      workspaceId,
+      name,
+      color: labelColorForName(name),
+    })
     .onConflictDoNothing({
       // Tag_workspaceId_name_key is a partial unique index (deletedAt IS NULL).
       target: [tagModel.workspaceId, tagModel.name],

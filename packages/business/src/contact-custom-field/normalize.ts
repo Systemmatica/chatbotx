@@ -1,5 +1,10 @@
 import { type DatabaseClient, db } from "@chatbotx.io/database/client"
-import type { CustomFieldType } from "@chatbotx.io/database/partials"
+import {
+  type CustomFieldOption,
+  type CustomFieldType,
+  isSelectCustomFieldType,
+  normalizeSelectFieldValue,
+} from "@chatbotx.io/database/partials"
 import {
   currentTemporalLiteral,
   DEFAULT_FILTER_TIMEZONE,
@@ -134,6 +139,12 @@ const resolveTemporalSourceTimezone = async (input: {
 export const normalizeCustomFieldValueForStorage = async (input: {
   type: CustomFieldType
   value: string
+  /**
+   * Choices of a select / multiSelect field. A value that is not one of them
+   * normalizes to `null` (rejected), so flows, API calls and imports can only
+   * store option labels.
+   */
+  options?: readonly CustomFieldOption[] | null
   resolveSourceTimezone: SourceTimezoneResolver
   /**
    * Browser zone captured at form submit. Honored only by `date` (see
@@ -162,6 +173,10 @@ export const normalizeCustomFieldValueForStorage = async (input: {
     temporalInputParsing = TemporalInputParsing.Strict,
     fillEmptyTemporalWithNow = false,
   } = input
+
+  if (isSelectCustomFieldType(type)) {
+    return normalizeSelectFieldValue({ type, options: input.options, value })
+  }
 
   if (!isTemporalCustomFieldType(type)) {
     return value
