@@ -4,6 +4,7 @@
     "title": "QR-kod"
   },
   "actions": {
+    "toggleSidebar": "Toggle menu",
     "actions": "Åtgärder",
     "activate": "Aktivera",
     "add": "Lägg till",

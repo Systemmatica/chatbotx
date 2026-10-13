@@ -1,5 +1,6 @@
 {
   "actions": {
+    "toggleSidebar": "Toggle menu",
     "copy": "Sao chép",
     "copyUrl": "Sao chép URL",
     "actions": "Hành động",
