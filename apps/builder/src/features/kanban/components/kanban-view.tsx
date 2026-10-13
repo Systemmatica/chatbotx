@@ -437,6 +437,7 @@ export function KanbanView({
               {columns.map((column) => (
                 <KanbanColumn
                   column={column}
+                  flowId={flowId}
                   key={column.id}
                   loadingMore={loadingMoreColumnId === column.id}
                   onLoadMore={handleLoadMore}

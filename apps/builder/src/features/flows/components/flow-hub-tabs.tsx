@@ -15,16 +15,17 @@ import { useTranslations } from "next-intl"
 /**
  * The flow is the hub: its builder, funnel board, chats, analytics and
  * settings are tabs of one page. "Chats" is the inbox pre-filtered to contacts
- * currently in this flow.
+ * currently in this flow, rendered inside the hub.
  */
-export function flowChatsHref(workspaceId: string, flowId: string): string {
-  const filter = {
-    operator: "and",
-    conditions: [{ field: "currentFlow", operator: "eq", value: flowId }],
-  }
-  return `/space/${workspaceId}/inbox?contactFilter=${encodeURIComponent(
-    JSON.stringify(filter),
-  )}`
+export function flowChatsHref(
+  workspaceId: string,
+  flowId: string,
+  conversationId?: string | null,
+): string {
+  const href = `/space/${workspaceId}/flows/${flowId}/chats`
+  return conversationId
+    ? `${href}?conversationId=${encodeURIComponent(conversationId)}`
+    : href
 }
 
 export function FlowHubTabs({
@@ -58,7 +59,7 @@ export function FlowHubTabs({
       className={cn("flex items-center gap-1", className)}
     >
       {tabs.map((tab) => {
-        const active = tab.id !== "chats" && pathname === tab.href
+        const active = pathname === tab.href
         const Icon = tab.icon
         return (
           <Link

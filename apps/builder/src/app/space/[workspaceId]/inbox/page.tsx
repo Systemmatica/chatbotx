@@ -1,29 +1,15 @@
 import { getIdFromParams } from "@chatbotx.io/utils"
-import { cookies } from "next/headers"
 import { notFound } from "next/navigation"
-import { ChatLayout } from "@/features/chat/chat-layout"
-import { ChatStoreProvider } from "@/features/chat/store/chat-store-provider"
+import { InboxScreen } from "@/features/chat/inbox-screen"
 import { contactFilterCriteriaSchema } from "@/features/contact-filter/schemas"
-import { canViewContactEmailAndPhone } from "@/features/contacts/permissions"
-import { CustomFieldStoreProvider } from "@/features/custom-fields/provider/custom-field-store-context"
-import { FlowStoreProvider } from "@/features/flows/provider/flow-store-context"
-import { InboxStoreProvider } from "@/features/inboxes/provider/inbox-store-context"
-import { SavedReplyStoreProvider } from "@/features/saved-replies/provider/saved-reply-store-context"
-import { SequenceStoreProvider } from "@/features/sequences/provider/sequence-store-context"
-import { TagStoreProvider } from "@/features/tags/provider/tag-store-context"
-import { UserStoreProvider } from "@/features/users/provider/user-store-context"
 import { requireContactsAccess } from "@/lib/auth/require-workspace-permission"
-import { getCurrentUserAndTargetWorkspace } from "@/lib/auth/utils"
 
 type InboxPageProps = {
   params: Promise<{ workspaceId: string }>
   searchParams?: Promise<{ contactFilter?: string | string[] }>
 }
 
-/**
- * `?contactFilter=<json>` presets the conversation filter — the flow page's
- * "Chats" tab links here with "current flow is <flow>".
- */
+/** `?contactFilter=<json>` presets the conversation filter. */
 const parseContactFilter = (raw: string | string[] | undefined) => {
   if (typeof raw !== "string") {
     return
@@ -47,48 +33,16 @@ export default async function InboxPage({
 
   await requireContactsAccess(workspaceId)
 
-  const layout = (await cookies()).get("csm:layout:inbox")
-  const savedLayout = layout ? JSON.parse(layout.value) : [25, 50, 25]
-  const userAndWorkspace = await getCurrentUserAndTargetWorkspace(workspaceId)
-  if (!userAndWorkspace) {
-    return notFound()
-  }
-  const canViewEmailAndPhone = canViewContactEmailAndPhone(
-    userAndWorkspace.targetWorkspaceMember.permissions,
-  )
-
   return (
     <div className="-m-6">
-      <ChatStoreProvider
+      <InboxScreen
         initialFilters={{
           contactFilter: parseContactFilter(
             (await searchParams)?.contactFilter,
           ),
         }}
-      >
-        <InboxStoreProvider workspaceId={workspaceId}>
-          <UserStoreProvider workspaceId={workspaceId}>
-            <CustomFieldStoreProvider workspaceId={workspaceId}>
-              <SavedReplyStoreProvider
-                autoInitialize={false}
-                workspaceId={workspaceId}
-              >
-                <TagStoreProvider workspaceId={workspaceId}>
-                  <SequenceStoreProvider workspaceId={workspaceId}>
-                    <FlowStoreProvider workspaceId={workspaceId}>
-                      <ChatLayout
-                        canViewEmailAndPhone={canViewEmailAndPhone}
-                        layout={savedLayout}
-                        workspaceId={workspaceId}
-                      />
-                    </FlowStoreProvider>
-                  </SequenceStoreProvider>
-                </TagStoreProvider>
-              </SavedReplyStoreProvider>
-            </CustomFieldStoreProvider>
-          </UserStoreProvider>
-        </InboxStoreProvider>
-      </ChatStoreProvider>
+        workspaceId={workspaceId}
+      />
     </div>
   )
 }

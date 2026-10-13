@@ -7,6 +7,7 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@chatbotx.io/ui/components/ui/resizable"
+import { cn } from "@chatbotx.io/ui/lib/utils"
 import {
   BotIcon,
   Loader2Icon,
@@ -35,6 +36,11 @@ type ChatLayoutProps = {
   canViewEmailAndPhone?: boolean
   workspaceId: string
   layout?: [number, number, number]
+  /**
+   * Fill the parent's height instead of the viewport — for pages that put
+   * their own header above the inbox (the flow hub's "Chats" tab).
+   */
+  fillParent?: boolean
 }
 
 export const ChatLayout = (props: ChatLayoutProps) => {
@@ -43,6 +49,7 @@ export const ChatLayout = (props: ChatLayoutProps) => {
     canViewEmailAndPhone = true,
     workspaceId,
     layout = [25, 50, 25],
+    fillParent = false,
   } = props
 
   const {
@@ -167,7 +174,10 @@ export const ChatLayout = (props: ChatLayoutProps) => {
 
       {/* CONTACT DETAIL */}
       <ResizablePanel
-        className="overflow-y-auto! h-screen px-4 py-3"
+        className={cn(
+          "overflow-y-auto! px-4 py-3",
+          fillParent ? "h-full" : "h-screen",
+        )}
         defaultSize={`${layout[2] ?? 25}%`}
         maxSize={"30%"}
         minSize={"20%"}

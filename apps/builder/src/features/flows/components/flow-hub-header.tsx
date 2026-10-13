@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl"
 import { AppBreadcrumb } from "@/components/app-breadcrumb"
 import { FlowHubTabs } from "./flow-hub-tabs"
 
-/** Header of the flow hub pages that have no canvas (board, settings). */
+/** Header of the flow hub pages that have no canvas (board, chats, settings). */
 export function FlowHubHeader({
   workspaceId,
   flowId,
@@ -15,7 +15,7 @@ export function FlowHubHeader({
   flowId: string
   flowName: string
   /** Translation key of the current tab under `flowHub`. */
-  section: "kanban" | "settings"
+  section: "kanban" | "chats" | "settings"
 }) {
   const t = useTranslations()
 
