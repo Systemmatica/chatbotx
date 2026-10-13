@@ -26,6 +26,10 @@ export const leadMagnetIdRequest = withWorkspaceIdSchema.and(
 
 export const listLeadMagnetsRequest = withWorkspaceIdSchema
 
+export const listContactLeadMagnetsRequest = withWorkspaceIdSchema.and(
+  z.object({ contactId: zodBigintAsString() }),
+)
+
 export const createLeadMagnetRequest = withWorkspaceIdSchema.and(
   z.object({
     name: leadMagnetName,

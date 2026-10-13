@@ -7,7 +7,7 @@ import {
   AccordionTrigger,
 } from "@chatbotx.io/ui/components/ui/accordion"
 import { useTranslations } from "next-intl"
-import { useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { client } from "@/lib/orpc/orpc"
 import type { ContactAppointmentResource } from "../appointments/schemas/resource"
 import { useChatStore } from "../chat/store/chat-store-provider"
@@ -15,6 +15,8 @@ import { ContactNotesManage } from "../contact-notes/contact-notes-manage"
 import type { ContactOnSequenceWithRelations } from "../contact-sequences/schema"
 import UpdateContactSequenceField from "../contact-sequences/update-contact-sequence-field"
 import { CurrentStepBlock } from "../flow-steps/components/current-step-block"
+import { ContactLeadMagnets } from "../lead-magnets/components/contact-lead-magnets"
+import type { ReceivedLeadMagnetResource } from "../lead-magnets/schemas/resource"
 import { SequenceStoreProvider } from "../sequences/provider/sequence-store-context"
 import type { TagResource } from "../tags/schema/resource"
 import { ContactAppointmentsList } from "./components/contact-appointments-list"
@@ -53,6 +55,28 @@ export const ContactInboxPanel = ({
   const [appointments, setAppointments] = useState<
     ContactAppointmentResource[]
   >([])
+  const [receivedLeadMagnets, setReceivedLeadMagnets] = useState<
+    ReceivedLeadMagnetResource[]
+  >([])
+
+  // A lead magnet is received through its tag, so this also runs after the
+  // contact's tags change. Responses for a contact no longer shown are dropped.
+  const leadMagnetsContactIdRef = useRef<string | null>(null)
+  const loadLeadMagnets = useCallback(
+    (contactId: string) => {
+      leadMagnetsContactIdRef.current = contactId
+      const apply = (data: ReceivedLeadMagnetResource[]) => {
+        if (leadMagnetsContactIdRef.current === contactId) {
+          setReceivedLeadMagnets(data)
+        }
+      }
+      client.leadMagnetsAPI
+        .listContactLeadMagnetsAPI({ workspaceId, contactId })
+        .then(({ data }) => apply(data))
+        .catch(() => apply([]))
+    },
+    [workspaceId],
+  )
 
   useEffect(() => {
     const contactId = storeContact?.id
@@ -61,6 +85,8 @@ export const ContactInboxPanel = ({
       setContactData(null)
       setCoupons([])
       setAppointments([])
+      leadMagnetsContactIdRef.current = null
+      setReceivedLeadMagnets([])
       return
     }
 
@@ -68,6 +94,8 @@ export const ContactInboxPanel = ({
       setContactData(null)
       setCoupons([])
       setAppointments([])
+      leadMagnetsContactIdRef.current = null
+      setReceivedLeadMagnets([])
       return
     }
 
@@ -89,7 +117,9 @@ export const ContactInboxPanel = ({
       .listContactAppointmentsAPI({ workspaceId, contactId })
       .then(setAppointments)
       .catch(() => setAppointments([]))
-  }, [activeConversationId, storeContact?.id, workspaceId])
+
+    loadLeadMagnets(contactId)
+  }, [activeConversationId, storeContact?.id, workspaceId, loadLeadMagnets])
 
   const accordionModules: AccordionModule[] = useMemo(() => {
     if (!contactData) {
@@ -132,6 +162,7 @@ export const ContactInboxPanel = ({
             contact={contactData}
             onSuccess={(updatedTags: TagResource[]) => {
               setContactData({ ...contactData, tags: updatedTags })
+              loadLeadMagnets(contactData.id)
             }}
             tags={contactData.tags}
             workspaceId={workspaceId}
@@ -162,7 +193,7 @@ export const ContactInboxPanel = ({
         ),
       },
     ]
-  }, [contactData, workspaceId, t, coupons, appointments])
+  }, [contactData, workspaceId, t, coupons, appointments, loadLeadMagnets])
 
   if (!storeContact) {
     return null
@@ -181,6 +212,8 @@ export const ContactInboxPanel = ({
           workspaceId={workspaceId}
         />
       ) : null}
+
+      <ContactLeadMagnets leadMagnets={receivedLeadMagnets} />
 
       <ContactNotesManage contactNotes={contactData?.contactNotes ?? []} />
 

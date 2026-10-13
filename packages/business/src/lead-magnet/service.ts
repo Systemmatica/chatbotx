@@ -11,6 +11,7 @@ import {
 import {
   type LeadMagnetWithStats,
   leadMagnetRepository,
+  type ReceivedLeadMagnet,
 } from "@chatbotx.io/database/repositories"
 import type { LeadMagnetModel } from "@chatbotx.io/database/types"
 import { BaseService } from "../base.service"
@@ -63,6 +64,14 @@ class LeadMagnetService extends BaseService {
       workspaceId: input.workspaceId,
       restrictToAssignedUserId: input.accessScope?.restrictToAssignedUserId,
     })
+  }
+
+  /** Lead magnets the contact received (holds the tag of), newest first. */
+  async listReceivedByContact(input: {
+    workspaceId: string
+    contactId: string
+  }): Promise<ReceivedLeadMagnet[]> {
+    return await leadMagnetRepository.listReceivedByContact(input)
   }
 
   async findOrFail(input: {

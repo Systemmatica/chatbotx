@@ -28,3 +28,18 @@ export type LeadMagnetWithStatsResource = z.infer<
 export const listLeadMagnetsResponse = z.object({
   data: z.array(leadMagnetWithStatsResource),
 })
+
+export const receivedLeadMagnetResource = leadMagnetResource
+  .pick({ id: true, name: true, kind: true, url: true })
+  .extend({
+    /** When the contact got the tag; `null` when that date is unknown. */
+    receivedAt: z.date().nullable(),
+  })
+
+export type ReceivedLeadMagnetResource = z.infer<
+  typeof receivedLeadMagnetResource
+>
+
+export const listContactLeadMagnetsResponse = z.object({
+  data: z.array(receivedLeadMagnetResource),
+})

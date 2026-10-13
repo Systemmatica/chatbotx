@@ -1,0 +1,1 @@
+ALTER TABLE "ContactToTag" ADD COLUMN "createdAt" timestamp(6) with time zone;
