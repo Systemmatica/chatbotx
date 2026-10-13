@@ -9,6 +9,7 @@ import {
 import { act } from "react"
 import { createRoot, type Root } from "react-dom/client"
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest"
+import { NODE_CARD_CONTENT_WIDTH_CLASS } from "../../../nodes/node-dimensions"
 import SendCarouselStepViewer from "../viewer"
 
 const mocks = vi.hoisted(() => ({
@@ -104,7 +105,7 @@ describe("SendCarouselStepViewer", () => {
     }
   })
 
-  test("uses a fixed 256px card width without clipping or disabling interaction", () => {
+  test("uses the node content width per card without clipping or disabling interaction", () => {
     render(<SendCarouselStepViewer data={makeCarousel(3)} nodeId="node-1" />)
 
     const row = container.querySelector('[data-slot="send-carousel-cards"]')
@@ -113,7 +114,7 @@ describe("SendCarouselStepViewer", () => {
     for (const card of Array.from(
       container.querySelectorAll("[data-carousel-card-id]"),
     )) {
-      expect(card.className).toContain("w-64")
+      expect(card.className).toContain(NODE_CARD_CONTENT_WIDTH_CLASS)
       expect(card.className).toContain("shrink-0")
     }
   })

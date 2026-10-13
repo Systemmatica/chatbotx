@@ -5591,5 +5591,12 @@
       "badgeNoDate": "{kind} “{name}”",
       "unknownDate": "date received unknown"
     }
+  },
+  "flowCanvas": {
+    "autoLayout": "Auto-arrange",
+    "autoLayoutError": "Could not arrange the flow",
+    "nextStep": "Next step",
+    "createBlock": "Create block",
+    "createCondition": "Create condition"
   }
 }

@@ -1,4 +1,4 @@
-import type { NodeType } from "@chatbotx.io/flow-config"
+import type { FlowNode, NodeType } from "@chatbotx.io/flow-config"
 import { Button } from "@chatbotx.io/ui/components/ui/button"
 import {
   Popover,
@@ -9,6 +9,7 @@ import {
   ControlButton,
   type ReactFlowInstance,
   useReactFlow,
+  type XYPosition,
 } from "@xyflow/react"
 import { PlusIcon } from "lucide-react"
 import { useTranslations } from "next-intl"
@@ -36,35 +37,53 @@ export default function AddNodeButton() {
         }
       />
       <PopoverContent className="w-max max-w-xs p-2">
-        <div className="flex flex-col items-start">
-          {Object.values(allNodesConfig).map((it, idx) => {
-            const item = it?.(t)
-            return item ? (
-              <Button
-                className="w-full justify-start whitespace-nowrap"
-                key={item.type}
-                onClick={() => onClickAction(item.type)}
-                variant="ghost"
-              >
-                <item.icon />
-                {item.label}
-              </Button>
-            ) : (
-              // biome-ignore lint/suspicious/noArrayIndexKey: safe return
-              <div key={idx} />
-            )
-          })}
-        </div>
+        <NodeTypeMenu onSelect={onClickAction} />
       </PopoverContent>
     </Popover>
   )
 }
 
+/** Vertical list of every node type the canvas can create. */
+export function NodeTypeMenu({
+  onSelect,
+}: {
+  onSelect: (nodeType: NodeType) => void
+}) {
+  const t = useTranslations()
+
+  return (
+    <div className="flex flex-col items-start">
+      {Object.values(allNodesConfig).map((it, idx) => {
+        const item = it?.(t)
+        return item ? (
+          <Button
+            className="w-full justify-start whitespace-nowrap"
+            key={item.type}
+            onClick={() => onSelect(item.type)}
+            variant="ghost"
+          >
+            <item.icon />
+            {item.label}
+          </Button>
+        ) : (
+          // biome-ignore lint/suspicious/noArrayIndexKey: safe return
+          <div key={idx} />
+        )
+      })}
+    </div>
+  )
+}
+
+/**
+ * Adds a node of `nodeType` to the canvas and returns it. Without a `position`
+ * it lands near the top-right of the visible viewport.
+ */
 export function addNewNode(
   reactFlow: ReactFlowInstance,
   nodeType: NodeType,
   t: TranslationFn,
-): string | null {
+  options: { position?: XYPosition } = {},
+): FlowNode | null {
   const { addNodes, getNodes, screenToFlowPosition } = reactFlow
 
   const allNodes = getNodes()
@@ -85,15 +104,18 @@ export function addNewNode(
       name: `${targetNodeConfig.label} #${labelVersion}`,
     },
     nodeProps: {
-      position: screenToFlowPosition({
-        x: window.innerWidth - 400,
-        y: 100,
-      }),
+      position:
+        options.position ??
+        screenToFlowPosition({
+          x: window.innerWidth - 400,
+          y: 100,
+        }),
     },
   })
-  if (newNode) {
-    addNodes([newNode])
+  if (!newNode) {
+    return null
   }
+  addNodes([newNode])
 
-  return null
+  return newNode as FlowNode
 }

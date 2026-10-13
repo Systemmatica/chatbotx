@@ -5591,5 +5591,12 @@
       "badgeNoDate": "{kind} «{name}»",
       "unknownDate": "дата получения неизвестна"
     }
+  },
+  "flowCanvas": {
+    "autoLayout": "Выровнять схему",
+    "autoLayoutError": "Не удалось выровнять схему",
+    "nextStep": "Следующий шаг",
+    "createBlock": "Создать блок",
+    "createCondition": "Создать условие"
   }
 }

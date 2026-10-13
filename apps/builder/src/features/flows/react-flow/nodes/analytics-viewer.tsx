@@ -13,6 +13,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@chatbotx.io/ui/components/ui/card"
+import { cn } from "@chatbotx.io/ui/lib/utils"
 import { Position } from "@xyflow/react"
 import { useTranslations } from "next-intl"
 import { memo } from "react"
@@ -21,7 +22,9 @@ import type { SmartDelayNodeStats } from "../../analytics/smart-delay-node-stats
 import { DynamicStepViewer } from "../steps"
 import { ButtonStepViewer } from "../steps/button/viewer"
 import { FlowAnalyticsStoreProvider } from "../stores/flow-analytics-store-provider"
+import { NextStepHandleView } from "./next-step-handle"
 import { allNodesConfig } from "./node-config"
+import { NODE_CARD_WIDTH_CLASS } from "./node-dimensions"
 
 type NodeAnalyticsViewerProps = {
   id: string
@@ -185,7 +188,7 @@ export const NodeAnalyticsViewer = memo((props: NodeAnalyticsViewerProps) => {
         )}
       </div>
 
-      <Card className="w-72 gap-0 p-0">
+      <Card className={cn(NODE_CARD_WIDTH_CLASS, "gap-0 p-0")}>
         <CardHeader className="relative gap-2 p-4">
           <BaseHandle
             id={id}
@@ -236,11 +239,7 @@ export const NodeAnalyticsViewer = memo((props: NodeAnalyticsViewerProps) => {
               ))}
 
             {shouldShowDefaultContinue(type, data) && (
-              <div className="relative w-full text-right">
-                {/* React Flow keeps this connector on physical Position.Right. */}
-                <span className="mr-4">{t("actions.continue")}</span>
-                <BaseHandle id={id} position={Position.Right} type="source" />
-              </div>
+              <NextStepHandleView nodeId={id} />
             )}
           </CardContent>
         </FlowAnalyticsStoreProvider>
