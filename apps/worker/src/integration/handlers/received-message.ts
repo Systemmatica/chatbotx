@@ -85,6 +85,7 @@ import {
   integrationService,
   isInstagramViaFacebook,
 } from "../../services/integrations"
+import { scheduleProfileRefreshIfNeeded } from "./contact/profile-refresh"
 import { resolvePostbackButtonLabel, sanitizeFlowAction } from "./flow-action"
 
 type ContactInboxTracking = ContactInboxTrackingData
@@ -1089,6 +1090,16 @@ const buildExistingContactMatch = async (props: {
       )
     }
   }
+
+  // The profile (avatar/bio) is fetched only at contact creation; a contact
+  // left without a usable avatar gets one throttled background retry here.
+  await scheduleProfileRefreshIfNeeded({
+    channel: inbox.channel,
+    workspaceId: inbox.workspaceId,
+    contactInboxId: syncedContactInbox.id,
+    sourceId: syncedContactInbox.sourceId,
+    contact: syncedContact,
+  })
 
   const conversation = await conversationService.findOrCreate({
     workspaceId: inbox.workspaceId,
