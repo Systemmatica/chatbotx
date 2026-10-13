@@ -18,6 +18,8 @@ export const customFieldTypes = z.enum([
   "datetime",
   "boolean",
   "longText",
+  "select",
+  "multiSelect",
 ])
 export type CustomFieldType = z.infer<typeof customFieldTypes>
 

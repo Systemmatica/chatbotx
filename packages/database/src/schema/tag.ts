@@ -1,11 +1,13 @@
 import { isNull } from "drizzle-orm"
 import {
   index,
+  pgEnum,
   pgTable,
   text,
   timestamp,
   uniqueIndex,
 } from "drizzle-orm/pg-core"
+import { type LabelColor, labelColors } from "../partials/label-color"
 import {
   bigintAsString,
   sharedColumns,
@@ -14,11 +16,21 @@ import {
 import { folderModel } from "./folder"
 import { workspaceModel } from "./workspace"
 
+export const labelColor = pgEnum(
+  "labelColor",
+  labelColors.options as [string, ...string[]],
+)
+
 export const tagModel = pgTable(
   "Tag",
   {
     ...sharedColumns,
     name: text().notNull(),
+    /**
+     * Palette token; `null` renders the deterministic color of `name`
+     * (`resolveLabelColor`), so tags created without a color still look stable.
+     */
+    color: labelColor().$type<LabelColor>(),
     deletedAt: timestamp(timestampConfig),
     folderId: bigintAsString().references(() => folderModel.id, {
       onDelete: "set null",
