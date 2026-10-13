@@ -27,9 +27,17 @@ import { cn } from "@chatbotx.io/ui/lib/utils"
 import { createId } from "@chatbotx.io/utils"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useReactFlow } from "@xyflow/react"
-import { CopyIcon, MoveVerticalIcon, PlusIcon, XIcon } from "lucide-react"
+import { CopyIcon, GripVerticalIcon, PlusIcon, XIcon } from "lucide-react"
 import { useTranslations } from "next-intl"
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
+import {
+  type KeyboardEvent,
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react"
 import {
   type Control,
   useFieldArray,
@@ -48,6 +56,7 @@ import { useFlowTemplate } from "../stores/flow-template-store-provider"
 import { useStepStore } from "../stores/step-store-provider"
 import { useFlowHistory } from "../stores/use-flow-history"
 import { useWhatsappFlow } from "../stores/whatsapp-flow-store-provider"
+import { createUndoGuard, showUndoToast } from "../undo-toast"
 import { allNodesConfig } from "./node-config"
 import type { MenuItem } from "./types"
 
@@ -288,6 +297,23 @@ export const NodeEditor = memo((props: NodeEditorProps) => {
   })
 
   const editSnapshotTakenRef = useRef(false)
+  /**
+   * Bumped by every user edit and every step add/copy/move/remove. A step
+   * removal can only be undone from its toast while this has not moved on.
+   * `null` once the editor is gone (sheet closed, other block opened).
+   */
+  const stepsRevisionRef = useRef<number | null>(0)
+  const bumpStepsRevision = useCallback(() => {
+    if (stepsRevisionRef.current !== null) {
+      stepsRevisionRef.current += 1
+    }
+  }, [])
+  useEffect(() => {
+    stepsRevisionRef.current = 0
+    return () => {
+      stepsRevisionRef.current = null
+    }
+  }, [])
   const pushNodeDetailsToFlow = useCallbackRef(
     (values: FlowNode["data"]["details"]) => {
       const currentNode = getNode(nodeId)
@@ -321,6 +347,7 @@ export const NodeEditor = memo((props: NodeEditorProps) => {
       }
 
       if (type) {
+        bumpStepsRevision()
         releaseEditSnapshot()
       }
     })
@@ -328,7 +355,7 @@ export const NodeEditor = memo((props: NodeEditorProps) => {
     return () => {
       subscription.unsubscribe()
     }
-  }, [form, releaseEditSnapshot, takeSnapshot])
+  }, [bumpStepsRevision, form, releaseEditSnapshot, takeSnapshot])
 
   useEffect(
     () => () => {
@@ -368,10 +395,11 @@ export const NodeEditor = memo((props: NodeEditorProps) => {
         const newStep = allSteps[menuItem.stepType]?.defaultFn(menuItem.props)
         if (newStep) {
           appendStep(newStep)
+          bumpStepsRevision()
         }
       }
     },
-    [appendStep],
+    [appendStep, bumpStepsRevision],
   )
 
   const onCopyStep = useCallback(
@@ -380,16 +408,87 @@ export const NodeEditor = memo((props: NodeEditorProps) => {
       const values = getValues(`steps.${index}` as any)
       if (values) {
         insertStep(index + 1, replaceIds(values))
+        bumpStepsRevision()
       }
     },
-    [getValues, insertStep],
+    [bumpStepsRevision, getValues, insertStep],
+  )
+
+  /**
+   * Structural step changes are not "user typing" for the form watcher, so
+   * they record their own undo snapshot (after flushing pending edits to the
+   * canvas) and then go through the same field-array -> pushToFlow -> autosave
+   * path as every other edit.
+   */
+  const snapshotBeforeStructuralChange = useCallback(() => {
+    pushToFlow.flush()
+    takeSnapshot()
+  }, [pushToFlow, takeSnapshot])
+
+  const onMoveStep = useCallback(
+    (fromIndex: number, toIndex: number) => {
+      if (
+        fromIndex === toIndex ||
+        toIndex < 0 ||
+        toIndex >= stepFields.length
+      ) {
+        return
+      }
+      snapshotBeforeStructuralChange()
+      moveStep(fromIndex, toIndex)
+      bumpStepsRevision()
+    },
+    [
+      bumpStepsRevision,
+      moveStep,
+      snapshotBeforeStructuralChange,
+      stepFields.length,
+    ],
   )
 
   const onRemoveStep = useCallback(
     (index: number) => {
+      // biome-ignore lint/suspicious/noExplicitAny: wip - dynamic field path
+      const removedStep = getValues(`steps.${index}` as any)
+      snapshotBeforeStructuralChange()
       removeStep(index)
+      bumpStepsRevision()
+
+      const guard = createUndoGuard(() => stepsRevisionRef.current)
+      showUndoToast({
+        message: t("flowCanvas.deletedStep"),
+        actionLabel: t("actions.undo"),
+        canUndo: guard.isLatest,
+        undo: () => {
+          snapshotBeforeStructuralChange()
+          insertStep(index, removedStep)
+          bumpStepsRevision()
+        },
+      })
     },
-    [removeStep],
+    [
+      bumpStepsRevision,
+      getValues,
+      insertStep,
+      removeStep,
+      snapshotBeforeStructuralChange,
+      t,
+    ],
+  )
+
+  /** Alt+Arrow on a drag handle moves the step without dragging. */
+  const onStepHandleKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLButtonElement>, index: number) => {
+      if (!event.altKey || event.ctrlKey || event.metaKey) {
+        return
+      }
+      if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+        event.preventDefault()
+        event.stopPropagation()
+        onMoveStep(index, event.key === "ArrowUp" ? index - 1 : index + 1)
+      }
+    },
+    [onMoveStep],
   )
 
   return (
@@ -413,7 +512,7 @@ export const NodeEditor = memo((props: NodeEditorProps) => {
           <Sortable
             getItemValue={(item) => item.id}
             onMove={({ activeIndex, overIndex }) =>
-              moveStep(activeIndex, overIndex)
+              onMoveStep(activeIndex, overIndex)
             }
             value={stepFields}
           >
@@ -424,13 +523,40 @@ export const NodeEditor = memo((props: NodeEditorProps) => {
                   render={
                     <div
                       className={cn(
-                        "flex items-center gap-2",
+                        "group/step flex items-center gap-2",
                         // biome-ignore lint/suspicious/noExplicitAny: wip
                         (field as any).stepType === stepTypes.enum.sendCarousel
                           ? "relative"
                           : "",
                       )}
                     >
+                      {hiddenActionsStepTypes.includes(
+                        // biome-ignore lint/suspicious/noExplicitAny: wip
+                        (field as any).stepType,
+                      ) ? (
+                        <div className="w-6 shrink-0" />
+                      ) : (
+                        <SortableItemHandle
+                          aria-keyshortcuts="Alt+ArrowUp Alt+ArrowDown"
+                          aria-label={t("flowCanvas.stepHandle", {
+                            position: index + 1,
+                            total: stepFields.length,
+                          })}
+                          onKeyDown={(event) =>
+                            onStepHandleKeyDown(event, index)
+                          }
+                          render={
+                            <Button
+                              className="-ms-2 size-6 shrink-0 text-muted-foreground opacity-0 transition-opacity focus-visible:opacity-100 group-hover/step:opacity-100 data-dragging:opacity-100 [@media(hover:none)]:opacity-100"
+                              size="icon"
+                              title={t("flowCanvas.stepHandleHint")}
+                              variant="ghost"
+                            >
+                              <GripVerticalIcon className="size-4" />
+                            </Button>
+                          }
+                        />
+                      )}
                       {(() => {
                         const messages = collectErrorMessages(
                           // biome-ignore lint/suspicious/noExplicitAny: wip - dynamic form errors
@@ -456,6 +582,7 @@ export const NodeEditor = memo((props: NodeEditorProps) => {
                       ) && (
                         <div className="flex flex-col">
                           <Button
+                            aria-label={t("actions.delete")}
                             className="size-8 shrink-0"
                             onClick={() => onRemoveStep(index)}
                             size="icon"
@@ -465,17 +592,6 @@ export const NodeEditor = memo((props: NodeEditorProps) => {
                             <XIcon aria-hidden="true" className="size-4" />
                           </Button>
 
-                          <SortableItemHandle
-                            render={
-                              <Button
-                                className="size-8"
-                                size="icon"
-                                variant="ghost"
-                              >
-                                <MoveVerticalIcon className="h-4 w-4" />
-                              </Button>
-                            }
-                          />
                           {!disabledCopyActionTypes.includes(
                             // biome-ignore lint/suspicious/noExplicitAny: wip
                             (field as any).stepType,

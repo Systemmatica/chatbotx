@@ -16,14 +16,17 @@ import {
   MarkerType,
   type Node,
   type NodeChange,
+  type OnDelete,
   Panel,
   ReactFlow,
   SelectionMode,
   useEdgesState,
+  useNodesInitialized,
   useNodesState,
   useReactFlow,
   type XYPosition,
 } from "@xyflow/react"
+import { useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { useOptimisticAction } from "next-safe-action/hooks"
 import {
@@ -59,6 +62,11 @@ import {
 } from "./layout/auto-layout"
 import { NODE_CARD_WIDTH_PX } from "./nodes/node-dimensions"
 import { NodeViewer } from "./nodes/viewer"
+import {
+  FlowOutlinePanel,
+  FlowOutlineToggleButton,
+} from "./outline/flow-outline-panel"
+import { useOutlineOpen } from "./outline/use-outline-open"
 import AddNodeButton, { addNewNode } from "./panel-buttons/add-node-button"
 import AutoLayoutButton from "./panel-buttons/auto-layout-button"
 import FocusButton from "./panel-buttons/focus-button"
@@ -81,6 +89,7 @@ import { hasMeaningfulNodeChange } from "./react-flow-node-change"
 import { useFlowHistoryStoreApi } from "./stores/flow-history-store-provider"
 import { useStepStore } from "./stores/step-store-provider"
 import { useFlowHistory } from "./stores/use-flow-history"
+import { createUndoGuard, showUndoToast } from "./undo-toast"
 
 function getClientPosition(event: MouseEvent | TouchEvent) {
   if ("changedTouches" in event) {
@@ -148,6 +157,8 @@ export function ReactFlowWrapper({
     screenToFlowPosition,
     fitView,
     getNode,
+    getZoom,
+    setCenter,
   } = reactFlow
 
   const [nodes, setNodes, onNodesChange] = useNodesState(
@@ -206,7 +217,7 @@ export function ReactFlowWrapper({
   // Capture deliberately reads React Flow's internal store here. The restore
   // path writes through the controlled props so undo/redo stays out of
   // onNodesChange/onEdgesChange.
-  const { takeSnapshot } = useFlowHistory()
+  const { takeSnapshot, undo } = useFlowHistory()
   const historyStore = useFlowHistoryStoreApi()
 
   // Register the local state setters as the history store's restore handlers so
@@ -670,6 +681,56 @@ export function ReactFlowWrapper({
     [updateEdge],
   )
 
+  const outline = useOutlineOpen()
+
+  /**
+   * Selects `nodeId` alone and centers the viewport on it at the current zoom.
+   * Selection is written through the controlled state so it never lands in
+   * undo history or marks the draft dirty.
+   */
+  const focusNode = useCallback(
+    (nodeId: string) => {
+      const node = getNode(nodeId)
+      if (!node) {
+        return false
+      }
+      setNodes((currentNodes) =>
+        currentNodes.map((current) => {
+          const shouldSelect = current.id === nodeId
+          return Boolean(current.selected) === shouldSelect
+            ? current
+            : { ...current, selected: shouldSelect }
+        }),
+      )
+      const width = node.measured?.width ?? NODE_CARD_WIDTH_PX
+      const height = node.measured?.height ?? 0
+      setCenter(node.position.x + width / 2, node.position.y + height / 2, {
+        zoom: getZoom(),
+        duration: 400,
+      }).catch(() => undefined)
+      return true
+    },
+    [getNode, getZoom, setCenter, setNodes],
+  )
+
+  // `?node=<id>` (e.g. from a search result) focuses that block once the
+  // canvas has measured its nodes.
+  const searchParams = useSearchParams()
+  const nodeIdFromUrl = searchParams.get("node")
+  const nodesInitialized = useNodesInitialized()
+  const focusedUrlNodeRef = useRef<string | null>(null)
+  useEffect(() => {
+    if (
+      !(nodeIdFromUrl && nodesInitialized) ||
+      focusedUrlNodeRef.current === nodeIdFromUrl
+    ) {
+      return
+    }
+    if (focusNode(nodeIdFromUrl)) {
+      focusedUrlNodeRef.current = nodeIdFromUrl
+    }
+  }, [focusNode, nodeIdFromUrl, nodesInitialized])
+
   const flowMutationValue = useMemo<FlowMutationContextValue>(
     () => ({
       addNextNode,
@@ -819,6 +880,25 @@ export function ReactFlowWrapper({
     [applyButtonRoutes, takeCoalescedSnapshot],
   )
 
+  // Every block deletion (Delete/Backspace, context menu, toolbar, cut) runs
+  // through React Flow's deleteElements, which reports here once it is done.
+  // By then the deletion's snapshot is the newest undo entry.
+  const onDelete = useCallback<OnDelete>(
+    ({ nodes: deletedNodes }) => {
+      if (deletedNodes.length === 0) {
+        return
+      }
+      const guard = createUndoGuard(() => historyStore.getState().past.at(-1))
+      showUndoToast({
+        message: t("flowCanvas.deletedBlocks", { count: deletedNodes.length }),
+        actionLabel: t("actions.undo"),
+        canUndo: guard.isLatest,
+        undo,
+      })
+    },
+    [historyStore, t, undo],
+  )
+
   return (
     <FlowMutationProvider value={flowMutationValue}>
       <FlowContextMenu actions={contextMenuActions} menu={contextMenu}>
@@ -844,6 +924,7 @@ export function ReactFlowWrapper({
           nodeTypes={viewerNodeTypes}
           onConnect={onConnect}
           onConnectEnd={onConnectEnd}
+          onDelete={onDelete}
           onEdgeMouseEnter={onEdgeMouseEnter}
           onEdgeMouseLeave={onEdgeMouseLeave}
           onEdgesChange={handleEdgesChange}
@@ -870,7 +951,15 @@ export function ReactFlowWrapper({
           )}
           <Background />
           <FlowMiniMap />
-          <Panel className="w-[310px]" position="bottom-center">
+          {outline.open && (
+            <FlowOutlinePanel
+              edges={edges}
+              nodes={nodes}
+              onClose={outline.toggle}
+              onSelect={focusNode}
+            />
+          )}
+          <Panel className="w-[366px]" position="bottom-center">
             <Controls
               className="overflow-hidden rounded-md shadow-none!"
               orientation="horizontal"
@@ -882,6 +971,10 @@ export function ReactFlowWrapper({
               <ZoomInButton />
               <ZoomOutButton />
               <AddNodeButton />
+              <FlowOutlineToggleButton
+                onClick={outline.toggle}
+                open={outline.open}
+              />
               <AutoLayoutButton
                 disabled={isFlowMutating}
                 isRunning={isAutoLayoutRunning}
