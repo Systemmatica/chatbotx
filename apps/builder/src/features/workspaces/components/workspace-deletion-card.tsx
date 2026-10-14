@@ -14,52 +14,13 @@ import {
 import { Button } from "@chatbotx.io/ui/components/ui/button"
 import { Card, CardContent } from "@chatbotx.io/ui/components/ui/card"
 import { formatDate } from "@chatbotx.io/ui/lib/format"
-import { formatDistanceToNowStrict } from "date-fns"
 import { AlertTriangleIcon, Loader2Icon, Trash2Icon } from "lucide-react"
 import { useLocale, useTranslations } from "next-intl"
 import { useAction } from "next-safe-action/hooks"
-import { useEffect, useState } from "react"
+import { useRelativeTime } from "@/hooks/use-relative-time"
 import { safeActionErrorHandler } from "@/lib/errors/safe-action-error-handler"
 import { cancelWorkspaceDeletionAction } from "../actions/cancel-workspace-deletion-action"
 import { scheduleWorkspaceDeletionAction } from "../actions/schedule-workspace-deletion-action"
-
-function formatCountdown(target: string | Date | null) {
-  if (!target) {
-    return null
-  }
-
-  const targetDate = new Date(target)
-  if (Number.isNaN(targetDate.getTime())) {
-    return null
-  }
-
-  // `round`, not `ceil`: scheduledDeletionAt is rounded up to the purge cron
-  // boundary, so the real distance is 24h + up to 30m (~1.01 days). `ceil` would
-  // inflate that to "2 days"; `round` keeps it at the intended "1 day".
-  return formatDistanceToNowStrict(targetDate, {
-    addSuffix: true,
-    roundingMethod: "round",
-  })
-}
-
-function useCountdown(target: string | Date | null) {
-  const [countdown, setCountdown] = useState(() => formatCountdown(target))
-
-  useEffect(() => {
-    setCountdown(formatCountdown(target))
-
-    if (!target) {
-      return
-    }
-
-    const timer = window.setInterval(() => {
-      setCountdown(formatCountdown(target))
-    }, 60_000)
-    return () => window.clearInterval(timer)
-  }, [target])
-
-  return countdown
-}
 
 export function WorkspaceDeletionCard({
   workspace,
@@ -71,7 +32,9 @@ export function WorkspaceDeletionCard({
 }) {
   const t = useTranslations()
   const locale = useLocale()
-  const countdown = useCountdown(workspace.scheduledDeletionAt)
+  // Rounded, so the ~24h30m grace window (scheduledDeletionAt is rounded up to
+  // the purge cron boundary) reads "in 1 day", not "in 2 days".
+  const countdown = useRelativeTime(workspace.scheduledDeletionAt) || null
   const deletionDate = formatDate(workspace.scheduledDeletionAt ?? undefined, {
     hour: "numeric",
     minute: "numeric",

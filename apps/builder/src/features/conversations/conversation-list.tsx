@@ -18,6 +18,7 @@ import { useForm } from "react-hook-form"
 import { type GridComponents, Virtuoso } from "react-virtuoso"
 import { toast } from "sonner"
 import { useDebouncedCallback } from "use-debounce"
+import { useVisibleInterval } from "@/hooks/use-visible-interval"
 import type { ConversationFilters } from "../chat/store/chat-store"
 import { useChatStore } from "../chat/store/chat-store-provider"
 import { CreateContactDialog } from "../contacts/create-contact-dialog"
@@ -38,6 +39,7 @@ export default function ConversationList({
   const {
     conversations,
     loadMoreConversations,
+    refreshConversations,
     filters,
     setFilters,
     resetState,
@@ -65,6 +67,10 @@ export default function ConversationList({
   useEffect(() => {
     initActiveConversationFromUrl(workspaceId)
   }, [])
+
+  // Realtime pushes new messages and assignments; the current step, unread
+  // state and chats the bot touched without a message are polled.
+  useVisibleInterval(() => refreshConversations(workspaceId))
 
   // Load more items when reaching the end of the list
   const loadMoreItems = () => {

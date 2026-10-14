@@ -18,6 +18,7 @@ import type {
   MessageResource,
   MessageResourceWithRelations,
 } from "@/features/messages/schema/resource"
+import { mergeFreshHead } from "@/lib/merge-fresh"
 import { client } from "@/lib/orpc/orpc"
 
 export type ConversationFilters = {
@@ -44,6 +45,11 @@ export type ChatState = {
   activeConversationId: string | null
   hasNextConversationPage: boolean
   filters: ConversationFilters
+  /**
+   * Bumped whenever the list is reset or refiltered, so a background refresh
+   * started for the previous list is dropped.
+   */
+  conversationListGeneration: number
 
   // message list
   messages: MessageResourceWithRelations[]
@@ -72,6 +78,12 @@ export type ChatActions = {
     workspaceId: string,
     options?: LoadMoreConversationsOptions,
   ) => Promise<void>
+  /**
+   * Background refresh: refetches the first page with the current filters and
+   * merges it in (last message, current step, unread), keeping later pages,
+   * the scroll position and the selection.
+   */
+  refreshConversations: (workspaceId: string) => Promise<void>
   setActiveConversationId: (activeConversationId: string | null) => void
   updateConversation: (
     conversationId: string,
@@ -142,6 +154,31 @@ const appendUniqueConversations = (
   ]
 }
 
+const activityTime = (value: Date | string | null | undefined) =>
+  value ? new Date(value).getTime() : 0
+
+/**
+ * Picks between the listed copy of a conversation and its refetched copy: a
+ * realtime update newer than the refetch wins, and a chat read here stays
+ * read even if the refetch raced the read receipt.
+ */
+export const pickFresherConversation = (
+  current: ListConversationItemResource,
+  fresh: ListConversationItemResource,
+): ListConversationItemResource => {
+  if (
+    activityTime(current.lastActivityAt) > activityTime(fresh.lastActivityAt)
+  ) {
+    return current
+  }
+  if (
+    activityTime(current.agentLastReadAt) > activityTime(fresh.agentLastReadAt)
+  ) {
+    return { ...fresh, agentLastReadAt: current.agentLastReadAt }
+  }
+  return fresh
+}
+
 const hasConversationIdInUrl = () =>
   !!new URLSearchParams(
     typeof window === "undefined" ? "" : window.location.search,
@@ -170,6 +207,7 @@ export const createChatStore = (initialFilters: ConversationFilters = {}) => {
     hasNextConversationPage: true,
     activeConversationId: null,
     filters: initialFilters,
+    conversationListGeneration: 0,
 
     // default message state
     messages: [],
@@ -313,6 +351,41 @@ export const createChatStore = (initialFilters: ConversationFilters = {}) => {
       }
     },
 
+    refreshConversations: async (workspaceId: string) => {
+      const {
+        isLoadingConversation,
+        isFirstLoadConversation,
+        filters,
+        conversationListGeneration,
+      } = get()
+      if (isLoadingConversation || isFirstLoadConversation) {
+        return
+      }
+
+      const { data } = await ky
+        .post<ListConversationsResponse>(
+          `/api/workspaces/${workspaceId}/conversations/list`,
+          {
+            json: { perPage: "20", cursor: "", ...filters },
+            timeout: 30_000,
+          },
+        )
+        .json()
+
+      if (get().conversationListGeneration !== conversationListGeneration) {
+        return
+      }
+      set((state) => {
+        const conversations = mergeFreshHead(
+          state.conversations,
+          data,
+          (conversation) => conversation.id,
+          pickFresherConversation,
+        )
+        return conversations === state.conversations ? state : { conversations }
+      })
+    },
+
     setActiveConversationId: (activeConversationId: string | null) => {
       const { activeConversationId: oldActiveConversationId } = get()
       if (oldActiveConversationId !== activeConversationId) {
@@ -369,6 +442,7 @@ export const createChatStore = (initialFilters: ConversationFilters = {}) => {
         isBootstrappingUrlConversation: false,
         hasNextConversationPage: true,
         activeConversationId: null,
+        conversationListGeneration: get().conversationListGeneration + 1,
 
         messages: [],
         nextCursorMessage: null,
@@ -378,7 +452,10 @@ export const createChatStore = (initialFilters: ConversationFilters = {}) => {
     },
 
     setFilters: (filters: ConversationFilters) => {
-      set({ filters })
+      set((state) => ({
+        filters,
+        conversationListGeneration: state.conversationListGeneration + 1,
+      }))
     },
 
     setAssignee: (value: string | null) => {

@@ -5864,5 +5864,8 @@
       "empty": "Empty",
       "onThisPage": "{count} on this page"
     }
+  },
+  "relativeTime": {
+    "justNow": "just now"
   }
 }

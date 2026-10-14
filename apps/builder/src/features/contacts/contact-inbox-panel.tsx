@@ -8,6 +8,8 @@ import {
 } from "@chatbotx.io/ui/components/ui/accordion"
 import { useTranslations } from "next-intl"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useVisibleInterval } from "@/hooks/use-visible-interval"
+import { reconcileList, reuseUnchanged } from "@/lib/merge-fresh"
 import { client } from "@/lib/orpc/orpc"
 import type { ContactAppointmentResource } from "../appointments/schemas/resource"
 import { useChatStore } from "../chat/store/chat-store-provider"
@@ -93,6 +95,65 @@ export const ContactPanel = ({
   const onContactLoadedRef = useRef(onContactLoaded)
   onContactLoadedRef.current = onContactLoaded
 
+  // Bumped by every local change to the card (tags, sequences, fields), so a
+  // background refresh that started before it cannot bring back stale data.
+  const localEditSeqRef = useRef(0)
+  const markLocalEdit = useCallback(() => {
+    localEditSeqRef.current += 1
+  }, [])
+  const contactDataRef = useRef(contactData)
+  contactDataRef.current = contactData
+
+  // Background refresh of what the bot, flows or teammates can change while
+  // the card is open: fields, tags, notes, current step and lead magnets. The
+  // history feed refreshes itself. Nothing shows a spinner, and a response
+  // for a contact no longer shown or older than a local edit is dropped.
+  const refreshContact = useCallback(async () => {
+    const shown = contactDataRef.current
+    if (!(contactId && shown?.id === contactId)) {
+      return
+    }
+    const editSeq = localEditSeqRef.current
+    const [contactResult, leadMagnetsResult] = await Promise.allSettled([
+      client.contactsAPIs.getContactAuthenticatedAPI({
+        workspaceId,
+        contactId,
+      }),
+      client.leadMagnetsAPI.listContactLeadMagnetsAPI({
+        workspaceId,
+        contactId,
+      }),
+    ])
+    const current = contactDataRef.current
+    if (current?.id !== contactId || localEditSeqRef.current !== editSeq) {
+      return
+    }
+    if (contactResult.status === "fulfilled") {
+      const next = reuseUnchanged(current, contactResult.value)
+      if (next !== current) {
+        contactDataRef.current = next
+        setContactData(next)
+        onContactLoadedRef.current?.(next)
+      }
+    }
+    if (
+      leadMagnetsResult.status === "fulfilled" &&
+      leadMagnetsContactIdRef.current === contactId
+    ) {
+      setReceivedLeadMagnets((previous) =>
+        reconcileList(
+          previous,
+          leadMagnetsResult.value.data,
+          (item) => item.id,
+        ),
+      )
+    }
+  }, [contactId, workspaceId])
+
+  useVisibleInterval(refreshContact, undefined, {
+    enabled: Boolean(contactId && contactData?.id === contactId),
+  })
+
   useEffect(() => {
     if (!contactId) {
       setContactData(null)
@@ -154,6 +215,7 @@ export const ContactPanel = ({
     if (!contactId || contactTagsChange.contactId !== contactId) {
       return
     }
+    markLocalEdit()
     loadLeadMagnets(contactId)
     client.contactsAPIs
       .getContactAuthenticatedAPI({ workspaceId, contactId })
@@ -165,7 +227,13 @@ export const ContactPanel = ({
       .catch(() => {
         // Keep the current tags; the next open refetches them.
       })
-  }, [contactTagsChange, contactId, workspaceId, loadLeadMagnets])
+  }, [
+    contactTagsChange,
+    contactId,
+    workspaceId,
+    loadLeadMagnets,
+    markLocalEdit,
+  ])
 
   const accordionModules: AccordionModule[] = useMemo(() => {
     if (!contactData) {
@@ -207,6 +275,7 @@ export const ContactPanel = ({
           <UpdateContactTagField
             contact={contactData}
             onSuccess={(updatedTags: TagResource[]) => {
+              markLocalEdit()
               setContactData({ ...contactData, tags: updatedTags })
               loadLeadMagnets(contactData.id)
             }}
@@ -225,6 +294,7 @@ export const ContactPanel = ({
             <UpdateContactSequenceField
               contact={contactData}
               onSuccess={(updatedSequences) => {
+                markLocalEdit()
                 setContactData({
                   ...contactData,
                   contactsOnSequences:
@@ -239,7 +309,15 @@ export const ContactPanel = ({
         ),
       },
     ]
-  }, [contactData, workspaceId, t, coupons, appointments, loadLeadMagnets])
+  }, [
+    contactData,
+    workspaceId,
+    t,
+    coupons,
+    appointments,
+    loadLeadMagnets,
+    markLocalEdit,
+  ])
 
   if (!contactId) {
     return null
@@ -251,6 +329,7 @@ export const ContactPanel = ({
         baseContact={baseContact}
         contact={contactData}
         contactInbox={contactInbox}
+        onEdited={markLocalEdit}
       />
 
       {contactData ? (

@@ -51,13 +51,18 @@ import { uniqueInOrder } from "@/features/contacts/lib/peek-navigation"
 import { useCustomFieldStore } from "@/features/custom-fields/provider/custom-field-store-context"
 import { flowChatsHref } from "@/features/flows/components/flow-hub-tabs"
 import { useTagSelectOptions } from "@/features/tags/provider/tag-hook"
+import { useVisibleInterval } from "@/hooks/use-visible-interval"
 import { client } from "@/lib/orpc/orpc"
 import {
   isAbortError,
   RequestTimeoutError,
   withTimeout,
 } from "@/lib/with-timeout"
-import { appendColumnCards, moveCardBetweenColumns } from "../lib/columns"
+import {
+  appendColumnCards,
+  mergeRefreshedColumns,
+  moveCardBetweenColumns,
+} from "../lib/columns"
 import type { KanbanTemplateId } from "../lib/templates"
 import type {
   KanbanBoardResource,
@@ -125,6 +130,17 @@ export function KanbanView({
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [activeCard, setActiveCard] = useState<KanbanCardResource | null>(null)
   const requestIdRef = useRef(0)
+  // Bumped by every local change to the cards (drag, move result, load more),
+  // so a background refresh that started before it is dropped.
+  const boardEditSeqRef = useRef(0)
+  const pendingMovesRef = useRef(0)
+  const busyRef = useRef(false)
+  busyRef.current =
+    isLoadingCards || loadingMoreColumnId !== null || activeCard !== null
+  const isBoardBusy = useCallback(
+    () => busyRef.current || pendingMovesRef.current > 0,
+    [],
+  )
   const lastDragEndAtRef = useRef(0)
   const { contactId: peekContactId, openContact } = useContactPeek()
 
@@ -227,12 +243,54 @@ export function KanbanView({
     loadCards()
   }, [loadCards])
 
+  // Background refresh (cards moved by flows, new contacts, last messages).
+  // It never touches the spinner or the board status and fails silently: the
+  // "Refresh" button and the initial load keep their timeout/error handling.
+  // Skipped while a load, a "load more" or a drag is in progress; dropped if
+  // the board, filters or cards changed locally while it was in flight.
+  const refreshCards = useCallback(async () => {
+    if (!selectedBoardId || isBoardBusy()) {
+      return
+    }
+    const requestId = requestIdRef.current
+    const editSeq = boardEditSeqRef.current
+    const result = await withTimeout(
+      (signal) =>
+        client.kanbanAPI.getKanbanBoardCardsAPI(
+          {
+            workspaceId,
+            boardId: selectedBoardId,
+            search: search || undefined,
+            tagId: tagId || undefined,
+            perColumn: CARDS_PER_COLUMN,
+          },
+          { signal },
+        ),
+      { timeoutMs: REQUEST_TIMEOUT_MS },
+    )
+    if (
+      requestId !== requestIdRef.current ||
+      editSeq !== boardEditSeqRef.current ||
+      isBoardBusy()
+    ) {
+      return
+    }
+    setColumns((current) =>
+      mergeRefreshedColumns(current, result.columns, CARDS_PER_COLUMN),
+    )
+  }, [workspaceId, selectedBoardId, search, tagId, isBoardBusy])
+
+  useVisibleInterval(refreshCards, undefined, {
+    enabled: boardsStatus === "ready" && selectedBoardId !== null,
+  })
+
   const handleLoadMore = async (columnId: string) => {
     const column = columns.find((item) => item.id === columnId)
     if (!(selectedBoardId && column)) {
       return
     }
     setLoadingMoreColumnId(columnId)
+    boardEditSeqRef.current += 1
     try {
       const result = await client.kanbanAPI.getKanbanBoardCardsAPI({
         workspaceId,
@@ -244,6 +302,7 @@ export function KanbanView({
         offset: column.cards.length,
       })
       const page = result.columns[0]
+      boardEditSeqRef.current += 1
       if (page) {
         setColumns((current) => appendColumnCards(current, page))
       }
@@ -270,6 +329,7 @@ export function KanbanView({
   )
 
   const handleDragStart = ({ active }: DragStartEvent) => {
+    boardEditSeqRef.current += 1
     const card = columns
       .flatMap((column) => column.cards)
       .find((item) => item.contactId === String(active.id))
@@ -291,6 +351,8 @@ export function KanbanView({
     }
 
     setColumns(next)
+    boardEditSeqRef.current += 1
+    pendingMovesRef.current += 1
     try {
       await client.kanbanAPI.moveKanbanCardAPI({
         workspaceId,
@@ -309,6 +371,9 @@ export function KanbanView({
           : previous
       })
       toast.error(`${t("kanban.moveFailed")} ${errorMessage(error, "")}`.trim())
+    } finally {
+      pendingMovesRef.current -= 1
+      boardEditSeqRef.current += 1
     }
   }
 

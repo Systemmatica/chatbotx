@@ -1,3 +1,4 @@
+import { isSameData } from "@/lib/merge-fresh"
 import type { KanbanColumnResource } from "../schemas/resource"
 
 /**
@@ -59,6 +60,49 @@ export function appendColumnCards(
       ],
     }
   })
+}
+
+/**
+ * Applies a background refetch (the first `perColumn` cards of each stage) to
+ * the board on screen. Stages and their order come from the refetch. Cards a
+ * column showed past its first page ("load more") stay at its end unless the
+ * refetch placed them elsewhere; cards of the first page that are gone from
+ * the refetch moved or left the board. Unchanged cards and columns keep their
+ * identity, and an unchanged board returns `current`.
+ */
+export function mergeRefreshedColumns(
+  current: KanbanColumnResource[],
+  fresh: KanbanColumnResource[],
+  perColumn: number,
+): KanbanColumnResource[] {
+  const freshCardIds = new Set(
+    fresh.flatMap((column) => column.cards.map((card) => card.contactId)),
+  )
+  const currentById = new Map(current.map((column) => [column.id, column]))
+
+  const merged = fresh.map((column) => {
+    const previous = currentById.get(column.id)
+    if (!previous) {
+      return column
+    }
+    const previousCards = new Map(
+      previous.cards.map((card) => [card.contactId, card]),
+    )
+    const cards = column.cards.map((card) => {
+      const old = previousCards.get(card.contactId)
+      return old && isSameData(old, card) ? old : card
+    })
+    const loadedMore = previous.cards
+      .slice(perColumn)
+      .filter((card) => !freshCardIds.has(card.contactId))
+    const next = { ...column, cards: [...cards, ...loadedMore] }
+    return isSameData(previous, next) ? previous : next
+  })
+
+  return merged.length === current.length &&
+    merged.every((column, index) => column === current[index])
+    ? current
+    : merged
 }
 
 /** Generates a stable id for a new stage. */

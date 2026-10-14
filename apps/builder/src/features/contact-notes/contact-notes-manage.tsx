@@ -3,7 +3,7 @@ import { Button } from "@chatbotx.io/ui/components/ui/button"
 import { Label } from "@chatbotx.io/ui/components/ui/label"
 import { PlusIcon } from "lucide-react"
 import { useTranslations } from "next-intl"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { z } from "zod"
 import { useWorkspaceId } from "@/hooks/routing"
 import { AddContactForm } from "./add-contact-note-form"
@@ -37,10 +37,23 @@ export function ContactNotesManage({
     null,
   )
 
+  const modeRef = useRef(mode)
+  modeRef.current = mode
+  const shownContactIdRef = useRef(contactId)
+
+  // Another contact closes an open note form. The card also refreshes in the
+  // background: for the same contact the server's notes are taken only while
+  // no note is being added, edited or deleted, so an open form is kept.
   useEffect(() => {
-    setAllContactNotes(contactNotes)
-    setMode(contactNoteModes.enum.list)
-  }, [contactNotes])
+    const switched = shownContactIdRef.current !== contactId
+    shownContactIdRef.current = contactId
+    if (switched) {
+      setMode(contactNoteModes.enum.list)
+    }
+    if (switched || modeRef.current === contactNoteModes.enum.list) {
+      setAllContactNotes(contactNotes)
+    }
+  }, [contactId, contactNotes])
 
   const updateNotes = (notes: ContactNoteResource[]) => {
     setAllContactNotes(notes)

@@ -2,14 +2,31 @@
 
 import { cn } from "@chatbotx.io/ui/lib/utils"
 import { Loader2Icon, PaperclipIcon } from "lucide-react"
-import { useFormatter, useTranslations } from "next-intl"
-import { useEffect, useState } from "react"
+import { useTranslations } from "next-intl"
+import { useCallback, useEffect, useRef, useState } from "react"
+import { RelativeTime } from "@/components/relative-time"
 import type { ListMessagesResponse } from "@/features/messages/schema/query"
+import { useVisibleInterval } from "@/hooks/use-visible-interval"
+import { reconcileList } from "@/lib/merge-fresh"
 import { client } from "@/lib/orpc/orpc"
 
 const RECENT_MESSAGES_LIMIT = 6
 
 type RecentMessage = ListMessagesResponse["data"][number]
+
+const fetchRecentMessages = async (
+  workspaceId: string,
+  conversationId: string,
+): Promise<RecentMessage[]> => {
+  const { data } = await client.messagesAPI.listMessagesAuthenticatedAPI({
+    workspaceId,
+    conversationId,
+    perPage: RECENT_MESSAGES_LIMIT,
+  })
+  return data.toSorted(
+    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+  )
+}
 
 /** A short read-only tail of the contact's chat for the side peek. */
 export function ContactRecentMessages({
@@ -20,7 +37,6 @@ export function ContactRecentMessages({
   conversationId: string | null | undefined
 }) {
   const t = useTranslations()
-  const format = useFormatter()
   const [messages, setMessages] = useState<RecentMessage[] | null>(null)
   const [failed, setFailed] = useState(false)
 
@@ -31,21 +47,10 @@ export function ContactRecentMessages({
       return
     }
     let ignore = false
-    client.messagesAPI
-      .listMessagesAuthenticatedAPI({
-        workspaceId,
-        conversationId,
-        perPage: RECENT_MESSAGES_LIMIT,
-      })
-      .then(({ data }) => {
+    fetchRecentMessages(workspaceId, conversationId)
+      .then((data) => {
         if (!ignore) {
-          setMessages(
-            data.toSorted(
-              (a, b) =>
-                new Date(a.createdAt).getTime() -
-                new Date(b.createdAt).getTime(),
-            ),
-          )
+          setMessages(data)
         }
       })
       .catch(() => {
@@ -57,6 +62,26 @@ export function ContactRecentMessages({
       ignore = true
     }
   }, [workspaceId, conversationId])
+
+  // Background refresh once loaded: no spinner, and a response for a chat no
+  // longer shown is dropped.
+  const shownConversationIdRef = useRef(conversationId)
+  shownConversationIdRef.current = conversationId
+  const refresh = useCallback(async () => {
+    if (!conversationId) {
+      return
+    }
+    const data = await fetchRecentMessages(workspaceId, conversationId)
+    if (shownConversationIdRef.current !== conversationId) {
+      return
+    }
+    setMessages((previous) =>
+      previous === null ? previous : reconcileList(previous, data, (m) => m.id),
+    )
+  }, [workspaceId, conversationId])
+  useVisibleInterval(refresh, undefined, {
+    enabled: Boolean(conversationId) && messages !== null && !failed,
+  })
 
   let body: React.ReactNode
   if (!conversationId) {
@@ -107,12 +132,10 @@ export function ContactRecentMessages({
                 </p>
               ) : null}
             </div>
-            <time
+            <RelativeTime
               className="px-1 text-[10px] text-muted-foreground"
-              dateTime={new Date(message.createdAt).toISOString()}
-            >
-              {format.relativeTime(new Date(message.createdAt))}
-            </time>
+              value={message.createdAt}
+            />
           </li>
         ))}
       </ol>
