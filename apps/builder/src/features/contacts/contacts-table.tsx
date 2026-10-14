@@ -21,7 +21,7 @@ import {
   isTemporalCustomFieldType,
 } from "@chatbotx.io/utils/datetime"
 import type { Column, ColumnDef } from "@tanstack/react-table"
-import { format, formatDistanceToNow } from "date-fns"
+import { format } from "date-fns"
 import { ChevronDownIcon, ChevronRightIcon } from "lucide-react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
@@ -29,6 +29,7 @@ import { useFormatter, useTranslations } from "next-intl"
 import { parseAsString, useQueryState } from "nuqs"
 import { use, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { LabelChip, LabelChipList } from "@/components/labels/label-chip"
+import { RelativeTime } from "@/components/relative-time"
 import {
   type ContactFilterCriteria,
   ContactListFilterButton,
@@ -535,11 +536,7 @@ export function ContactsTable({
           )
 
           return (
-            <div>
-              {lastReadAt
-                ? formatDistanceToNow(lastReadAt, { addSuffix: true })
-                : null}
-            </div>
+            <div>{lastReadAt ? <RelativeTime value={lastReadAt} /> : null}</div>
           )
         },
         meta: {

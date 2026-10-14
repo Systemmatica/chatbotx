@@ -1,7 +1,8 @@
 "use client"
 
 import { cn } from "@chatbotx.io/ui/lib/utils"
-import { useFormatter, useTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
+import { useRelativeTime } from "@/hooks/use-relative-time"
 import { formatStepLabel } from "../lib/step-label"
 import type { CurrentFlowStepResource } from "../schemas/resource"
 
@@ -17,7 +18,7 @@ export function CurrentStepLine({
   className?: string
 }) {
   const t = useTranslations()
-  const format = useFormatter()
+  const time = useRelativeTime(step?.reachedAt)
 
   if (!step) {
     return null
@@ -26,7 +27,7 @@ export function CurrentStepLine({
   const text = t("currentStep.line", {
     flow: step.flowName,
     step: formatStepLabel(step, t),
-    time: format.relativeTime(step.reachedAt),
+    time,
   })
 
   return (

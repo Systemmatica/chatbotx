@@ -2,8 +2,9 @@
 
 import { cn } from "@chatbotx.io/ui/lib/utils"
 import { Loader2Icon, PaperclipIcon } from "lucide-react"
-import { useFormatter, useTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useEffect, useState } from "react"
+import { RelativeTime } from "@/components/relative-time"
 import type { ListMessagesResponse } from "@/features/messages/schema/query"
 import { client } from "@/lib/orpc/orpc"
 
@@ -20,7 +21,6 @@ export function ContactRecentMessages({
   conversationId: string | null | undefined
 }) {
   const t = useTranslations()
-  const format = useFormatter()
   const [messages, setMessages] = useState<RecentMessage[] | null>(null)
   const [failed, setFailed] = useState(false)
 
@@ -107,12 +107,10 @@ export function ContactRecentMessages({
                 </p>
               ) : null}
             </div>
-            <time
+            <RelativeTime
               className="px-1 text-[10px] text-muted-foreground"
-              dateTime={new Date(message.createdAt).toISOString()}
-            >
-              {format.relativeTime(new Date(message.createdAt))}
-            </time>
+              value={message.createdAt}
+            />
           </li>
         ))}
       </ol>

@@ -21,8 +21,9 @@ import {
   UserXIcon,
   WorkflowIcon,
 } from "lucide-react"
-import { useFormatter, useLocale, useTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { useCallback, useEffect, useRef, useState } from "react"
+import { RelativeTime } from "@/components/relative-time"
 import { client } from "@/lib/orpc/orpc"
 import { describeActivity, describeActor } from "../lib/describe-activity"
 import {
@@ -77,7 +78,6 @@ export function ContactActivityFeed({
   contactId: string | null | undefined
 }) {
   const t = useTranslations()
-  const format = useFormatter()
   const locale = useLocale()
   const [open, setOpen] = useState(true)
   const [state, setState] = useState<FeedState>(INITIAL_STATE)
@@ -192,8 +192,7 @@ export function ContactActivityFeed({
                       </span>
                     ) : null}
                     <span className="text-[11px] text-muted-foreground">
-                      <time
-                        dateTime={item.occurredAt.toISOString()}
+                      <RelativeTime
                         title={formatDate(item.occurredAt, {
                           day: "2-digit",
                           month: "2-digit",
@@ -202,9 +201,8 @@ export function ContactActivityFeed({
                           minute: "2-digit",
                           locale,
                         })}
-                      >
-                        {format.relativeTime(item.occurredAt)}
-                      </time>
+                        value={item.occurredAt}
+                      />
                       {actor ? ` · ${actor}` : null}
                     </span>
                   </div>

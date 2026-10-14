@@ -3,7 +3,8 @@
 import { formatDate } from "@chatbotx.io/ui/lib/format"
 import { ExternalLinkIcon, WorkflowIcon } from "lucide-react"
 import Link from "next/link"
-import { useFormatter, useLocale, useTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
+import { RelativeTime } from "@/components/relative-time"
 import { formatStepLabel } from "../lib/step-label"
 import type { CurrentFlowStepResource } from "../schemas/resource"
 
@@ -19,7 +20,6 @@ export function CurrentStepBlock({
   step: CurrentFlowStepResource | null | undefined
 }) {
   const t = useTranslations()
-  const format = useFormatter()
   const locale = useLocale()
 
   return (
@@ -39,18 +39,18 @@ export function CurrentStepBlock({
           <dt className="text-muted-foreground">
             {t("currentStep.reachedAt")}
           </dt>
-          <dd
-            className="truncate"
-            title={formatDate(step.reachedAt, {
-              day: "2-digit",
-              month: "2-digit",
-              year: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
-              locale,
-            })}
-          >
-            {format.relativeTime(step.reachedAt)}
+          <dd className="truncate">
+            <RelativeTime
+              title={formatDate(step.reachedAt, {
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+                locale,
+              })}
+              value={step.reachedAt}
+            />
           </dd>
         </dl>
       ) : (

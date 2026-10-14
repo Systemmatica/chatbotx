@@ -5864,5 +5864,8 @@
       "empty": "Не заполнено",
       "onThisPage": "{count} на этой странице"
     }
+  },
+  "relativeTime": {
+    "justNow": "только что"
   }
 }

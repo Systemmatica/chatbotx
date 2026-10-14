@@ -32,10 +32,12 @@ import {
   PhoneIcon,
   Trash2Icon,
 } from "lucide-react"
-import { useFormatter, useTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useMemo } from "react"
+import { RelativeTime } from "@/components/relative-time"
 import { getBrowserTimezone } from "@/features/contact-filter/lib/timezone"
 import { CurrentStepLine } from "@/features/flow-steps/components/current-step-line"
+import { useRelativeTime } from "@/hooks/use-relative-time"
 import type { KanbanCardResource } from "../schemas/resource"
 
 export type CardCustomField = { id: string; name: string; type: string }
@@ -73,7 +75,6 @@ export function KanbanCardPropertyLines({
   customFieldsById: Map<string, CardCustomField>
 }) {
   const t = useTranslations()
-  const format = useFormatter()
 
   return (
     <>
@@ -84,9 +85,11 @@ export function KanbanCardPropertyLines({
           case "lastActivity":
             return (
               <p className="truncate text-muted-foreground text-xs" key={key}>
-                {card.lastMessageAt
-                  ? format.relativeTime(card.lastMessageAt)
-                  : t("kanban.noLastMessage")}
+                {card.lastMessageAt ? (
+                  <RelativeTime value={card.lastMessageAt} />
+                ) : (
+                  t("kanban.noLastMessage")
+                )}
               </p>
             )
           case "currentStep":
@@ -123,9 +126,7 @@ export function KanbanCardPropertyLines({
                 key={key}
               >
                 <ClockIcon className="size-3 shrink-0" />
-                {t("kanban.cardProperties.inStageSince", {
-                  time: format.relativeTime(data.stageSince),
-                })}
+                <InStageSince since={data.stageSince} />
               </p>
             ) : null
           case "phone":
@@ -180,6 +181,13 @@ export function KanbanCardPropertyLines({
       })}
     </>
   )
+}
+
+/** "In this stage since <relative time>", kept fresh by the shared clock. */
+function InStageSince({ since }: { since: Date | string }) {
+  const t = useTranslations()
+  const time = useRelativeTime(since)
+  return <>{t("kanban.cardProperties.inStageSince", { time })}</>
 }
 
 function formatFieldValue(
