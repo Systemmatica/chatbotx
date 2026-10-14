@@ -113,7 +113,7 @@ const WhatsappOptionListStepEditor = ({
 
   return (
     <div className="items-center justify-center overflow-hidden rounded-lg">
-      <div className="bg-secondary px-4 py-2">
+      <div className="bg-secondary px-3 py-2">
         <TiptapEditorField name={`${parentName}.text`} />
       </div>
 
