@@ -127,7 +127,8 @@ export const TiptapEditor = ({
         initValue,
         promptVariableOptionsRef.current,
       )
-      tiptapEditor.commands.setContent(html)
+      // Seeding is not an edit — see RichTextTiptapEditor.
+      tiptapEditor.commands.setContent(html, { emitUpdate: false })
     }
   }, [tiptapEditor, initValue])
 

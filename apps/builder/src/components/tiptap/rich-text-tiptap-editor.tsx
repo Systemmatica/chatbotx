@@ -216,7 +216,10 @@ export const RichTextTiptapEditor = ({
               initValue,
               promptVariableOptionsRef.current,
             )
-      tiptapEditor.commands.setContent(html)
+      // Seeding is not an edit: tiptap v3 emits `update` from setContent by
+      // default, which would reach `onChange` and record a phantom undo entry
+      // (and dirty the draft) just because the editor was opened.
+      tiptapEditor.commands.setContent(html, { emitUpdate: false })
     }
   }, [tiptapEditor, initValue])
 

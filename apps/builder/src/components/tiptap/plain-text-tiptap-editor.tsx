@@ -162,8 +162,10 @@ export const PlainTextTiptapEditor = ({
     if (tiptapEditor && initValue !== undefined) {
       // Empty content must clear to a single blank line — feeding "<p><br></p>"
       // injects a hard break that renders as a spurious second line.
+      // Seeding is not an edit — see RichTextTiptapEditor.
       tiptapEditor.commands.setContent(
         initValue ? plainTextToParagraphHtml(initValue) : "",
+        { emitUpdate: false },
       )
     }
   }, [tiptapEditor, initValue, plainTextToParagraphHtml])

@@ -53,6 +53,7 @@ import { ButtonStepEditor } from "../steps/button/editor"
 import { ErrorAlert } from "../steps/error-alert"
 import { SpreadsheetDialogProvider } from "../steps/spreadsheet/components/spreadsheet-dialog-context"
 import { useFlowTemplate } from "../stores/flow-template-store-provider"
+import { createFormEditHistory } from "../stores/form-edit-history"
 import { useStepStore } from "../stores/step-store-provider"
 import { useFlowHistory } from "../stores/use-flow-history"
 import { useWhatsappFlow } from "../stores/whatsapp-flow-store-provider"
@@ -273,6 +274,10 @@ export const NodeEditor = memo((props: NodeEditorProps) => {
     (state) => state,
   )
   const { takeSnapshot } = useFlowHistory()
+  const takeSnapshotRef = useRef(takeSnapshot)
+  useEffect(() => {
+    takeSnapshotRef.current = takeSnapshot
+  }, [takeSnapshot])
 
   // biome-ignore lint/suspicious/noExplicitAny: wip - complex node data types
   const form = useForm<any>({
@@ -296,7 +301,6 @@ export const NodeEditor = memo((props: NodeEditorProps) => {
     name: "steps",
   })
 
-  const editSnapshotTakenRef = useRef(false)
   /**
    * Bumped by every user edit and every step add/copy/move/remove. A step
    * removal can only be undone from its toast while this has not moved on.
@@ -318,7 +322,12 @@ export const NodeEditor = memo((props: NodeEditorProps) => {
     (values: FlowNode["data"]["details"]) => {
       const currentNode = getNode(nodeId)
 
-      if (currentNode) {
+      // Nothing to write when the form still matches the node (e.g. the
+      // editor was only opened): a redundant replace would churn the canvas.
+      if (
+        currentNode &&
+        JSON.stringify(currentNode.data.details) !== JSON.stringify(values)
+      ) {
         updateNodeData(nodeId, {
           ...currentNode.data,
           details: values,
@@ -326,12 +335,17 @@ export const NodeEditor = memo((props: NodeEditorProps) => {
       }
     },
   )
+  // Seeded once from the form's initial values: echoes of those values (an
+  // editor re-emitting its content on mount) never count as edits.
+  const [editHistory] = useState(() =>
+    createFormEditHistory({
+      initialValues: form.getValues(),
+      takeSnapshot: () => takeSnapshotRef.current(),
+    }),
+  )
   const releaseEditSnapshot = useMemo(
-    () =>
-      createDebouncedFn(() => {
-        editSnapshotTakenRef.current = false
-      }, 500),
-    [],
+    () => createDebouncedFn(() => editHistory.release(), 500),
+    [editHistory],
   )
 
   const pushToFlow = useMemo(
@@ -340,13 +354,8 @@ export const NodeEditor = memo((props: NodeEditorProps) => {
   )
 
   useEffect(() => {
-    const subscription = form.watch((_values, { type } = {}) => {
-      if (type && !editSnapshotTakenRef.current) {
-        takeSnapshot()
-        editSnapshotTakenRef.current = true
-      }
-
-      if (type) {
+    const subscription = form.watch((values, { type } = {}) => {
+      if (editHistory.onChange(values, Boolean(type))) {
         bumpStepsRevision()
         releaseEditSnapshot()
       }
@@ -355,7 +364,7 @@ export const NodeEditor = memo((props: NodeEditorProps) => {
     return () => {
       subscription.unsubscribe()
     }
-  }, [bumpStepsRevision, form, releaseEditSnapshot, takeSnapshot])
+  }, [bumpStepsRevision, editHistory, form, releaseEditSnapshot])
 
   useEffect(
     () => () => {
