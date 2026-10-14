@@ -748,7 +748,8 @@ export function ReactFlowWrapper({
 
   const [isAutoLayoutRunning, setIsAutoLayoutRunning] = useState(false)
 
-  // Rearranges every node left-to-right. Positions go through onNodesChange,
+  // Rearranges every node into section rows sized for the screen (see
+  // computeAutoLayout). Positions go through onNodesChange,
   // the same path a manual drag takes, so the result lands in undo history,
   // flips the draft to "unsaved" and is picked up by the autosave.
   const handleAutoLayout = useCallback(async () => {
@@ -765,6 +766,7 @@ export function ReactFlowWrapper({
           width: node.measured?.width,
           height: node.measured?.height,
           isStartNode: Boolean(node.data.isStartNode),
+          name: node.data.name,
         })),
         getEdges(),
       )

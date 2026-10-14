@@ -7,11 +7,13 @@ import {
   SheetDescription,
   SheetTitle,
 } from "@chatbotx.io/ui/components/ui/sheet"
+import { cn } from "@chatbotx.io/ui/lib/utils"
 import { useReactFlow, useStore } from "@xyflow/react"
 import { LoaderCircleIcon } from "lucide-react"
 import { memo, useEffect, useMemo, useRef, useState } from "react"
 import { useCustomFieldStore } from "@/features/custom-fields/provider/custom-field-store-context"
 import { NodeEditor } from "./editor"
+import { NODE_EDITOR_SHEET_WIDTH_CLASS } from "./node-dimensions"
 import { NodeNameEditor } from "./node-name-editor"
 import {
   selectedNodeEqualityFn,
@@ -92,14 +94,17 @@ export const NodeDetailSheetContent = memo(
     return (
       <Sheet onOpenChange={onOpenChange} open={open}>
         <SheetContent
-          className="wrap-break-word flex flex-col gap-0 sm:max-w-[420px]"
+          className={cn(
+            "wrap-break-word flex flex-col gap-0",
+            NODE_EDITOR_SHEET_WIDTH_CLASS,
+          )}
           side="left"
         >
           <SheetTitle>
             <NodeNameEditor activeNode={activeNode} />
           </SheetTitle>
           <SheetDescription />
-          <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-5">
+          <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-4">
             {customFieldsInitialized ? (
               <NodeEditor
                 key={`${activeNode.id}:${openToken}`}
