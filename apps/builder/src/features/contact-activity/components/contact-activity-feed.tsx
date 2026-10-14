@@ -24,6 +24,8 @@ import {
 import { useLocale, useTranslations } from "next-intl"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { RelativeTime } from "@/components/relative-time"
+import { useVisibleInterval } from "@/hooks/use-visible-interval"
+import { mergeFreshHead } from "@/lib/merge-fresh"
 import { client } from "@/lib/orpc/orpc"
 import { describeActivity, describeActor } from "../lib/describe-activity"
 import {
@@ -123,6 +125,46 @@ export function ContactActivityFeed({
     },
     [workspaceId, contactId],
   )
+
+  // Background refresh of the newest page: new events appear on top, pages
+  // loaded with "Load more" stay, and nothing shows "Loading…". A user reload
+  // or "Load more" started meanwhile wins over this response.
+  const stateRef = useRef(state)
+  stateRef.current = state
+  const refresh = useCallback(async () => {
+    if (!contactId || stateRef.current.loading) {
+      return
+    }
+    const requestId = requestRef.current
+    const { data, nextCursor } =
+      await client.contactActivityAPI.listContactActivityAPI({
+        workspaceId,
+        contactId,
+        cursor: null,
+        limit: CONTACT_ACTIVITY_PAGE_SIZE,
+      })
+    if (requestRef.current !== requestId) {
+      return
+    }
+    setState((previous) => {
+      const items = mergeFreshHead(previous.items, data, (item) => item.id)
+      const keptOlder = items.length > data.length
+      if (items === previous.items && !previous.error) {
+        return previous
+      }
+      return {
+        items,
+        // Older pages already shown keep their own cursor.
+        nextCursor: keptOlder ? previous.nextCursor : nextCursor,
+        loading: false,
+        error: false,
+      }
+    })
+  }, [workspaceId, contactId])
+
+  useVisibleInterval(refresh, undefined, {
+    enabled: open && Boolean(contactId),
+  })
 
   useEffect(() => {
     requestRef.current += 1

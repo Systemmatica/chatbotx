@@ -34,6 +34,11 @@ type CustomFieldCellProps = {
   value: string | null
   /** Applies a value to the table at once (optimistic) or rolls it back. */
   onLocalChange: (value: string | null) => void
+  /**
+   * `true` while the value is edited or being saved, `false` after: the table
+   * holds its background refresh meanwhile.
+   */
+  onBusyChange?: (busy: boolean) => void
 }
 
 const serverErrorOf = (result: unknown): string | undefined => {
@@ -53,9 +58,22 @@ export function CustomFieldCell({
   type,
   value,
   onLocalChange,
+  onBusyChange,
 }: CustomFieldCellProps) {
   const t = useTranslations()
   const [editing, setEditing] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const busy = editing || saving
+  const onBusyChangeRef = useRef(onBusyChange)
+  onBusyChangeRef.current = onBusyChange
+
+  useEffect(() => {
+    if (!busy) {
+      return
+    }
+    onBusyChangeRef.current?.(true)
+    return () => onBusyChangeRef.current?.(false)
+  }, [busy])
   const [timezone, setTimezone] = useState("UTC")
 
   useEffect(() => {
@@ -69,6 +87,7 @@ export function CustomFieldCell({
     }
     const previous = value
     onLocalChange(next)
+    setSaving(true)
     try {
       const result =
         next === null
@@ -96,6 +115,8 @@ export function CustomFieldCell({
           ? error.message
           : t("contacts.inlineEdit.saveFailed"),
       )
+    } finally {
+      setSaving(false)
     }
   }
 

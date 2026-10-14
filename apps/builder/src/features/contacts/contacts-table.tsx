@@ -66,6 +66,8 @@ import {
   resolveContactViewConfig,
 } from "@/features/contact-views/schemas/config"
 import type { ContactViewResource } from "@/features/contact-views/schemas/resource"
+import { useVisibleInterval } from "@/hooks/use-visible-interval"
+import { reconcileList } from "@/lib/merge-fresh"
 import { client } from "@/lib/orpc/orpc"
 import { resolveCustomFieldIcon } from "../custom-fields/lib/custom-field-icons"
 import { useCustomFieldStore } from "../custom-fields/provider/custom-field-store-context"
@@ -299,6 +301,26 @@ export function ContactsTable({
     return params.get("keyword") ?? undefined
   }, [searchParamsKey])
 
+  // The page the table shows, as a request for the current URL and filter.
+  const fetchPage = useCallback(() => {
+    const params = new URLSearchParams(searchParamsKey)
+    return client.contactsAPIs.listContactsByPOSTAuthenticatedAPI({
+      workspaceId,
+      page: Number(params.get("page") ?? "1"),
+      perPage: Number(
+        params.get("perPage") ?? String(CONTACTS_DEFAULT_PER_PAGE),
+      ),
+      sort: parseSortParam(params.get("sort")),
+      keyword: params.get("keyword") ?? undefined,
+      contactFilter: isContactFilterActive ? contactFilter : undefined,
+    })
+  }, [contactFilter, isContactFilterActive, searchParamsKey, workspaceId])
+
+  // Bumped when the page is refetched for new params and by inline edits, so
+  // a background refresh started before either is dropped.
+  const pageSeqRef = useRef(0)
+  const busyCellsRef = useRef(0)
+
   useEffect(() => {
     if (!didHydrateInitialDataRef.current) {
       didHydrateInitialDataRef.current = true
@@ -306,19 +328,9 @@ export function ContactsTable({
     }
 
     let ignore = false
-    const params = new URLSearchParams(searchParamsKey)
+    pageSeqRef.current += 1
 
-    client.contactsAPIs
-      .listContactsByPOSTAuthenticatedAPI({
-        workspaceId,
-        page: Number(params.get("page") ?? "1"),
-        perPage: Number(
-          params.get("perPage") ?? String(CONTACTS_DEFAULT_PER_PAGE),
-        ),
-        sort: parseSortParam(params.get("sort")),
-        keyword: params.get("keyword") ?? undefined,
-        contactFilter: isContactFilterActive ? contactFilter : undefined,
-      })
+    fetchPage()
       .then((response) => {
         if (ignore) {
           return
@@ -344,15 +356,36 @@ export function ContactsTable({
       ignore = true
     }
   }, [
-    contactFilter,
+    fetchPage,
     initialData,
     initialPageCount,
     initialTotalCount,
     initialTotalCountCapped,
-    isContactFilterActive,
-    searchParamsKey,
-    workspaceId,
   ])
+
+  // Background refresh of the shown page (new contacts, fields and tags set
+  // by flows). Rows keep their identity when unchanged, so selection, scroll
+  // and open cells are untouched; it waits while a cell is edited or saved.
+  const refreshPage = useCallback(async () => {
+    if (busyCellsRef.current > 0) {
+      return
+    }
+    const seq = pageSeqRef.current
+    const response = await fetchPage()
+    if (seq !== pageSeqRef.current || busyCellsRef.current > 0) {
+      return
+    }
+    setTableData((rows) => reconcileList(rows, response.data, (row) => row.id))
+    setTablePageCount(response.pageCount)
+    setTableTotalCount(response.totalCount)
+    setTableTotalCountCapped(response.totalCountCapped)
+  }, [fetchPage])
+  useVisibleInterval(refreshPage)
+
+  const trackCellBusy = useCallback((busy: boolean) => {
+    busyCellsRef.current += busy ? 1 : -1
+    pageSeqRef.current += 1
+  }, [])
 
   useEffect(() => {
     if (isContactFilterActive) {
@@ -387,6 +420,7 @@ export function ContactsTable({
   // Optimistic inline edits (and their rollback) patch the loaded page.
   const updateRowCustomField = useCallback(
     (contactId: string, customFieldId: string, value: string | null) => {
+      pageSeqRef.current += 1
       setTableData((rows) =>
         patchRowCustomField(rows, contactId, customFieldId, value),
       )
@@ -591,6 +625,7 @@ export function ContactsTable({
               <CustomFieldCell
                 contactId={row.original.id}
                 customFieldId={field.id}
+                onBusyChange={trackCellBusy}
                 onLocalChange={(value) =>
                   updateRowCustomField(row.original.id, field.id, value)
                 }
@@ -604,7 +639,14 @@ export function ContactsTable({
           }) satisfies ColumnDef<ListContactsResponse["data"][number]>,
       ),
     ],
-    [workspaceId, t, showTagReceivedAt, customFields, updateRowCustomField],
+    [
+      workspaceId,
+      t,
+      showTagReceivedAt,
+      customFields,
+      updateRowCustomField,
+      trackCellBusy,
+    ],
   )
 
   const { table } = useDataTable({

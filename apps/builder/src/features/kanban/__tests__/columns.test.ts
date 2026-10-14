@@ -1,5 +1,9 @@
 import { describe, expect, test } from "vitest"
-import { appendColumnCards, moveCardBetweenColumns } from "../lib/columns"
+import {
+  appendColumnCards,
+  mergeRefreshedColumns,
+  moveCardBetweenColumns,
+} from "../lib/columns"
 import type {
   KanbanCardResource,
   KanbanColumnResource,
@@ -61,5 +65,73 @@ describe("appendColumnCards", () => {
     )
 
     expect(next[0].cards.map((c) => c.contactId)).toEqual(["1", "2", "3"])
+  })
+})
+
+describe("mergeRefreshedColumns", () => {
+  const ids = (columns: KanbanColumnResource[]) =>
+    columns.map((item) => [item.id, item.cards.map((c) => c.contactId)])
+
+  test("returns the current board when nothing changed", () => {
+    const current = [column("a", [card("1")]), column("b", [card("2")])]
+    const fresh = [column("a", [card("1")]), column("b", [card("2")])]
+
+    expect(mergeRefreshedColumns(current, fresh, 2)).toBe(current)
+  })
+
+  test("moves cards between stages and keeps unchanged columns", () => {
+    const current = [
+      column("a", [card("1"), card("2")]),
+      column("b", [card("3")]),
+      column("c", [card("4")]),
+    ]
+    const fresh = [
+      column("a", [card("1")]),
+      column("b", [card("2"), card("3")]),
+      column("c", [card("4")]),
+    ]
+
+    const next = mergeRefreshedColumns(current, fresh, 2)
+
+    expect(ids(next)).toEqual([
+      ["a", ["1"]],
+      ["b", ["2", "3"]],
+      ["c", ["4"]],
+    ])
+    expect(next[2]).toBe(current[2])
+    expect(next[1].cards[1]).toBe(current[1].cards[0])
+  })
+
+  test("keeps cards loaded past the first page unless they moved", () => {
+    const current = [
+      column("a", [card("1"), card("2"), card("3"), card("4")], 4),
+      column("b", [], 0),
+    ]
+    const fresh = [
+      column("a", [card("new"), card("1")], 5),
+      column("b", [card("4")], 1),
+    ]
+
+    const next = mergeRefreshedColumns(current, fresh, 2)
+
+    // "2" fell off the refetched first page: it moved or left the board.
+    expect(ids(next)).toEqual([
+      ["a", ["new", "1", "3"]],
+      ["b", ["4"]],
+    ])
+    expect(next[0].total).toBe(5)
+  })
+
+  test("follows added, removed and reordered stages", () => {
+    const current = [column("a", [card("1")]), column("b", [card("2")])]
+    const fresh = [column("c", []), column("b", [card("2")])]
+
+    const next = mergeRefreshedColumns(current, fresh, 50)
+
+    expect(ids(next)).toEqual([
+      ["c", []],
+      ["b", ["2"]],
+    ])
+    expect(next[1]).toBe(current[1])
   })
 })

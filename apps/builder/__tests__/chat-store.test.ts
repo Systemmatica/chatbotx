@@ -30,6 +30,7 @@ type TestConversation = {
   messages: unknown[]
   lastActivityAt: Date | null
   agentLastReadAt?: Date
+  flowStage?: string
 }
 
 type TestMessage = {
@@ -390,5 +391,146 @@ describe("chat store conversation updates", () => {
       ...second,
       agentLastReadAt: new Date("2026-01-02T00:00:00Z"),
     })
+  })
+})
+
+describe("chat store background refresh", () => {
+  const at = (iso: string) => new Date(iso)
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    setConversationUrl(null)
+  })
+
+  test("refreshConversations merges the first page and keeps later pages and selection", async () => {
+    const store = createChatStore()
+    const a = makeConversation("a", at("2026-01-01T02:00:00Z"))
+    const b = makeConversation("b", at("2026-01-01T01:00:00Z"))
+    const older = makeConversation("older", at("2025-12-01T00:00:00Z"))
+    store.setState({
+      conversations: [a, b, older] as never,
+      isFirstLoadConversation: false,
+      activeConversationId: "b",
+      nextCursorConversation: "cursor-2",
+    })
+    const fresh = makeConversation("new", at("2026-01-01T03:00:00Z"))
+    const bUpdated = { ...b, flowStage: "stage-2" }
+    mockConversationPage([fresh, a, bUpdated] as TestConversation[])
+
+    await store.getState().refreshConversations("ws-1")
+
+    const state = store.getState()
+    expect(state.conversations.map((c) => c.id)).toEqual([
+      "new",
+      "a",
+      "b",
+      "older",
+    ])
+    expect(state.conversations[1]).toBe(a)
+    expect(state.conversations[2]).toMatchObject({ flowStage: "stage-2" })
+    expect(state.activeConversationId).toBe("b")
+    expect(state.nextCursorConversation).toBe("cursor-2")
+    expect(mockKyPost).toHaveBeenCalledWith(
+      "/api/workspaces/ws-1/conversations/list",
+      expect.objectContaining({
+        json: expect.objectContaining({ cursor: "", perPage: "20" }),
+      }),
+    )
+  })
+
+  test("refreshConversations keeps the state object when nothing changed", async () => {
+    const store = createChatStore()
+    const a = makeConversation("a", at("2026-01-01T02:00:00Z"))
+    store.setState({
+      conversations: [a] as never,
+      isFirstLoadConversation: false,
+    })
+    const before = store.getState()
+    mockConversationPage([{ ...a }] as TestConversation[])
+
+    await store.getState().refreshConversations("ws-1")
+
+    expect(store.getState()).toBe(before)
+  })
+
+  test("refreshConversations keeps a realtime update newer than the refetch", async () => {
+    const store = createChatStore()
+    const live = makeConversation("a", at("2026-01-01T05:00:00Z"))
+    store.setState({
+      conversations: [live] as never,
+      isFirstLoadConversation: false,
+    })
+    mockConversationPage([
+      makeConversation("a", at("2026-01-01T04:00:00Z")),
+    ] as TestConversation[])
+
+    await store.getState().refreshConversations("ws-1")
+
+    expect(store.getState().conversations[0]).toBe(live)
+  })
+
+  test("refreshConversations does not let a stale refetch mark a read chat unread", async () => {
+    const store = createChatStore()
+    const read = {
+      ...makeConversation("a", at("2026-01-01T05:00:00Z")),
+      agentLastReadAt: at("2026-01-01T06:00:00Z"),
+    }
+    store.setState({
+      conversations: [read] as never,
+      isFirstLoadConversation: false,
+    })
+    mockConversationPage([
+      {
+        ...makeConversation("a", at("2026-01-01T05:00:00Z")),
+        agentLastReadAt: at("2026-01-01T01:00:00Z"),
+        flowStage: "next",
+      },
+    ] as TestConversation[])
+
+    await store.getState().refreshConversations("ws-1")
+
+    expect(store.getState().conversations[0]).toMatchObject({
+      agentLastReadAt: at("2026-01-01T06:00:00Z"),
+      flowStage: "next",
+    })
+  })
+
+  test("refreshConversations drops a response for filters changed meanwhile", async () => {
+    const store = createChatStore()
+    const a = makeConversation("a", at("2026-01-01T02:00:00Z"))
+    store.setState({
+      conversations: [a] as never,
+      isFirstLoadConversation: false,
+    })
+    let resolve: (value: unknown) => void = () => undefined
+    mockKyPost.mockReturnValue({
+      json: () =>
+        new Promise((done) => {
+          resolve = done
+        }),
+    })
+
+    const refresh = store.getState().refreshConversations("ws-1")
+    store.getState().setFilters({ keyword: "x" })
+    resolve({
+      data: [makeConversation("other", at("2026-01-02T00:00:00Z"))],
+      nextCursor: null,
+    })
+    await refresh
+
+    expect(store.getState().conversations.map((c) => c.id)).toEqual(["a"])
+  })
+
+  test("refreshConversations is skipped before the first page or while it loads", async () => {
+    const store = createChatStore()
+
+    await store.getState().refreshConversations("ws-1")
+    store.setState({
+      isFirstLoadConversation: false,
+      isLoadingConversation: true,
+    })
+    await store.getState().refreshConversations("ws-1")
+
+    expect(mockKyPost).not.toHaveBeenCalled()
   })
 })

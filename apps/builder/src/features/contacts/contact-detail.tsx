@@ -207,6 +207,7 @@ export const ContactDetail = ({
   contact,
   baseContact,
   contactInbox,
+  onEdited,
 }: {
   contact: GetContactResponse | null
   /**
@@ -216,6 +217,8 @@ export const ContactDetail = ({
   baseContact?: ContactResource | null
   /** Channel row shown first (the inbox passes the active chat's). */
   contactInbox?: ContactInboxResource | null
+  /** A field was saved or removed here (drops an in-flight refresh). */
+  onEdited?: () => void
 }) => {
   const t = useTranslations()
 
@@ -231,6 +234,14 @@ export const ContactDetail = ({
     useCustomFieldStore((state) => state)
 
   const [contactFields, setContactFields] = useState<ContactEditableField[]>([])
+  // Custom fields added with "+" but not saved yet: the server does not know
+  // them, so a background refresh of `contact` must not drop them.
+  const [pendingFields, setPendingFields] = useState<ContactEditableField[]>([])
+  const contactId = contact?.id
+  // biome-ignore lint/correctness/useExhaustiveDependencies: contactId is the trigger — unsaved fields belong to the previous contact
+  useEffect(() => {
+    setPendingFields([])
+  }, [contactId])
 
   useEffect(() => {
     setTimezone(getBrowserTimezone())
@@ -268,23 +279,38 @@ export const ContactDetail = ({
   }
 
   const handleCustomFieldDeleted = (customFieldId: string) => {
+    onEdited?.()
+    setPendingFields((previous) =>
+      previous.some((field) => field.key === customFieldId)
+        ? previous.filter((field) => field.key !== customFieldId)
+        : previous,
+    )
     setContactFields((previous) =>
       previous.filter((field) => field.key !== customFieldId),
     )
   }
 
   const handleCustomFieldUpdated = (fieldKey: string, value: string) => {
+    onEdited?.()
+    const applyValue = (field: ContactEditableField): ContactEditableField => ({
+      ...field,
+      formValue: value,
+      value: isTemporalCustomFieldType(field.type)
+        ? formatCustomFieldValueInTimeZone(field.type, value, timezone)
+        : getContactFieldDisplayValue(fieldKey, value),
+    })
+    // A just-added field stays pending (with its value) until a refreshed
+    // contact lists it; other fields are left alone so nothing re-renders.
+    setPendingFields((previous) =>
+      previous.some((field) => field.key === fieldKey)
+        ? previous.map((field) =>
+            field.key === fieldKey ? applyValue(field) : field,
+          )
+        : previous,
+    )
     setContactFields((previous) =>
       previous.map((field) =>
-        field.key === fieldKey
-          ? {
-              ...field,
-              formValue: value,
-              value: isTemporalCustomFieldType(field.type)
-                ? formatCustomFieldValueInTimeZone(field.type, value, timezone)
-                : getContactFieldDisplayValue(fieldKey, value),
-            }
-          : field,
+        field.key === fieldKey ? applyValue(field) : field,
       ),
     )
   }
@@ -294,17 +320,16 @@ export const ContactDetail = ({
     if (!targetCustomField) {
       return
     }
-    setContactFields((previous) => [
-      ...previous,
-      {
-        key: customFieldId,
-        icon: resolveCustomFieldIcon(targetCustomField),
-        label: targetCustomField.name,
-        value: "",
-        type: targetCustomField.type,
-        selectOptions: targetCustomField.options ?? undefined,
-      },
-    ])
+    const field: ContactEditableField = {
+      key: customFieldId,
+      icon: resolveCustomFieldIcon(targetCustomField),
+      label: targetCustomField.name,
+      value: "",
+      type: targetCustomField.type,
+      selectOptions: targetCustomField.options ?? undefined,
+    }
+    setPendingFields((previous) => [...previous, field])
+    setContactFields((previous) => [...previous, field])
   }
 
   const customFieldMap = useMemo(() => {
@@ -432,7 +457,11 @@ export const ContactDetail = ({
           }
         }
 
-        setContactFields(tmpContactFields)
+        const shownKeys = new Set(tmpContactFields.map((field) => field.key))
+        setContactFields([
+          ...tmpContactFields,
+          ...pendingFields.filter((field) => !shownKeys.has(field.key)),
+        ])
       } else {
         setContactFields([])
       }
@@ -444,6 +473,7 @@ export const ContactDetail = ({
     contactInbox,
     initializedCustomFields,
     contact,
+    pendingFields,
     customFieldMap,
     genderOptions,
     languageOptions,
