@@ -29,46 +29,51 @@ export const createTriggerAction = workspaceActionClient
     }: {
       bindArgsParsedInputs: WorkspaceIdRequestParams
       parsedInput: CreateTriggerSchema
-    }) => {
-      const t = await getTranslations()
-
-      const existingTriggersCount = await db.$count(
-        triggerModel,
-        eq(triggerModel.workspaceId, workspaceId),
-      )
-
-      if (existingTriggersCount >= MAX_TRIGGERS_PER_CHATBOT) {
-        throw new ChatbotXException(
-          t("validation.maxItemsReached", {
-            max: MAX_TRIGGERS_PER_CHATBOT,
-            feature: "triggers",
-          }),
-        )
-      }
-
-      if (parsedInput.folderId) {
-        await ensureFolderIsExists(
-          parsedInput.folderId,
-          workspaceId,
-          folderTypes.enum.trigger,
-        )
-      }
-
-      const { ...triggerData } = parsedInput
-
-      const result = await db
-        .insert(triggerModel)
-        .values({
-          id: createId(),
-          ...triggerData,
-          actions: [],
-          workspaceId,
-        })
-        .returning()
-        .then((rows) => rows[0])
-
-      await updateTriggerCache(workspaceId)
-
-      return result
-    },
+    }) => await createTrigger(workspaceId, parsedInput),
   )
+
+export const createTrigger = async (
+  workspaceId: string,
+  parsedInput: CreateTriggerSchema,
+) => {
+  const t = await getTranslations()
+
+  const existingTriggersCount = await db.$count(
+    triggerModel,
+    eq(triggerModel.workspaceId, workspaceId),
+  )
+
+  if (existingTriggersCount >= MAX_TRIGGERS_PER_CHATBOT) {
+    throw new ChatbotXException(
+      t("validation.maxItemsReached", {
+        max: MAX_TRIGGERS_PER_CHATBOT,
+        feature: "triggers",
+      }),
+    )
+  }
+
+  if (parsedInput.folderId) {
+    await ensureFolderIsExists(
+      parsedInput.folderId,
+      workspaceId,
+      folderTypes.enum.trigger,
+    )
+  }
+
+  const { ...triggerData } = parsedInput
+
+  const result = await db
+    .insert(triggerModel)
+    .values({
+      id: createId(),
+      ...triggerData,
+      actions: [],
+      workspaceId,
+    })
+    .returning()
+    .then((rows) => rows[0])
+
+  await updateTriggerCache(workspaceId)
+
+  return result
+}

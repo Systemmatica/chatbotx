@@ -22,15 +22,26 @@ export const deleteTriggersAction = workspaceActionClient
       bindArgsParsedInputs: WorkspaceIdRequestParams
       parsedInput: BulkUpdateIdsRequest
     }) => {
-      await db
-        .delete(triggerModel)
-        .where(
-          and(
-            eq(triggerModel.workspaceId, workspaceId),
-            inArray(triggerModel.id, parsedInput.ids),
-          ),
-        )
-
-      await removeTriggerCache(workspaceId)
+      await deleteTriggers(workspaceId, parsedInput.ids)
     },
   )
+
+/** Deletes triggers of a workspace; returns the ids actually deleted. */
+export const deleteTriggers = async (
+  workspaceId: string,
+  ids: string[],
+): Promise<string[]> => {
+  const deleted = await db
+    .delete(triggerModel)
+    .where(
+      and(
+        eq(triggerModel.workspaceId, workspaceId),
+        inArray(triggerModel.id, ids),
+      ),
+    )
+    .returning({ id: triggerModel.id })
+
+  await removeTriggerCache(workspaceId)
+
+  return deleted.map((row) => row.id)
+}

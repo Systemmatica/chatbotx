@@ -1,17 +1,15 @@
 "use server"
 
+import { notFoundException } from "@chatbotx.io/business/errors"
 import { db, eq } from "@chatbotx.io/database/client"
 import { triggerModel } from "@chatbotx.io/database/schema"
+import { updateTriggerCache } from "@chatbotx.io/events"
 import { zodBigintAsString } from "@chatbotx.io/utils"
-import { z } from "zod"
 import { workspaceActionClient } from "@/lib/safe-action"
-
-const updateTriggerSettingsSchema = z.object({
-  name: z.optional(z.string().trim().min(1).max(255)),
-  active: z.optional(z.boolean()),
-})
-
-type UpdateTriggerSettingsSchema = z.infer<typeof updateTriggerSettingsSchema>
+import {
+  type UpdateTriggerSettingsSchema,
+  updateTriggerSettingsSchema,
+} from "../schema/mutation"
 
 export const updateTriggerSettingsAction = workspaceActionClient
   .bindArgsSchemas([zodBigintAsString(), zodBigintAsString()])
@@ -46,11 +44,15 @@ export const updateTriggerSettings = async (
   })
 
   if (!trigger) {
-    throw new Error("Trigger not found")
+    throw notFoundException("Trigger not found")
   }
 
   await db
     .update(triggerModel)
     .set(parsedInput)
     .where(eq(triggerModel.id, trigger.id))
+
+  // The trigger cache answers "does this workspace have an active trigger for
+  // event X", so an activation change must refresh it like any other edit.
+  await updateTriggerCache(ctx.workspaceId)
 }

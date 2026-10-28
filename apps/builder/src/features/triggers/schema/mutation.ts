@@ -14,3 +14,11 @@ export const updateTriggerSchema = z.object({
   actions: z.array(z.union(Object.values(allActions))),
 })
 export type UpdateTriggerSchema = z.infer<typeof updateTriggerSchema>
+
+export const updateTriggerSettingsSchema = z.object({
+  name: z.optional(z.string().trim().min(1).max(255)),
+  active: z.optional(z.boolean()),
+})
+export type UpdateTriggerSettingsSchema = z.infer<
+  typeof updateTriggerSettingsSchema
+>
