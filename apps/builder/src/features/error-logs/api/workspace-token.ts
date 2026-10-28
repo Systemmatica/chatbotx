@@ -1,5 +1,5 @@
 import { workspaceTokenAuthAPI } from "@/orpc"
-import { listErrorLogs } from "../queries"
+import { listWorkspaceErrorLogs } from "../queries"
 import {
   listErrorLogsRequest,
   publicListErrorLogsResponse,
@@ -17,7 +17,7 @@ export const errorLogsWorkspaceTokenAPIs = {
     .output(publicListErrorLogsResponse)
     .handler(
       async ({ context, input }) =>
-        await listErrorLogs({
+        await listWorkspaceErrorLogs({
           ...input,
           workspaceId: context.workspace.id,
         }),

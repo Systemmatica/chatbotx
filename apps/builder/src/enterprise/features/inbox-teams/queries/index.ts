@@ -10,6 +10,16 @@ export async function listInboxTeams(
 ): Promise<ListInboxTeamsResponse> {
   await assertCurrentUserCanAccessChatbot(input.workspaceId)
 
+  return await listWorkspaceInboxTeams(input)
+}
+
+/**
+ * Lists inbox teams without the session check — for callers that authorized the
+ * workspace another way (workspace token).
+ */
+export async function listWorkspaceInboxTeams(
+  input: ListInboxTeamsRequest,
+): Promise<ListInboxTeamsResponse> {
   const data = await inboxTeamService.listByWorkspace({
     workspaceId: input.workspaceId,
   })

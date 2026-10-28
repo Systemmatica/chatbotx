@@ -16,6 +16,16 @@ export async function listErrorLogs(
 ): Promise<ListErrorLogsResponse> {
   await assertCurrentUserCanAccessChatbot(input.workspaceId)
 
+  return await listWorkspaceErrorLogs(input)
+}
+
+/**
+ * Lists error logs without the session check — for callers that authorized the
+ * workspace another way (workspace token).
+ */
+export async function listWorkspaceErrorLogs(
+  input: ListErrorLogsRequest,
+): Promise<ListErrorLogsResponse> {
   const where = {
     workspaceId: input.workspaceId,
     ...(input.keyword

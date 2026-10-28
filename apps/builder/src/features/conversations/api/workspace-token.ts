@@ -7,7 +7,7 @@ import z from "zod"
 import { contactFilterCriteriaSchema } from "@/features/contact-filter"
 import { cursorPaginationRequest } from "@/lib/pagination"
 import { workspaceTokenAuthAPI } from "@/orpc"
-import { listConversations } from "../queries/list-conversations.query"
+import { listWorkspaceConversations } from "../queries/list-conversations.query"
 import { listConversationsResponse } from "../schema/resource"
 
 function jsonQueryParam<T>(schema: z.ZodType<T>) {
@@ -61,10 +61,12 @@ export const conversationWorkspaceTokenAPIs = {
     .output(listConversationsResponse)
     .handler(
       async ({ context, input }) =>
-        await listConversations({
-          ...input,
-          workspaceId: context.workspace.id,
-        }),
+        // A workspace token acts with full workspace access, so keyword
+        // search may match contact email and phone.
+        await listWorkspaceConversations(
+          { ...input, workspaceId: context.workspace.id },
+          { includeEmailAndPhone: true },
+        ),
     ),
 }
 

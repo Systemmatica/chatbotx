@@ -20,6 +20,16 @@ export async function listWorkspaceMembers(
 ): Promise<ListWorkspaceMembersResponse> {
   await assertCurrentUserCanAccessChatbot(input.workspaceId)
 
+  return await listWorkspaceMembersUnchecked(input)
+}
+
+/**
+ * Lists workspace members without the session check — for callers that authorized the
+ * workspace another way (workspace token).
+ */
+export async function listWorkspaceMembersUnchecked(
+  input: ListWorkspaceMembersRequest,
+): Promise<ListWorkspaceMembersResponse> {
   const pagination = getPaginationWithDefaults(input)
 
   const where = {

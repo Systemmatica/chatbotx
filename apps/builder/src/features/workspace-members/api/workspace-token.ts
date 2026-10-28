@@ -1,6 +1,6 @@
 import { notFoundException } from "@chatbotx.io/business/errors"
 import { workspaceTokenAuthAPI } from "@/orpc"
-import { getWorkspaceMember, listWorkspaceMembers } from "../queries"
+import { getWorkspaceMember, listWorkspaceMembersUnchecked } from "../queries"
 import {
   getWorkspaceMemberRequest,
   getWorkspaceMemberResponse,
@@ -20,7 +20,7 @@ export const workspaceMembersAPIs = {
     .output(listWorkspaceMembersResponse)
     .handler(
       async ({ context, input }) =>
-        await listWorkspaceMembers({
+        await listWorkspaceMembersUnchecked({
           ...input,
           workspaceId: context.workspace.id,
         }),

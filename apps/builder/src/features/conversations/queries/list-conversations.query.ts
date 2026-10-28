@@ -37,23 +37,39 @@ type ConversationCursor = z.infer<typeof conversationCursorSchema>
 export const listConversations = async (
   data: ListConversationsRequest,
 ): Promise<ListConversationsResponse> => {
-  const { workspaceId, ...input } = data
-  await assertCurrentUserCanAccessChatbot(workspaceId)
-
-  const limit = input.perPage ?? DEFAULT_PER_PAGE
-  const cursor = input.cursor
-    ? decodeCursor(input.cursor, conversationCursorSchema)
-    : null
+  await assertCurrentUserCanAccessChatbot(data.workspaceId)
 
   // Inbox keyword search must not become an email/phone oracle for agents who
   // lack the emailAndPhone permission — resolve visibility from the member's
   // permissions (independent of Contacts-section access) and thread it through.
-  const userAndWorkspace = await getCurrentUserAndTargetWorkspace(workspaceId)
+  const userAndWorkspace = await getCurrentUserAndTargetWorkspace(
+    data.workspaceId,
+  )
   const includeEmailAndPhone = userAndWorkspace
     ? canViewContactEmailAndPhone(
         userAndWorkspace.targetWorkspaceMember.permissions,
       )
     : false
+
+  return await listWorkspaceConversations(data, { includeEmailAndPhone })
+}
+
+/**
+ * Lists conversations without the session check — for callers that
+ * authorized the workspace another way (workspace token). The caller decides
+ * whether keyword search may match contact email and phone.
+ */
+export const listWorkspaceConversations = async (
+  data: ListConversationsRequest,
+  options: { includeEmailAndPhone: boolean },
+): Promise<ListConversationsResponse> => {
+  const { workspaceId, ...input } = data
+  const { includeEmailAndPhone } = options
+
+  const limit = input.perPage ?? DEFAULT_PER_PAGE
+  const cursor = input.cursor
+    ? decodeCursor(input.cursor, conversationCursorSchema)
+    : null
 
   const where = buildConversationWhere(workspaceId, input, cursor, {
     includeEmailAndPhone,

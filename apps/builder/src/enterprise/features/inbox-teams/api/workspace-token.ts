@@ -1,5 +1,5 @@
 import { workspaceTokenAuthAPI } from "@/orpc"
-import { listInboxTeams } from "../queries"
+import { listWorkspaceInboxTeams } from "../queries"
 import { listInboxTeamsResponse } from "../schema/action"
 
 export const inboxTeamsWorkspaceTokenAPIs = {
@@ -13,7 +13,7 @@ export const inboxTeamsWorkspaceTokenAPIs = {
     .output(listInboxTeamsResponse)
     .handler(
       async ({ context }) =>
-        await listInboxTeams({ workspaceId: context.workspace.id }),
+        await listWorkspaceInboxTeams({ workspaceId: context.workspace.id }),
     ),
 }
 
