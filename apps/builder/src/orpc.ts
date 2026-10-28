@@ -32,9 +32,40 @@ export const authorizedAPI = base
   )
   .use(authMiddleware)
 
+// Shared actions reused by the public API report field errors the way the UI
+// expects them: next-safe-action's `returnValidationErrors` throws an error
+// carrying `validationErrors`, and a few helpers call `schema.parse` directly.
+// Without this mapping both surface as an opaque 500 to API clients.
+const toPublicValidationError = (
+  error: Error,
+): ORPCError<string, unknown> | null => {
+  if ("validationErrors" in error) {
+    return new ORPCError("invalidRequestData", {
+      message: "Validation error",
+      status: 422,
+      data: { validationErrors: error.validationErrors },
+    })
+  }
+
+  if (error.name === "ZodError" && "issues" in error) {
+    return new ORPCError("invalidRequestData", {
+      message: "Validation error",
+      status: 422,
+      data: { issues: error.issues },
+    })
+  }
+
+  return null
+}
+
 export const workspaceTokenAuthAPI = base
   .use(
     onError((error: Error) => {
+      const validationError = toPublicValidationError(error)
+      if (validationError) {
+        throw validationError
+      }
+
       if (error.name === ChatbotXException.name) {
         throw new ORPCError((error as ChatbotXException).code, {
           message: error.message,
