@@ -18,7 +18,7 @@ export const updateFlowAction = workspaceActionClient
     await updateFlow({ workspaceId, id }, parsedInput)
   })
 
-const updateFlow = async (
+export const updateFlow = async (
   ctx: {
     workspaceId: string
     id: string
