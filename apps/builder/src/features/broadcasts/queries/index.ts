@@ -19,6 +19,16 @@ export async function listBroadcasts(
 ): Promise<PaginatedResponse<BroadcastResourceWithRelations>> {
   await assertCurrentUserCanAccessChatbot(input.workspaceId)
 
+  return await listWorkspaceBroadcasts(input)
+}
+
+/**
+ * Lists broadcasts without the session check — for callers that authorized
+ * the workspace another way (workspace token).
+ */
+export async function listWorkspaceBroadcasts(
+  input: GetBroadcastsSchema,
+): Promise<PaginatedResponse<BroadcastResourceWithRelations>> {
   const where = {
     workspaceId: input.workspaceId,
     name: input.name ? { ilike: likeContains(input.name) } : undefined,

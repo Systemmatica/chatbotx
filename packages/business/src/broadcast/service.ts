@@ -13,6 +13,7 @@ import {
 } from "@chatbotx.io/database/client"
 import {
   BROADCAST_TEXT_FLOW_FOLDER_NAME,
+  broadcastStatuses,
   type ChannelType,
   dmConversationUsesSourceId,
   requiresRecentInteractionWindow,
@@ -504,6 +505,59 @@ class BroadcastService extends BaseService {
     await flowVersionService.invalidateList(flowId)
 
     return broadcast
+  }
+
+  /**
+   * Cancels a broadcast that has not started yet. Guarded on
+   * `status = 'scheduled'` so a broadcast the scheduler already picked up
+   * (`sending`) or finished is never flipped. Returns null when nothing
+   * matched.
+   */
+  async cancelScheduled(input: {
+    workspaceId: string
+    id: string
+  }): Promise<BroadcastModel | null> {
+    const [row] = await db
+      .update(broadcastModel)
+      .set({ status: broadcastStatuses.enum.cancelled, updatedAt: new Date() })
+      .where(
+        and(
+          eq(broadcastModel.workspaceId, input.workspaceId),
+          eq(broadcastModel.id, input.id),
+          eq(broadcastModel.status, broadcastStatuses.enum.scheduled),
+        ),
+      )
+      .returning()
+
+    return row ?? null
+  }
+
+  /**
+   * Moves the send time of a broadcast that has not started yet. Same
+   * `status = 'scheduled'` guard as `cancelScheduled`.
+   */
+  async reschedule(input: {
+    workspaceId: string
+    id: string
+    schedulesAt: Date
+  }): Promise<BroadcastModel | null> {
+    const [row] = await db
+      .update(broadcastModel)
+      .set({
+        schedulesAt: input.schedulesAt,
+        schedulesType: "future",
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(broadcastModel.workspaceId, input.workspaceId),
+          eq(broadcastModel.id, input.id),
+          eq(broadcastModel.status, broadcastStatuses.enum.scheduled),
+        ),
+      )
+      .returning()
+
+    return row ?? null
   }
 }
 
