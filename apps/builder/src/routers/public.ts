@@ -1,5 +1,6 @@
 import { inboxTeamsWorkspaceTokenAPIs } from "@/enterprise/features/inbox-teams/api/workspace-token"
 import aiAgentsWorkspaceTokenAPIs from "@/features/ai-agents/api/workspace-token"
+import analyticsWorkspaceTokenAPIs from "@/features/analytics/api/workspace-token"
 import keywordsWorkspaceTokenAPIs from "@/features/automated-response/api/workspace-token"
 import botFieldWorkspaceTokenAPIs from "@/features/bot-fields/api/workspace-token"
 import { broadcastWorkspaceTokenAPIs } from "@/features/broadcasts/api/workspace-token"
@@ -43,5 +44,6 @@ export const publicRouter = {
   ...aiAgentsWorkspaceTokenAPIs,
   ...keywordsWorkspaceTokenAPIs,
   ...integrationsWorkspaceTokenAPIs,
+  ...analyticsWorkspaceTokenAPIs,
   ...channelApiAPIs,
 }

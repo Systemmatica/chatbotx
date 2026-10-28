@@ -32,6 +32,11 @@ export const router = {
       default: m.aiAgentsAPI,
     })),
   ),
+  publicAnalyticsAPI: lazy(() =>
+    import("@/features/analytics/api").then((m) => ({
+      default: m.publicAnalyticsAPI,
+    })),
+  ),
   broadcastAPIs: lazy(() =>
     import("@/features/broadcasts/api").then((m) => ({
       default: m.broadcastAPIs,
