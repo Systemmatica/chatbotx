@@ -1,5 +1,6 @@
 "use server"
 
+import { notFoundException } from "@chatbotx.io/business/errors"
 import { db, eq, findOrFail } from "@chatbotx.io/database/client"
 import { sequenceModel, sequenceStepModel } from "@chatbotx.io/database/schema"
 import { zodBigintAsString } from "@chatbotx.io/utils"
@@ -43,7 +44,7 @@ async function deleteStep(stepId: string, workspaceId: string) {
   })
 
   if (!step) {
-    throw new Error("Step not found")
+    throw notFoundException("Step not found")
   }
 
   if (step.sequence.workspaceId !== workspaceId) {
@@ -64,12 +65,17 @@ export const deleteSequenceStepAction = workspaceActionClient
       bindArgsParsedInputs: WorkspaceIdRequestParams
       parsedInput: DeleteSequenceStepRequest
     }) => {
-      const { stepId, sequenceId } = parsedInput
-
-      await validateSequenceOwnership(sequenceId, workspaceId)
-      await deleteStep(stepId, workspaceId)
-      await recalculateAllContactsInSequence(sequenceId, workspaceId)
+      await deleteSequenceStep(workspaceId, parsedInput)
 
       return { success: true }
     },
   )
+
+export const deleteSequenceStep = async (
+  workspaceId: string,
+  { stepId, sequenceId }: DeleteSequenceStepRequest,
+) => {
+  await validateSequenceOwnership(sequenceId, workspaceId)
+  await deleteStep(stepId, workspaceId)
+  await recalculateAllContactsInSequence(sequenceId, workspaceId)
+}

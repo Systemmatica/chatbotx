@@ -25,31 +25,36 @@ export const createSequenceAction = workspaceActionClient
     }: {
       bindArgsParsedInputs: WorkspaceIdRequestParams
       parsedInput: CreateSequenceRequest
-    }) => {
-      const t = await getTranslations()
-
-      try {
-        const sequenceId = createId()
-
-        await db.insert(sequenceModel).values({
-          id: sequenceId,
-          workspaceId,
-          name: parsedInput.name,
-          folderId: parsedInput.folderId || null,
-        })
-
-        return { sequenceId }
-      } catch (error) {
-        if (isDatabaseError(error) && error.cause.code === "23505") {
-          return returnValidationErrors(createSequenceRequest, {
-            _errors: [t("sequences.validation.exception")],
-            name: {
-              _errors: [t("sequences.validation.nameExists")],
-            },
-          })
-        }
-
-        throw new Error("Failed to create sequence")
-      }
-    },
+    }) => await createSequence(workspaceId, parsedInput),
   )
+
+export const createSequence = async (
+  workspaceId: string,
+  parsedInput: CreateSequenceRequest,
+) => {
+  const t = await getTranslations()
+
+  try {
+    const sequenceId = createId()
+
+    await db.insert(sequenceModel).values({
+      id: sequenceId,
+      workspaceId,
+      name: parsedInput.name,
+      folderId: parsedInput.folderId || null,
+    })
+
+    return { sequenceId }
+  } catch (error) {
+    if (isDatabaseError(error) && error.cause.code === "23505") {
+      return returnValidationErrors(createSequenceRequest, {
+        _errors: [t("sequences.validation.exception")],
+        name: {
+          _errors: [t("sequences.validation.nameExists")],
+        },
+      })
+    }
+
+    throw new Error("Failed to create sequence")
+  }
+}

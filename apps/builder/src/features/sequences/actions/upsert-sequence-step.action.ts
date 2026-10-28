@@ -1,7 +1,12 @@
 "use server"
 
+import { notFoundException } from "@chatbotx.io/business/errors"
 import { db, eq, findOrFail } from "@chatbotx.io/database/client"
-import { sequenceModel, sequenceStepModel } from "@chatbotx.io/database/schema"
+import {
+  flowModel,
+  sequenceModel,
+  sequenceStepModel,
+} from "@chatbotx.io/database/schema"
 import { createId } from "@chatbotx.io/utils"
 import {
   type WorkspaceIdRequestParams,
@@ -280,7 +285,7 @@ async function updateSequenceStep(
   })
 
   if (!step) {
-    throw new Error("Step not found")
+    throw notFoundException("Step not found")
   }
 
   if (step.sequence.workspaceId !== workspaceId) {
@@ -317,24 +322,31 @@ export const upsertSequenceStepAction = workspaceActionClient
     }: {
       bindArgsParsedInputs: WorkspaceIdRequestParams
       parsedInput: UpsertSequenceStepRequest
-    }) => {
-      const { stepId, sequenceId } = parsedInput
-
-      await validateSequenceOwnership(sequenceId, workspaceId)
-
-      let result: { stepId: string }
-
-      if (stepId) {
-        result = await handleStepUpdate(
-          parsedInput,
-          stepId,
-          sequenceId,
-          workspaceId,
-        )
-      } else {
-        result = await handleStepCreation(parsedInput, sequenceId, workspaceId)
-      }
-
-      return result
-    },
+    }) => await upsertSequenceStep(workspaceId, parsedInput),
   )
+
+/**
+ * Creates a sequence step, or updates it when `stepId` is set, and
+ * reschedules the contacts the change affects.
+ */
+export const upsertSequenceStep = async (
+  workspaceId: string,
+  parsedInput: UpsertSequenceStepRequest,
+): Promise<{ stepId: string }> => {
+  const { stepId, sequenceId, flowId } = parsedInput
+
+  await validateSequenceOwnership(sequenceId, workspaceId)
+  if (flowId) {
+    await findOrFail({
+      table: flowModel,
+      where: { id: flowId, workspaceId },
+      message: "Flow not found",
+    })
+  }
+
+  if (stepId) {
+    return await handleStepUpdate(parsedInput, stepId, sequenceId, workspaceId)
+  }
+
+  return await handleStepCreation(parsedInput, sequenceId, workspaceId)
+}

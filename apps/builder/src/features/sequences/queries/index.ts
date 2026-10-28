@@ -1,3 +1,4 @@
+import { notFoundException } from "@chatbotx.io/business/errors"
 import { db, eq, relationsFilterToSQL } from "@chatbotx.io/database/client"
 import { rootFolderId } from "@chatbotx.io/database/partials"
 import {
@@ -21,6 +22,16 @@ export async function listSequences(
 ): Promise<ListSequencesResponse> {
   await assertCurrentUserCanAccessChatbot(input.workspaceId)
 
+  return await listWorkspaceSequences(input)
+}
+
+/**
+ * Lists sequences without the session check — for callers that authorized
+ * the workspace another way (workspace token).
+ */
+export async function listWorkspaceSequences(
+  input: ListSequencesRequest,
+): Promise<ListSequencesResponse> {
   let folderIdFilter: string | { isNull: true } | undefined
   if (input.folderId) {
     folderIdFilter =
@@ -75,6 +86,14 @@ export async function listSequences(
 export async function getSequence(workspaceId: string, sequenceId: string) {
   await assertCurrentUserCanAccessChatbot(workspaceId)
 
+  return await findWorkspaceSequence(workspaceId, sequenceId)
+}
+
+/** Sequence with its ordered steps, without the session check. */
+export async function findWorkspaceSequence(
+  workspaceId: string,
+  sequenceId: string,
+) {
   const sequence = await db.query.sequenceModel.findFirst({
     where: {
       id: sequenceId,
@@ -91,7 +110,7 @@ export async function getSequence(workspaceId: string, sequenceId: string) {
   })
 
   if (!sequence) {
-    throw new Error("Sequence not found")
+    throw notFoundException("Sequence not found")
   }
 
   return {

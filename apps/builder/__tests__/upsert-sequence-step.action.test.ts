@@ -68,6 +68,7 @@ vi.mock("@chatbotx.io/database/client", () => ({
 }))
 
 vi.mock("@chatbotx.io/database/schema", () => ({
+  flowModel: { id: "flowId" },
   sequenceModel: { id: "id", workspaceId: "workspaceId" },
   sequenceStepModel: { id: "id" },
 }))
@@ -319,6 +320,43 @@ describe("upsertSequenceStepAction", () => {
       })
 
       expect(mockHandleStepUpdateImpact).not.toHaveBeenCalled()
+    })
+
+    test("checks the step's flow belongs to the same workspace", async () => {
+      await callAction({
+        bindArgsParsedInputs: [WS],
+        parsedInput: {
+          stepId: STEP_ID,
+          sequenceId: SEQ_ID,
+          order: 1,
+          flowId: "flow-abc",
+        },
+      })
+
+      expect(mockFindOrFail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: "flow-abc", workspaceId: WS },
+        }),
+      )
+    })
+
+    test("rejects a flow from another workspace before writing", async () => {
+      mockFindOrFail
+        .mockResolvedValueOnce(undefined)
+        .mockRejectedValueOnce(new Error("Flow not found"))
+
+      await expect(
+        callAction({
+          bindArgsParsedInputs: [WS],
+          parsedInput: {
+            stepId: STEP_ID,
+            sequenceId: SEQ_ID,
+            order: 1,
+            flowId: "foreign-flow",
+          },
+        }),
+      ).rejects.toThrow("Flow not found")
+      expect(mockUpdate).not.toHaveBeenCalled()
     })
 
     test("queries step with correct stepId and includes sequence relation", async () => {
