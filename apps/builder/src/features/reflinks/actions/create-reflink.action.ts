@@ -13,6 +13,7 @@ import {
   type CreateReflinkRequest,
   createReflinkRequest,
 } from "../schemas/action"
+import { assertReflinkTargetsInWorkspace } from "./utils"
 
 export const createReflinkAction = workspaceActionClient
   .bindArgsSchemas(workspaceIdrequestParams)
@@ -24,23 +25,35 @@ export const createReflinkAction = workspaceActionClient
     }: {
       bindArgsParsedInputs: WorkspaceIdRequestParams
       parsedInput: CreateReflinkRequest
-    }) => {
-      try {
-        await db.insert(reflinkModel).values({
-          id: createId(),
-          workspaceId,
-          type: "refLink",
-          ...parsedInput,
-        })
-      } catch (error) {
-        if (isUniqueViolationError(error)) {
-          return returnValidationErrors(createReflinkRequest, {
-            _errors: ["Validation Exception"],
-            name: { _errors: ["Name is already taken"] },
-          })
-        }
-
-        throw error
-      }
-    },
+    }) => await createReflink(workspaceId, parsedInput),
   )
+
+export const createReflink = async (
+  workspaceId: string,
+  parsedInput: CreateReflinkRequest,
+) => {
+  await assertReflinkTargetsInWorkspace({ workspaceId, ...parsedInput })
+
+  try {
+    const [reflink] = await db
+      .insert(reflinkModel)
+      .values({
+        id: createId(),
+        workspaceId,
+        type: "refLink",
+        ...parsedInput,
+      })
+      .returning()
+
+    return reflink
+  } catch (error) {
+    if (isUniqueViolationError(error)) {
+      return returnValidationErrors(createReflinkRequest, {
+        _errors: ["Validation Exception"],
+        name: { _errors: ["Name is already taken"] },
+      })
+    }
+
+    throw error
+  }
+}

@@ -15,6 +15,7 @@ import {
   type UpdateReflinkRequest,
   updateReflinkRequest,
 } from "../schemas/action"
+import { assertReflinkTargetsInWorkspace } from "./utils"
 
 export const updateReflinkAction = workspaceActionClient
   .bindArgsSchemas([zodBigintAsString(), zodBigintAsString()])
@@ -49,6 +50,11 @@ export const updateReflink = async (
     },
     message: "Reflink not found",
   })
+  await assertReflinkTargetsInWorkspace({
+    workspaceId: ctx.workspaceId,
+    ...parsedInput,
+  })
+
   try {
     await db
       .update(reflinkModel)

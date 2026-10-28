@@ -18,6 +18,16 @@ export async function listReflinks(
 ): Promise<ListReflinksResponse> {
   await assertCurrentUserCanAccessChatbot(input.workspaceId)
 
+  return await listWorkspaceReflinks(input)
+}
+
+/**
+ * Lists ref links without the session check — for callers that authorized
+ * the workspace another way (workspace token).
+ */
+export async function listWorkspaceReflinks(
+  input: ListReflinksRequest,
+): Promise<ListReflinksResponse> {
   const where = {
     workspaceId: input.workspaceId,
     type: "refLink" as const,

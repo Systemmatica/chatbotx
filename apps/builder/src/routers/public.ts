@@ -14,6 +14,7 @@ import inboxWorkspaceTokenAPIs from "@/features/inboxes/api/workspace-token"
 import { channelApiAPIs } from "@/features/integration-api/api"
 import whatsappMessageTemplateWorkspaceTokenAPIs from "@/features/integration-whatsapp/message-templates/api/workspace-token"
 import integrationsWorkspaceTokenAPIs from "@/features/integrations/api/workspace-token"
+import refLinksWorkspaceTokenAPIs from "@/features/reflinks/api/workspace-token"
 import savedReplyWorkspaceTokenAPIs from "@/features/saved-replies/api/workspace-token"
 import { sequencesWorkspaceTokenAPIs } from "@/features/sequences/api/workspace-token"
 import { tagWorkspaceTokenAPIs } from "@/features/tags/api/token-auth"
@@ -44,6 +45,7 @@ export const publicRouter = {
   ...aiAgentsWorkspaceTokenAPIs,
   ...keywordsWorkspaceTokenAPIs,
   ...integrationsWorkspaceTokenAPIs,
+  ...refLinksWorkspaceTokenAPIs,
   ...analyticsWorkspaceTokenAPIs,
   ...channelApiAPIs,
 }
